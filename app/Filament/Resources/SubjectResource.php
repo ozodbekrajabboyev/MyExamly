@@ -2,31 +2,28 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\SinfResource\Pages;
-use App\Filament\Resources\SinfResource\RelationManagers;
-use App\Models\Sinf;
+use App\Filament\Resources\SubjectResource\Pages;
+use App\Filament\Resources\SubjectResource\RelationManagers;
+use App\Models\Subject;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\Facades\Gate;
 
-class SinfResource extends Resource
+class SubjectResource extends Resource
 {
-    protected static ?string $model = Sinf::class;
+    protected static ?string $model = Subject::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
-    protected static ?string $navigationLabel = "Sinflar";
+    protected static ?string $navigationIcon = 'heroicon-o-book-open';
+    protected static ?string $navigationLabel = "Fanlar";
 
     public static function form(Form $form): Form
     {
         return $form
-            ->schema(Sinf::getForm());
+            ->schema(Subject::getForm());
     }
 
     public static function table(Table $table): Table
@@ -34,22 +31,21 @@ class SinfResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                    ->label("Sinf nomi")
+                    ->label("Fan nomi")
                     ->searchable(),
             ])
             ->filters([
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make()->icon('heroicon-o-pencil')->label("Tahrirlash"),
+                Tables\Actions\EditAction::make()->label("Tahrirlash"),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()->icon('heroicon-o-trash')->label("O'chirish"),
-                ])->label("Ko'proq"),
+                ]),
             ]);
     }
-
 
     public static function getRelations(): array
     {
@@ -61,9 +57,9 @@ class SinfResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListSinfs::route('/'),
-            'create' => Pages\CreateSinf::route('/create'),
-//            'edit' => Pages\EditSinf::route('/{record}/edit'),
+            'index' => Pages\ListSubjects::route('/'),
+            'create' => Pages\CreateSubject::route('/create'),
+//            'edit' => Pages\EditSubject::route('/{record}/edit'),
         ];
     }
 }

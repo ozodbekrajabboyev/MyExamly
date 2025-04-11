@@ -1,7 +1,6 @@
 <?php
 
-use App\Models\Subject;
-use App\Models\Teacher;
+use App\Models\Exam;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,10 +12,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('teacher_subject', function (Blueprint $table) {
+        Schema::create('problems', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(Teacher::class)->constrained()->cascadeOnDelete();
-            $table->foreignIdFor(Subject::class)->constrained()->cascadeOnDelete();
+            $table->foreignIdFor(Exam::class);
+            $table->integer('problem_number');
+            $table->integer('max_mark');
             $table->timestamps();
         });
     }
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        //
+        Schema::dropIfExists('problems');
     }
 };

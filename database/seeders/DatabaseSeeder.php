@@ -2,9 +2,13 @@
 
 namespace Database\Seeders;
 
+use App\Models\Student;
+use App\Models\Subject;
+use App\Models\Teacher;
 use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -15,9 +19,9 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        Student::factory(20)->create();
+        Subject::factory(20)->create();
+
+        Teacher::factory(20)->withSubjects(3)->create();
     }
 }
