@@ -17,7 +17,9 @@ class ExamResource extends Resource
 {
     protected static ?string $model = Exam::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationLabel = "Imtihonlar";
+
+    protected static ?string $navigationIcon = 'heroicon-o-clipboard';
 
     public static function form(Form $form): Form
     {
@@ -33,41 +35,50 @@ class ExamResource extends Resource
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('subject.name')
+                    ->label('Fan nomi')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('teacher.id')
+                Tables\Columns\TextColumn::make('teacher.full_name')
+                    ->label("O'qituvchining nomi")
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('type')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('serial_number')
-                    ->numeric()
+                    ->label('Imtihon nomi')
+                    ->formatStateUsing(fn ($state, $record) => "{$record->serial_number} - {$record->type}")
+                    ->searchable(['type', 'serial_number']) // Search both fields
                     ->sortable(),
+//                Tables\Columns\TextColumn::make('type')
+//                    ->label('Imtihon turi')
+//                    ->searchable(),
+//                Tables\Columns\TextColumn::make('serial_number')
+//                    ->label('Tartib raqam')
+//                    ->numeric()
+//                    ->sortable(),
                 Tables\Columns\TextColumn::make('problems_count')
+                    ->label('Topshiriqlar soni')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('metod.id')
-                    ->numeric()
+                    ->label('Metodbirlashma rahbari')
+                    ->formatStateUsing(function ($state) {
+                        $teacher = \App\Models\Teacher::find($state);
+                        return $teacher
+                            ? "{$teacher->full_name}"
+                            : "#{$state} - Noma'lum";
+                    })
                     ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+
             ])
             ->filters([
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()->label("Tahrirlash"),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                    Tables\Actions\DeleteBulkAction::make()->icon('heroicon-o-trash')->label("O'chirish"),
+                ])->label("Ko'proq"),
             ]);
     }
 

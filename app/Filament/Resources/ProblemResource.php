@@ -17,22 +17,13 @@ class ProblemResource extends Resource
 {
     protected static ?string $model = Problem::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationLabel = "Topshiriqlar";
+    protected static ?string $navigationIcon = 'heroicon-o-puzzle-piece';
 
     public static function form(Form $form): Form
     {
         return $form
-            ->schema([
-                Forms\Components\Select::make('exam_id')
-                    ->relationship('exam', 'id')
-                    ->required(),
-                Forms\Components\TextInput::make('problem_number')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('max_mark')
-                    ->required()
-                    ->numeric(),
-            ]);
+            ->schema(Problem::getForm());
     }
 
     public static function table(Table $table): Table
@@ -40,33 +31,32 @@ class ProblemResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('exam.id')
-                    ->numeric()
+                    ->label('Imtihon nomi')
+                    ->formatStateUsing(function ($state, $record) {
+                        $exam = $record->exam; // Exam modeliga relation orqali kirish
+                        return $exam ? "{$exam->sinf->name} | {$exam->subject->name} | {$exam->serial_number}-{$exam->type} " : '-';
+                    })
                     ->sortable(),
                 Tables\Columns\TextColumn::make('problem_number')
-                    ->numeric()
-                    ->sortable(),
+                    ->label('Topshiriq raqami')
+                    ->sortable()
+                    ->formatStateUsing(fn ($state) => $state."-topshiriq"),
                 Tables\Columns\TextColumn::make('max_mark')
+                    ->label('Maximum ball')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()->label("Tahrirlash"),
             ])
+            ->searchable()
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                    Tables\Actions\DeleteBulkAction::make()->icon('heroicon-o-trash')->label("O'chirish"),
+                ])->label("Ko'proq"),
             ]);
     }
 
