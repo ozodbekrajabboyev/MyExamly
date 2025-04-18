@@ -2,12 +2,13 @@
 
 namespace App\Filament\Resources\MarkResource\Pages;
 
-use App\Models\Exam;
 use App\Filament\Resources\MarkResource;
+use App\Models\Exam;
+use App\Models\Mark;
 use Filament\Actions;
-use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
+use Filament\Notifications\Notification;
 
 class CreateMark extends CreateRecord
 {
@@ -15,9 +16,8 @@ class CreateMark extends CreateRecord
 
     protected function handleRecordCreation(array $data): Model
     {
-        // dd($data);
         $exam = Exam::with('sinf')->find($data['exam_id']);
-        
+
         if (!$exam) {
             Notification::make()
                 ->title('Xatolik')
@@ -26,7 +26,6 @@ class CreateMark extends CreateRecord
                 ->send();
             throw new \Exception("Exam not found");
         }
-
         if (!$exam->sinf) {
             Notification::make()
                 ->title('Xatolik')
@@ -39,14 +38,15 @@ class CreateMark extends CreateRecord
         $createdMarks = [];
         $errors = [];
 
-        // dd($data['marks']);
+        unset($data['exam_id']);
 
         foreach ($data ?? [] as $key => $score) {
             try {
                 $cleanKey = str_replace(['marks[', ']'], '', $key);
+
                 [$studentId, $problemId] = explode('_', $cleanKey);
-                
-                $mark = \App\Models\Mark::updateOrCreate(
+
+                $mark = Mark::updateOrCreate(
                     [
                         'student_id' => $studentId,
                         'problem_id' => $problemId,
@@ -57,13 +57,14 @@ class CreateMark extends CreateRecord
                         'sinf_id' => $exam->sinf_id
                     ]
                 );
-                
+
                 $createdMarks[] = $mark;
+
             } catch (\Exception $e) {
-                $errors[] = "O'quvchi ID {$studentId}, topshiriq ID {$problemId}: " . $e->getMessage();
+//                dd($createdMarks);
+                $errors[] = "O'quvchi ID, topshiriq ID: " . $e->getMessage();
             }
         }
-        // dd($createdMarks);
 
         if (!empty($errors)) {
             Notification::make()
@@ -73,12 +74,8 @@ class CreateMark extends CreateRecord
                 ->send();
         }
 
-
+//        dd($createdMarks[0]);
         return $createdMarks[0] ?? new \App\Models\Mark();
     }
 
-    protected function getRedirectUrl(): string
-    {
-        return $this->getResource()::getUrl('index', ['exam_id' => $this->data['exam_id']]);
-    }
 }

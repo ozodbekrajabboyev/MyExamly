@@ -24,6 +24,11 @@ class Exam extends Model
         return $this->belongsTo(Sinf::class);
     }
 
+    public function marks():HasMany
+    {
+        return $this->hasMany(Mark::class);
+    }
+
     public function subject():BelongsTo
     {
         return $this->belongsTo(Subject::class);
