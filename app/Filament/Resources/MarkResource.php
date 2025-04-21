@@ -7,17 +7,14 @@ use App\Filament\Resources\MarkResource\RelationManagers;
 use App\Models\Exam;
 use App\Models\Mark;
 use Filament\Forms;
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use App\Filament\Resources\MarkResource\Pages\ViewMarks;
 use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Illuminate\Support\HtmlString;
 
 class MarkResource extends Resource
 {
@@ -25,73 +22,9 @@ class MarkResource extends Resource
     protected static ?string $navigationLabel = "Baholar";
     protected static ?string $navigationIcon = 'heroicon-o-pencil';
 
-
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                Forms\Components\Select::make('exam_id')
-                    ->label('Imtihon tanlang')
-                    ->options(Exam::with(['sinf', 'subject'])->get()->mapWithKeys(fn ($exam) => [
-                        $exam->id => "{$exam->sinf->name} | {$exam->subject->name} | {$exam->serial_number}-{$exam->type}"
-                    ]))
-                    ->live()
-                    ->disabled(fn(string $operation): bool => $operation === 'edit')
-                    ->required()
-                    ->columnSpanFull(),
-
-                Grid::make()
-                    ->schema(function (Get $get) {
-                        $examId = $get('exam_id');
-
-                        if (!$examId) return [];
-
-                        $exam = Exam::with(['sinf.students', 'problems' => fn($q) => $q->orderBy('problem_number')])->find($examId);
-                        if (!$exam) return [];
-
-                        $students = $exam->sinf->students->sortBy('full_name');
-                        $problems = $exam->problems;
-
-                        $schema = [];
-                        $headerC = new HtmlString("<span class='text-green-500 font-bold text-l'>O'quvchi / Topshiriq</span>");
-                        $header = [
-                            Placeholder::make('')->content(fn () => $headerC),
-                        ];
-
-                        foreach ($problems as $problem) {
-                            $header[] = Placeholder::make('')
-                                ->content(new HtmlString("<span class='text-green-500 font-bold text-l'>{$problem->problem_number}-topshiriq (Max: {$problem->max_mark})</span>"));
-                        }
-
-                        $schema[] = Grid::make(count($header))->schema($header);
-
-                        // Students + Inputs
-                        foreach ($students as $student) {
-                            $row = [
-                                Placeholder::make('')
-                                    ->content($student->full_name),
-                            ];
-
-                            foreach ($problems as $problem) {
-                                $existingMark = Mark::where('student_id', $student->id)
-                                    ->where('problem_id', $problem->id)
-                                    ->first();
-
-                                $row[] = TextInput::make("marks.{$student->id}_{$problem->id}")
-                                    ->hiddenLabel()
-                                    ->numeric()
-                                    ->minValue(0)
-                                    ->maxValue($problem->max_score)
-                                    ->default(1);
-                            }
-
-                            $schema[] = Grid::make(count($row))->schema($row);
-                        }
-
-                        return $schema;
-                    })
-                    ->extraAttributes(['class' => 'mark-table'])
-            ]);
+        return $form->schema(Mark::getForm());
     }
 
     public static function table(Table $table): Table
@@ -114,6 +47,11 @@ class MarkResource extends Resource
                 //
             ])
             ->actions([
+//                Tables\Actions\Action::make('view-marks')
+//                    ->label('Ko\'rish')
+//                    ->icon('heroicon-o-eye')
+//                    ->url(fn (Exam $record): string => MarkResource::getUrl('view-marks', ['exam' => $record->id]))
+//                    ->openUrlInNewTab(),
                 Tables\Actions\Action::make('edit')
                     ->label('Tahrirlash')
                     ->icon('heroicon-o-pencil')
@@ -136,10 +74,10 @@ class MarkResource extends Resource
 
     public static function getPages(): array
     {
-        return [
+        return array(
             'index' => Pages\ListMarks::route('/'),
             'create' => Pages\CreateMark::route('/create'),
             'edit' => Pages\EditMark::route('/{record}/edit'),
-        ];
+        );
     }
 }

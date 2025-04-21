@@ -24,7 +24,7 @@ class EditMark extends EditRecord
             foreach ($exam->problems as $problem) {
                 $existingMark = Mark::where('student_id', $student->id)
                     ->where('problem_id', $problem->id)
-                    ->where('exam_id', $exam->id)
+                    ->where('exam_id',   $exam->id)
                     ->first();
 
                 $data['marks'][$student->id . '_' . $problem->id] = $existingMark->mark ?? 1;
@@ -36,7 +36,8 @@ class EditMark extends EditRecord
 
     protected function handleRecordUpdate($record, array $data): Mark
     {
-        dd($record);
+//        dd($data);
+        $data['exam_id'] = $record['exam_id'];
         $exam = Exam::with('problems')->find($data['exam_id']);
 
         if (isset($data['marks'])) {
