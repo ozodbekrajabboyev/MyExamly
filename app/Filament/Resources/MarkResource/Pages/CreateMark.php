@@ -7,8 +7,8 @@ use App\Models\Exam;
 use App\Models\Mark;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
-use Illuminate\Database\Eloquent\Model;
 use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Model;
 
 class CreateMark extends CreateRecord
 {
@@ -24,27 +24,49 @@ class CreateMark extends CreateRecord
                 ->body('Imtihon topilmadi!')
                 ->danger()
                 ->send();
-            throw new \Exception("Exam not found");
+            throw new \Exception('Exam not found');
         }
+
         if (!$exam->sinf) {
             Notification::make()
                 ->title('Xatolik')
                 ->body('Imtihon sinf bilan boglanmagan!')
                 ->danger()
                 ->send();
-            throw new \Exception("Exam has no associated class");
+            throw new \Exception('Exam has no associated class');
         }
 
         $createdMarks = [];
         $errors = [];
 
-        unset($data['exam_id']);
+        // Process marks from the form (expected format: marks[studentId_problemId])
+        if (!isset($data['marks']) || !is_array($data['marks'])) {
+            Notification::make()
+                ->title('Xatolik')
+                ->body('Baho maʼlumotlari topilmadi!')
+                ->danger()
+                ->send();
+            throw new \Exception('No marks data provided');
+        }
 
-        foreach ($data ?? [] as $key => $score) {
+        foreach ($data['marks'] as $key => $score) {
             try {
-                $cleanKey = str_replace(['marks[', ']'], '', $key);
+                // Validate the key format (studentId_problemId)
+                if (!preg_match('/^\d+_\d+$/', $key)) {
+                    throw new \Exception("Invalid mark key format: {$key}");
+                }
 
-                [$studentId, $problemId] = explode('_', $cleanKey);
+                [$studentId, $problemId] = explode('_', $key);
+
+                // Ensure studentId and problemId are valid
+                if (!is_numeric($studentId) || !is_numeric($problemId)) {
+                    throw new \Exception("Invalid student ID or problem ID: {$key}");
+                }
+
+                // Validate score
+                if (!is_numeric($score) || $score < 0) {
+                    throw new \Exception("Invalid score for key: {$key}");
+                }
 
                 $mark = Mark::updateOrCreate(
                     [
@@ -54,28 +76,40 @@ class CreateMark extends CreateRecord
                     ],
                     [
                         'mark' => $score,
-                        'sinf_id' => $exam->sinf_id
+                        'sinf_id' => $exam->sinf_id,
                     ]
                 );
 
                 $createdMarks[] = $mark;
 
             } catch (\Exception $e) {
-//                dd($createdMarks);
-                $errors[] = "O'quvchi ID, topshiriq ID: " . $e->getMessage();
+                $errors[] = "O'quvchi ID: {$studentId}, Topshiriq ID: {$problemId} - Xato: " . $e->getMessage();
             }
         }
 
         if (!empty($errors)) {
             Notification::make()
                 ->title("Ba'zi baholarda xatolik")
-                ->body(implode('\n', array_slice($errors, 0, 3)))
+                ->body(implode('\n', array_slice($errors, 0, 3)) . (count($errors) > 3 ? '\nVa boshqa xatolar...' : ''))
                 ->danger()
                 ->send();
         }
 
-//        dd($createdMarks[0]);
-        return $createdMarks[0] ?? new \App\Models\Mark();
+        if (empty($createdMarks)) {
+            Notification::make()
+                ->title('Xatolik')
+                ->body('Hech qanday baho yaratilmadi!')
+                ->danger()
+                ->send();
+            throw new \Exception('No marks were created');
+        }
+
+        // Return the first created mark (Filament expects a single Model instance)
+        return $createdMarks[0];
     }
 
+    protected function getRedirectUrl(): string
+    {
+        return $this->getResource()::getUrl('index');
+    }
 }

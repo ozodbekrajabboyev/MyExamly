@@ -33,10 +33,10 @@ class MarkResource extends Resource
                 Forms\Components\Select::make('exam_id')
                     ->label('Imtihon tanlang')
                     ->options(Exam::with(['sinf', 'subject'])->get()->mapWithKeys(fn ($exam) => [
-                        $exam->id => "{$exam->sinf->name} - {$exam->subject->name}"
+                        $exam->id => "{$exam->sinf->name} | {$exam->subject->name} | {$exam->serial_number}-{$exam->type}"
                     ]))
                     ->live()
-                    ->disabled(fn (string $operation):bool => $operation === 'edit')
+                    ->disabled(fn(string $operation): bool => $operation === 'edit')
                     ->required()
                     ->columnSpanFull(),
 
@@ -81,7 +81,7 @@ class MarkResource extends Resource
                                     ->hiddenLabel()
                                     ->numeric()
                                     ->minValue(0)
-                                    ->maxValue($problem->max_score ?? 10)
+                                    ->maxValue($problem->max_score)
                                     ->default(1);
                             }
 
@@ -97,17 +97,15 @@ class MarkResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->query(Exam::query()->whereHas('marks')) // Asosiy queryni Exam modeliga o'zgartiramiz
+            ->query(Exam::query()->whereHas('marks'))
             ->columns([
                 Tables\Columns\TextColumn::make('subject.name')
                     ->label('Fan')
                     ->sortable(),
-
                 Tables\Columns\TextColumn::make('type')
                     ->label('Imtihon turi')
                     ->formatStateUsing(fn (Exam $record): string => $record->serial_number .'-'.$record->type)
                     ->sortable(),
-
                 Tables\Columns\TextColumn::make('sinf.name')
                     ->label('Sinf')
                     ->sortable(),
@@ -116,12 +114,11 @@ class MarkResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make()
-                    ->label("Tahrirlash")
-                    ->url(fn (Exam $record): string => MarkResource::getUrl('edit', [
-                        'record' => $record->id,
-                        'exam_id' => $record->id, // Pass exam ID explicitly
-                    ])),
+                Tables\Actions\Action::make('edit')
+                    ->label('Tahrirlash')
+                    ->icon('heroicon-o-pencil')
+                    ->url(fn (Exam $record): string => MarkResource::getUrl('edit', ['record' => $record->marks()->first()->id]))
+                    ->visible(fn (Exam $record): bool => $record->marks()->exists()),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
