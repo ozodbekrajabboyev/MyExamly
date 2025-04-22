@@ -47,11 +47,6 @@ class MarkResource extends Resource
                 //
             ])
             ->actions([
-//                Tables\Actions\Action::make('view-marks')
-//                    ->label('Ko\'rish')
-//                    ->icon('heroicon-o-eye')
-//                    ->url(fn (Exam $record): string => MarkResource::getUrl('view-marks', ['exam' => $record->id]))
-//                    ->openUrlInNewTab(),
                 Tables\Actions\Action::make('edit')
                     ->label('Tahrirlash')
                     ->icon('heroicon-o-pencil')

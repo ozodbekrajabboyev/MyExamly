@@ -26,7 +26,7 @@ class AppPanelProvider extends PanelProvider
             ->brandName('Managament of Exams')
             ->default()
             ->id('app')
-            ->path('/')
+            ->path('/admin')
             ->login()
             ->colors([
                 'primary' => Color::Indigo,
