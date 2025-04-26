@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Exam;
 use App\Models\Mark;
+use App\Models\Problem;
 use Livewire\Component;
 
 class Dashboard extends Component
@@ -11,18 +12,14 @@ class Dashboard extends Component
     public function render()
     {
         $exam = Exam::find(2)->id;
-        $marks = Mark::where('exam_id', $exam);
+        $marks = Mark::where('exam_id', $exam)->get();
 
-        dd($marks->count());
-
-
-        $problems = Mark::where('exam_id', $exam)->get();
-
-//        dd($students);
+        $problems = Problem::where('exam_id', $exam)->get();
 
         return view('livewire.dashboard', [
             'marks' => $marks,
-            'student'
+            'marks_count' => $marks->count(),
+            'problems' => $problems,
         ] );
     }
 

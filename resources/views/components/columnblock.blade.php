@@ -1,1 +1,3 @@
-<th>Problem 1 <span>(15 pts)</span></th>
+@props(['maxScore', 'problemNum'])
+
+<th>Problem {{$problemNum}} <span>({{$maxScore}} pts)</span></th>

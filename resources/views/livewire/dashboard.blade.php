@@ -1,4 +1,4 @@
-@props(['problems' => 5, 'students' => 10])
+@props(['marks', 'marks_count', 'problems'])
 <div>
     <div class="controls">
         <div class="exam-selector">
@@ -33,31 +33,21 @@
             <thead>
             <tr>
                 <th>Student Name</th>
-                @while($problems > 0)
-                    <x-columnblock />
-                    {{$problems-=1}}
-                @endwhile
+                @foreach($problems as $problem)
+                    <x-columnblock :problemNum="$problem->problem_number" :maxScore="$problem->max_mark"/>
+                @endforeach
                 <th>Average</th>
             </tr>
             </thead>
             <tbody>
             <tr>
                 <td>Emma Johnson</td>
-                <td>
-                    <x-rowblock />
-                </td>
-                <td>
-                    <x-rowblock />
-                </td>
-                <td>
-                    <x-rowblock />
-                </td>
-                <td>
-                    <x-rowblock />
-                </td>
-                <td>
-                    <x-rowblock />
-                </td>
+                @foreach()
+                    <td>
+                        <x-rowblock />
+                    </td>
+                @endforeach
+
                 <td><span class="average high">88%</span></td>
             </tr>
             </tbody>
