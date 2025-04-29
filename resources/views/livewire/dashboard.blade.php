@@ -1,4 +1,4 @@
-@props(['marks', 'marks_count', 'problems'])
+@props(['marks', 'marks_count', 'problems', 'students'])
 <div>
     <div class="controls">
         <div class="exam-selector">
@@ -31,25 +31,45 @@
     <div class="table-container">
         <table class="marks-table">
             <thead>
-            <tr>
-                <th>Student Name</th>
-                @foreach($problems as $problem)
-                    <x-columnblock :problemNum="$problem->problem_number" :maxScore="$problem->max_mark"/>
-                @endforeach
-                <th>Average</th>
-            </tr>
+                <tr>
+                    <th>Student Name</th>
+                    @php
+                        $over = 0;
+                    @endphp
+                    @foreach($problems as $problem)
+                        @php
+                            $over+=$problem->max_mark;
+                        @endphp
+                        <x-columnblock :problemNum="$problem->problem_number" :maxScore="$problem->max_mark"/>
+                    @endforeach
+                    <th>Overall <br> <span class="mr-2 text-center">({{ $over }})</span> </th>
+                    
+                    <th>Average</th>
+                </tr>
             </thead>
+
             <tbody>
-            <tr>
-                <td>Emma Johnson</td>
-                @foreach()
-                    <td>
-                        <x-rowblock />
-                    </td>
+                
+                @foreach ($students as $student)
+                    <tr>
+                        @php $overall = 0; @endphp
+                        <td>{{ $student->full_name }}</td>
+                        @foreach($marks as $mark)
+                            @if ($student->id === $mark->student->id)
+                                @php
+                                    $overall += $mark->mark;
+                                @endphp
+                                <td>
+                                    <x-rowblock :mark="$mark->mark" :max_score="$mark->problem->max_mark" />
+                                </td>
+                            @endif
+                        @endforeach
+                        
+                        <td><span class="average ">{{ $overall }}</span></td>
+                        <td><span class="average ">88%</span></td>
+                    </tr>
                 @endforeach
 
-                <td><span class="average high">88%</span></td>
-            </tr>
             </tbody>
         </table>
     </div>
