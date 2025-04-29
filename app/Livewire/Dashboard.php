@@ -10,24 +10,45 @@ use Livewire\Component;
 
 class Dashboard extends Component
 {
-    public function render()
-    {
-        $exam = Exam::find(1);
-        $marks = Mark::where('exam_id', $exam->id)->get();
+    public $selectedExamId = null;
+    public $marks = [];
+    public $problems = [];
+    public $students = [];
+    public $totalMaxScore = 0;
 
-        $problems = Problem::where('exam_id', $exam->id)->get();
-        $students = Student::where('sinf_id', $exam->sinf_id)->get();
-        
-        return view('livewire.dashboard', [
-            'marks' => $marks,
-            'marks_count' => $marks->count(),
-            'problems' => $problems,
-            'students' => $students
-        ] );
+    public function generateTable()
+    {
+        if (!$this->selectedExamId) {
+            $this->marks = [];
+            $this->problems = [];
+            $this->students = [];
+            $this->totalMaxScore = 0;
+            return;
+        }
+
+        $exam = Exam::find($this->selectedExamId);
+
+        if ($exam) {
+            $this->marks = Mark::where('exam_id', $exam->id)->get();
+            $this->problems = Problem::where('exam_id', $exam->id)
+                ->orderBy('problem_number')
+                ->get();
+            $this->students = Student::where('sinf_id', $exam->sinf_id)
+                ->orderBy('full_name')
+                ->get();
+
+            $this->totalMaxScore = $this->problems->sum('max_mark');
+        }
     }
 
-//    public function marks()
-//    {
-//
-//    }
+    public function render()
+    {
+        $exams = Exam::whereHas('problems.marks')
+            ->with(['sinf', 'subject'])
+            ->get();
+
+        return view('livewire.dashboard', [
+            'exams' => $exams,
+        ]);
+    }
 }
