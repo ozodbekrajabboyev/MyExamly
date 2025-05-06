@@ -82,7 +82,7 @@
                             $percentage = $totalMaxScore > 0 ? round(($overall / $totalMaxScore) * 100, 1) : 0;
                             $totalScores[] = $overall;
                         @endphp
-                        <td class="border py-1 px-2 text-center {{ $percentage >= 80 ? 'bg-green-100' : ($percentage >= 70 ? 'bg-yellow-100' : 'bg-red-100') }}">
+                        <td class="border py-1 px-2 text-center bg-yellow-100">
                             {{ $percentage }}%
                         </td>
                     </tr>
@@ -109,11 +109,15 @@
                     @endphp
 
                     <td class="border py-1 px-2 text-center bg-green-100 font-bold" rowspan="2">
-                        {{ $avgTotal }} ({{ $avgPercentage }}%)
+                        {{ $avgTotal }}
+                    </td>
+
+                    <td class="border py-1 px-2 text-center bg-green-100 font-bold" rowspan="2">
+                        {{$avgPercentage}}%
                     </td>
                 </tr>
 
-                <tr class="bg-blue-50 font-bold">
+                <tr class="bg-yellow-100 font-bold">
                     <td class="border py-1 px-2" colspan="2">O'zlashtirish foizi (%)</td>
                     @foreach ($problems as $problem)
                         @php
@@ -125,7 +129,7 @@
                                 : 0;
                         @endphp
                         <td class="border py-1 px-2 text-center">
-                <span class="{{ $masteryPercentage >= 70 ? 'text-green-600 font-bold' : 'text-red-600' }}">
+                <span class="">
                     {{ $masteryPercentage }}%
                 </span>
                         </td>
