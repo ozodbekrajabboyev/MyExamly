@@ -4,7 +4,7 @@
             <label for="exam-select">Select Exam</label>
             <div class="select-wrapper">
                 <select wire:model="selectedExamId" id="exam-select">
-                    <option value="">-- Choose Exam --</option>
+                    <option value="">-- Imtihonni tanlang --</option>
                     @foreach ($exams as $exam)
                         @php
                             $subjectName = \App\Models\Subject::all()->firstWhere('id', $exam->subject_id)?->name ?? 'No Subject';
