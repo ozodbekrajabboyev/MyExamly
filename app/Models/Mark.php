@@ -9,7 +9,6 @@ use Filament\Forms\Get;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Forms;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\HtmlString;
@@ -56,7 +55,10 @@ class Mark extends Model
                 ->schema([
                     Forms\Components\Select::make('exam_id')
                         ->label('Imtihon tanlang')
-                        ->options(Exam::with(['sinf', 'subject'])->get()->mapWithKeys(fn ($exam) => [
+                        ->options(Exam::whereDoesntHave('problems.marks')
+                            ->with(['sinf', 'subject'])
+                            ->get()
+                            ->mapWithKeys(fn ($exam) => [
                             $exam->id => "{$exam->sinf->name} | {$exam->subject->name} | {$exam->serial_number}-{$exam->type}"
                         ]))
                         ->live()
@@ -76,11 +78,20 @@ class Mark extends Model
                             $students = $exam->sinf->students->sortBy('full_name');
                             $problems = $exam->problems;
 
+                            $cur = $problems->count();
+                            $Needed = Exam::find($examId)->problems_count;
+
                             $schema = [];
                             $headerC = new HtmlString("<span class='text-green-500 font-bold text-l'>O'quvchi / Topshiriq</span>");
                             $header = [
                                 Placeholder::make('')->content(fn () => $headerC),
                             ];
+
+                            if($cur < $Needed){
+                                $header[] = Placeholder::make('')
+                                    ->content(new HtmlString("<span class='text-green-500 font-bold text-l'>Yetarlicha topshiriq qo'shilmagan</span>"));
+                                return $header;
+                            }
 
                             foreach ($problems as $problem) {
                                 $header[] = Placeholder::make('')

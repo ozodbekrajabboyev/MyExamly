@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Filament\Forms\Components\Section;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -34,7 +35,7 @@ class Problem extends Model
                 ->schema([
                     Select::make('exam_id')
                         ->label('Imtihon nomi')
-                        ->relationship('exam', 'id') // Asosiy key sifatida id
+                        ->relationship('exam', 'id')
                         ->getOptionLabelFromRecordUsing(fn ($record) =>
                         "{$record->sinf->name} | {$record->subject->name} | {$record->serial_number}-{$record->type}"
                         )
