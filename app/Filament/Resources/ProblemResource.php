@@ -4,6 +4,8 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProblemResource\Pages;
 use App\Filament\Resources\ProblemResource\RelationManagers;
+use App\Models\Exam;
+use Filament\Tables\Filters\SelectFilter;
 use App\Models\Problem;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -47,7 +49,23 @@ class ProblemResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                //
+                SelectFilter::make('exam_id')
+                    ->label('Imtihon bo\'yicha filtrlash')
+                    ->options(function () {
+                        return Exam::query()
+                            ->with(['sinf', 'subject'])
+                            ->get()
+                            ->mapWithKeys(function ($exam) {
+                                $label = "{$exam->sinf->name} | {$exam->subject->name} | {$exam->serial_number}-{$exam->type}";
+                                return [$exam->id => $label];
+                            });
+                    })
+                    ->searchable()
+                    ->query(function (Builder $query, array $data) {
+                        if (!empty($data['value'])) {
+                            $query->where('exam_id', $data['value']);
+                        }
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()->label("Tahrirlash"),
