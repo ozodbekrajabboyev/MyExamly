@@ -19,6 +19,40 @@
     padding: 0;
     box-sizing: border-box;
 }
+.export-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 16px; /* optional: pastdan biroz joy qoldirish */
+}
+
+.export-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background-color: #216be8; /* green-600 */
+    color: white;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, opacity 0.2s ease-in-out;
+}
+
+.export-btn:hover {
+    background-color: #257693; /* green-700 */
+}
+
+.export-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.export-btn .icon {
+    width: 20px;
+    height: 20px;
+}
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
