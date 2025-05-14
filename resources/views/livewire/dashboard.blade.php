@@ -25,6 +25,52 @@
     @elseif (count($students) === 0)
         <p class="text-gray-600 mt-4">Ushbu imtihon uchun hali hech qanday ma'lumot mavjud emas.</p>
     @else
+        <div x-data="{ isDisabled: false, countdown: 15 }" x-init="() => {
+    if (localStorage.getItem('lastExportClick')) {
+        const lastClick = parseInt(localStorage.getItem('lastExportClick'));
+        const now = Date.now();
+        const diff = Math.floor((now - lastClick) / 1000);
+
+        if (diff < 15) {
+            isDisabled = true;
+            countdown = 15 - diff;
+            const interval = setInterval(() => {
+                countdown--;
+                if (countdown <= 0) {
+                    isDisabled = false;
+                    clearInterval(interval);
+                }
+            }, 1000);
+        }
+    }
+}">
+            <button
+                type="button"
+                @click="
+            isDisabled = true;
+            localStorage.setItem('lastExportClick', Date.now());
+            const interval = setInterval(() => {
+                countdown--;
+                if (countdown <= 0) {
+                    isDisabled = false;
+                    clearInterval(interval);
+                }
+            }, 1000);
+            $wire.downloadPdf(); // Replace with your Livewire action
+        "
+                :disabled="isDisabled"
+                class="flex items-center justify-center px-3 py-2 text-sm font-medium rounded-lg border focus:outline-none focus:ring-4"
+                :class="{
+            'bg-white text-gray-900 border-gray-200 hover:bg-gray-100 hover:text-blue-700 focus:ring-gray-200 cursor-pointer': !isDisabled,
+            'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed': isDisabled
+        }"
+            >
+                <svg class="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                </svg>
+                <span x-text="isDisabled ? `Wait ${countdown}s` : 'Export'"></span>
+            </button>
+        </div>
         <div class="table-container mt-6 overflow-x-auto">
             <table class="marks-table w-full border-collapse">
                 <thead class="bg-gray-200">

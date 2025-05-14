@@ -6,6 +6,7 @@ use App\Models\Exam;
 use App\Models\Mark;
 use App\Models\Problem;
 use App\Models\Student;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Livewire\Component;
 
 class Dashboard extends Component
@@ -39,6 +40,27 @@ class Dashboard extends Component
 
             $this->totalMaxScore = $this->problems->sum('max_mark');
         }
+    }
+
+    public function downloadPdf()
+    {
+        $exam = Exam::with(['sinf', 'subject'])->find($this->selectedExamId);
+        $marks = Mark::where('exam_id', $exam->id)->get();
+        $problems = Problem::where('exam_id', $exam->id)->orderBy('problem_number')->get();
+        $students = Student::where('sinf_id', $exam->sinf_id)->orderBy('full_name')->get();
+        $totalMaxScore = $problems->sum('max_mark');
+
+        $pdf = Pdf::loadView('pdf.dashboard-table', [
+            'exam' => $exam,
+            'students' => $this->students,
+            'problems' => $this->problems,
+            'totalMaxScore' => $this->totalMaxScore,
+            'marks' => $this->marks, // << THIS is needed
+        ])->setPaper('a4', 'landscape');
+
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->stream();
+        }, 'imtihon-natijalari.pdf');
     }
 
     public function render()
