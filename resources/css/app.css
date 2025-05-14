@@ -29,8 +29,8 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 16px;
-    background-color: #216be8; /* green-600 */
+    padding: 8px 14px;
+    background-color: var(--color-primary);
     color: white;
     font-weight: 600;
     border: none;
@@ -41,7 +41,12 @@
 }
 
 .export-btn:hover {
-    background-color: #257693; /* green-700 */
+    background-color: #2563eb;
+    transform: translateY(-1px);
+}
+
+.export-btn:active {
+    transform: translateY(0);
 }
 
 .export-btn:disabled {
