@@ -58,9 +58,14 @@ class Dashboard extends Component
             'marks' => $this->marks, // << THIS is needed
         ])->setPaper('a4', 'landscape');
 
+        $exam1 = Exam::find($this->selectedExamId);
+        $className = $exam1->sinf->name;
+        $subject = $exam1->subject->name;
+        $type1 = $exam1->serial_number . "-" . $exam1->type;
+        $filename1 = "$className -sinf | $subject | $type1 | results.pdf";
         return response()->streamDownload(function () use ($pdf) {
             echo $pdf->stream();
-        }, 'imtihon-natijalari.pdf');
+        }, $filename1);
     }
 
     public function render()
