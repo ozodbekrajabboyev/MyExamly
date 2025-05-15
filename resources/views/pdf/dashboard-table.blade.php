@@ -107,7 +107,7 @@
 </table>
 <br><br>
 <h3><strong>Maktab-internatining  O‘IBDO‘:</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;F.F.Raxmonov</h3>
-<h3><stro   ng>Metodbirlashma rahbari:</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{$exam->metod->full_name ?? "Noma'lum"}}</h3>
+<h3><strong>Metodbirlashma rahbari:</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{$exam->metod->full_name ?? "Noma'lum"}}</h3>
 <h3><strong>Fan o‘qituvchisi:</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{$exam->teacher->full_name ?? "Noma'lum"}}</h3>
 </body>
 </html>
