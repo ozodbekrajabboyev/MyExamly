@@ -33,6 +33,8 @@ class SinfResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('id')
+                    ->label("Sinf ID"),
                 Tables\Columns\TextColumn::make('name')
                     ->label("Sinf nomi")
                     ->searchable(),

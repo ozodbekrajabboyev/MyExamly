@@ -2,12 +2,15 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Imports\StudentImporter;
 use App\Filament\Resources\StudentResource\Pages;
 use App\Filament\Resources\StudentResource\RelationManagers;
 use App\Models\Sinf;
 use App\Models\Student;
+use Filament\Actions\Action;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\Section;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -59,6 +62,11 @@ class StudentResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make()->label("Tahrirlash"),
+            ])
+            ->headerActions([
+                Tables\Actions\ImportAction::make()
+                    ->importer(StudentImporter::class)
+                    ->icon('heroicon-o-arrow-down-tray'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
