@@ -11,7 +11,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    
+
     <title>Student Exam Results Dashboard</title>
 </head>
 <body>
@@ -21,7 +21,10 @@
     </header>
 
     <main class="dashboard">
-        <livewire:dashboard />
+        <h2>
+            The Front is going to appear soon. Please Go back later! :)
+            Thank you for your patience
+        </h2>
     </main>
 
     <footer>

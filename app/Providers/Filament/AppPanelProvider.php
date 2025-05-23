@@ -26,7 +26,7 @@ class AppPanelProvider extends PanelProvider
             ->brandName('Managament of Exams')
             ->default()
             ->id('app')
-            ->path('/admin')
+            ->path('/')
             ->login()
             ->colors([
                 'primary' => Color::Indigo,
@@ -48,6 +48,9 @@ class AppPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+            ])
+            ->widgets([
+                \App\Filament\Widgets\ExamResultsWidget::class,
             ])
             ->databaseNotifications()
             ->authMiddleware([
