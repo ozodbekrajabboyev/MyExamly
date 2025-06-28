@@ -2,6 +2,11 @@
 
 namespace App\Providers\Filament;
 
+
+use App\Filament\Pages\Statistics;
+use App\Filament\Widgets\ExamResultsWidget;
+use App\Filament\Widgets\StatisticsChartWidget;
+use App\Filament\Widgets\StatsOverview;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -23,20 +28,19 @@ class AppPanelProvider extends PanelProvider
     public function panel(Panel $panel): Panel
     {
         return $panel
-            ->brandName('Managament of Exams')
-            ->default()
+            ->brandName('MyExamly')
+//            ->default()
             ->id('app')
             ->path('/')
             ->login()
+            ->unsavedChangesAlerts()
             ->colors([
-                'primary' => Color::Indigo,
-                'gray' => Color::Slate,
+                'primary' => Color::Blue,
+                'gray' => Color::Gray,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
-            ->pages([
-                Pages\Dashboard::class,
-            ])
+            ->pages([])
 //            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->middleware([
                 EncryptCookies::class,
@@ -50,7 +54,8 @@ class AppPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->widgets([
-                \App\Filament\Widgets\ExamResultsWidget::class,
+                ExamResultsWidget::class,
+                StatsOverview::class,
             ])
             ->databaseNotifications()
             ->authMiddleware([

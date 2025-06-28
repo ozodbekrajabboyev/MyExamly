@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Maktab;
 use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
@@ -14,8 +15,9 @@ return new class extends Migration
     {
         Schema::create('teachers', function (Blueprint $table) {
             $table->id();
+            $table->foreignIdFor(Maktab::class);
             $table->string('full_name');
-            $table->foreignIdFor(User::class)->constrained()->onDelete('cascade');
+            $table->foreignIdFor(User::class)->constrained();
             $table->string('phone')->nullable();
             $table->timestamps();
         });

@@ -21,8 +21,22 @@ class StudentImporter extends Importer
                 ->requiredMapping()
                 ->relationship()
                 ->rules(['required']),
+            ImportColumn::make('maktab')
+                ->relationship()
+                ->requiredMapping()
+                ->rules(['required']),
         ];
     }
+
+
+//    public function mapRecord(array $record): array
+//    {
+//        return [
+//            'full_name' => $record['full_name'] ?? '',
+//            'sinf_id' => $record['sinf'] ?? null, // resolved automatically by ->relationship()
+//            'maktab_id' => auth()->user()->maktab_id, // inject current user's school
+//        ];
+//    }
 
     public function resolveRecord(): ?Student
     {

@@ -70,16 +70,20 @@ class CreateMark extends CreateRecord
                     throw new \Exception("Invalid student ID or problem ID: {$key}");
                 }
 
+                $problem_max_score = $exam->problems->firstWhere('id', $problemId)->max_mark;
+
                 // Validate score
-                if (!is_numeric($score) || $score < 0) {
-                    throw new \Exception("Invalid score for key: {$key}");
+                if (!is_numeric($score) || $score < 0 || $score > $problem_max_score) {
+                    throw new \Exception("Ba'zi baholarda xatolik!: {$key}");
                 }
+
 
                 $mark = Mark::updateOrCreate(
                     [
                         'student_id' => $studentId,
                         'problem_id' => $problemId,
                         'exam_id' => $exam->id,
+                        'maktab_id' => $exam->maktab_id,
                     ],
                     [
                         'mark' => $score,

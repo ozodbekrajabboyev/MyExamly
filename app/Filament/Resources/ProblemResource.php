@@ -14,6 +14,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class ProblemResource extends Resource
 {
@@ -26,6 +27,18 @@ class ProblemResource extends Resource
     {
         return $form
             ->schema(Problem::getForm());
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $user = Auth::user();
+
+        return parent::getEloquentQuery()
+            ->when($user->role->name === 'teacher', function ($query) use ($user) {
+                $query->whereHas('exam', function ($q) use ($user) {
+                    $q->where('teacher_id', $user->teacher->id);
+                });
+            });
     }
 
     public static function table(Table $table): Table
@@ -52,9 +65,14 @@ class ProblemResource extends Resource
                 SelectFilter::make('exam_id')
                     ->label('Imtihon bo\'yicha filtrlash')
                     ->options(function () {
-                        return Exam::query()
-                            ->with(['sinf', 'subject'])
-                            ->get()
+                        $user = auth()->user();
+                        $query = Exam::query()->with(['sinf', 'subject']);
+
+                        if ($user->role->name === 'teacher') {
+                            $query->where('teacher_id', $user->teacher->id);
+                        }
+
+                        return $query->get()
                             ->mapWithKeys(function ($exam) {
                                 $label = "{$exam->sinf->name} | {$exam->subject->name} | {$exam->serial_number}-{$exam->type}";
                                 return [$exam->id => $label];
@@ -66,6 +84,7 @@ class ProblemResource extends Resource
                             $query->where('exam_id', $data['value']);
                         }
                     }),
+
             ])
             ->actions([
                 Tables\Actions\EditAction::make()->label("Tahrirlash"),

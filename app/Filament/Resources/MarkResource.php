@@ -15,6 +15,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class MarkResource extends Resource
 {
@@ -27,10 +28,29 @@ class MarkResource extends Resource
         return $form->schema(Mark::getForm());
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        $user = auth()->user();
+
+        return parent::getEloquentQuery()
+            ->when($user->role->name === 'teacher', function ($query) use ($user) {
+                $query->whereHas('problem.exam', function ($q) use ($user) {
+                    $q->where('teacher_id', $user->teacher->id);
+                });
+            });
+    }
     public static function table(Table $table): Table
     {
         return $table
-            ->query(Exam::query()->whereHas('marks'))
+            ->query(function () {
+                $user = Auth::user();
+
+                return Exam::query()
+                    ->whereHas('marks') // only exams with marks
+                    ->when($user->role->name === 'teacher', function ($query) use ($user) {
+                        $query->where('teacher_id', $user->teacher->id);
+                    });
+            })
             ->columns([
                 Tables\Columns\TextColumn::make('subject.name')
                     ->label('Fan')
@@ -52,11 +72,6 @@ class MarkResource extends Resource
                     ->icon('heroicon-o-pencil')
                     ->url(fn (Exam $record): string => MarkResource::getUrl('edit', ['record' => $record->marks()->first()->id]))
                     ->visible(fn (Exam $record): bool => $record->marks()->exists()),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()->icon('heroicon-o-trash')->label("O'chirish"),
-                ])->label("Ko'proq"),
             ]);
     }
 

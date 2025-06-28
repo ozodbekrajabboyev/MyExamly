@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Traits\ScopesSchool;
 use Closure;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
+use Filament\Forms;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,11 +18,16 @@ use Filament\Forms\Components\TextInput;
 class Problem extends Model
 {
     /** @use HasFactory<\Database\Factories\ProblemFactory> */
-    use HasFactory;
+    use HasFactory, ScopesSchool;
 
     public function exam():BelongsTo
     {
         return $this->belongsTo(Exam::class);
+    }
+
+    public function maktab(): BelongsTo
+    {
+        return $this->belongsTo(Maktab::class);
     }
     public function marks():hasMany
     {
@@ -47,11 +54,19 @@ class Problem extends Model
                 ->label('Imtihon nomi')
                 ->relationship('exam', 'id')
                 ->options(function () {
-                    return Exam::query()
+                    $user = auth()->user();
+
+                    return \App\Models\Exam::whereHas('sinf', function ($query) use ($user) {
+                        $query->where('maktab_id', $user->maktab_id);
+                    })
+                        ->when($user->role->name === 'teacher', function ($query) use ($user) {
+                            $query->where('teacher_id', $user->teacher->id); // ✅ Only show exams owned by this teacher
+                        })
                         ->with(['sinf', 'subject', 'problems'])
                         ->get()
                         ->mapWithKeys(function ($exam) {
                             $label = "{$exam->sinf->name} | {$exam->subject->name} | {$exam->serial_number}-{$exam->type}";
+
                             if ($exam->problems->count() >= $exam->problems_count) {
                                 $label .= ' (Yetarlicha topshiriq mavjud)';
                             }
@@ -59,6 +74,7 @@ class Problem extends Model
                             return [$exam->id => $label];
                         });
                 })
+
                 ->disableOptionWhen(function ($value) {
                     $exam = Exam::find($value);
                     return $exam && $exam->problems->count() >= $exam->problems_count;
@@ -88,6 +104,9 @@ class Problem extends Model
                 ->numeric()
                 ->minValue(0)
                 ->hidden(fn (Get $get): bool => !$get('exam_id')), // Only show when exam is selected
+            Forms\Components\Hidden::make('maktab_id')
+                ->default(fn () => auth()->user()->maktab_id)
+                ->required(),
         ];
     }
 }

@@ -53,7 +53,8 @@ class StudentResource extends Resource
                     ->label("O'quvchining IFSH")
                     ->searchable(),
                 Tables\Columns\TextColumn::make('sinf.name')
-                    ->label("Sinfi")
+                    ->label("Sinf nomi")
+                    ->formatStateUsing(fn (Student $record): string => $record->sinf->name .'-sinf')
                     ->sortable(),
             ])
             ->filters([

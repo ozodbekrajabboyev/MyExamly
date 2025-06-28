@@ -60,6 +60,7 @@ class EditMark extends EditRecord
                         'student_id' => $studentId,
                         'problem_id' => $problemId,
                         'exam_id' => $data['exam_id'],
+                        'maktab_id' => $exam->maktab_id,
                     ],
                     [
                         'mark' => $mark,

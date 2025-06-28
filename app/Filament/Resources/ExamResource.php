@@ -27,6 +27,22 @@ class ExamResource extends Resource
             ->schema(Exam::getForm());
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        $user = auth()->user();
+
+        // If teacher, restrict to their own exams or if it is an admin restrict to their own school's exam
+        if ($user->role->name === 'teacher') {
+            return parent::getEloquentQuery()
+                ->where('teacher_id', $user->teacher->id);
+        }else if($user->role->name === 'admin'){
+            return parent::getEloquentQuery()
+                ->where('maktab_id', $user->maktab_id);
+        }
+
+        // If superadmin, show all
+        return parent::getEloquentQuery();
+    }
     public static function table(Table $table): Table
     {
         return $table
@@ -74,11 +90,6 @@ class ExamResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make()->label("Tahrirlash"),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()->icon('heroicon-o-trash')->label("O'chirish"),
-                ])->label("Ko'proq"),
             ]);
     }
 

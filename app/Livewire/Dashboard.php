@@ -7,6 +7,7 @@ use App\Models\Mark;
 use App\Models\Problem;
 use App\Models\Student;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
 
 class Dashboard extends Component
@@ -70,7 +71,13 @@ class Dashboard extends Component
 
     public function render()
     {
-        $exams = Exam::whereHas('problems.marks')
+        $user = Auth::user();
+
+        $exams = \App\Models\Exam::query()
+            ->whereHas('problems.marks') // only exams that have at least one mark
+            ->when($user->role->name === 'teacher', function ($query) use ($user) {
+                $query->where('teacher_id', $user->teacher->id);
+            })
             ->with(['sinf', 'subject'])
             ->get();
 

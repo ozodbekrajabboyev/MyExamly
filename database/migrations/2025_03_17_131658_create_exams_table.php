@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Maktab;
 use App\Models\Sinf;
 use App\Models\Subject;
 use App\Models\Teacher;
@@ -16,6 +17,7 @@ return new class extends Migration
     {
         Schema::create('exams', function (Blueprint $table) {
             $table->id();
+            $table->foreignIdFor(Maktab::class);
             $table->foreignIdFor(Sinf::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Subject::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Teacher::class)->constrained()->cascadeOnDelete();

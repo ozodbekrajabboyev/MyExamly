@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Exam;
+use App\Models\Maktab;
 use App\Models\Problem;
 use App\Models\Sinf;
 use App\Models\Student;
@@ -17,6 +18,7 @@ return new class extends Migration
     {
         Schema::create('marks', function (Blueprint $table) {
             $table->id();
+            $table->foreignIdFor(Maktab::class);
             $table->foreignIdFor(Exam::class);
             $table->foreignIdFor(Sinf::class);
             $table->foreignIdFor(Student::class);

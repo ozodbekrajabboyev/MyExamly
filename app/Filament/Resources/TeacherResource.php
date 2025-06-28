@@ -4,15 +4,21 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\TeacherResource\Pages;
 use App\Filament\Resources\TeacherResource\RelationManagers;
+use App\Models\Role;
 use App\Models\Subject;
 use App\Models\Teacher;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class TeacherResource extends Resource
 {
@@ -39,6 +45,15 @@ class TeacherResource extends Resource
         $record->subjects()->sync($data['subjects']);
     }
 
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist->schema([
+            TextEntry::make('title'),
+            TextEntry::make('slug'),
+            TextEntry::make('content'),
+        ]);
+    }
+
     public static function table(Table $table): Table
     {
         return $table
@@ -58,14 +73,6 @@ class TeacherResource extends Resource
             ])
             ->filters([
                 //
-            ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
             ]);
     }
 
@@ -81,7 +88,6 @@ class TeacherResource extends Resource
         return [
             'index' => Pages\ListTeachers::route('/'),
             'create' => Pages\CreateTeacher::route('/create'),
-            'edit' => Pages\EditTeacher::route('/{record}/edit'),
         ];
     }
 }

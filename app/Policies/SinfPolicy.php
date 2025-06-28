@@ -13,7 +13,7 @@ class SinfPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->is_admin;
+        return $user->role->name === "superadmin" || $user->role->name === "admin";
     }
 
     /**
@@ -21,7 +21,7 @@ class SinfPolicy
      */
     public function view(User $user, Sinf $sinf): bool
     {
-        return $user->is_admin;
+        return $user->role->name === "superadmin" || $user->role->name === "admin";
     }
 
     /**
@@ -29,7 +29,7 @@ class SinfPolicy
      */
     public function create(User $user): bool
     {
-        return $user->is_admin;
+        return $user->role->name === "superadmin" || $user->role->name === "admin";
     }
 
     /**
@@ -37,7 +37,7 @@ class SinfPolicy
      */
     public function update(User $user, Sinf $sinf): bool
     {
-        return $user->is_admin;
+        return $user->role->name === "superadmin" || $user->role->name === "admin";
     }
 
     /**
@@ -45,7 +45,7 @@ class SinfPolicy
      */
     public function delete(User $user, Sinf $sinf): bool
     {
-        return $user->is_admin;
+        return $user->role->name === "superadmin" || $user->role->name === "admin";
     }
 
     /**
@@ -53,7 +53,7 @@ class SinfPolicy
      */
     public function restore(User $user, Sinf $sinf): bool
     {
-        return $user->is_admin;
+        return $user->role->name === "superadmin" || $user->role->name === "admin";
     }
 
     /**
@@ -61,6 +61,6 @@ class SinfPolicy
      */
     public function forceDelete(User $user, Sinf $sinf): bool
     {
-        return $user->is_admin;
+        return $user->role->name === "superadmin" || $user->role->name === "admin";
     }
 }

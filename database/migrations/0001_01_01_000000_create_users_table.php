@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Maktab;
+use App\Models\Role;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -13,9 +15,10 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
+            $table->foreignIdFor(Maktab::class)->default(1)->constrained();
             $table->string('name');
             $table->string('email')->unique();
-            $table->boolean('is_admin')->default(false);
+            $table->foreignIdFor(Role::class)->default(1)->constrained();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();

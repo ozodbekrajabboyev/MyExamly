@@ -4,7 +4,6 @@ namespace App\Policies;
 
 use App\Models\Teacher;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class TeacherPolicy
 {
@@ -13,7 +12,7 @@ class TeacherPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->is_admin;
+        return $user->role->name === "superadmin" || $user->role->name === "admin";
     }
 
     /**
@@ -21,7 +20,7 @@ class TeacherPolicy
      */
     public function view(User $user, Teacher $teacher): bool
     {
-        return $user->is_admin;
+        return $user->role->name === "superadmin" || $user->role->name === "admin";
     }
 
     /**
@@ -29,7 +28,7 @@ class TeacherPolicy
      */
     public function create(User $user): bool
     {
-        return $user->is_admin;
+        return $user->role->name === "superadmin" || $user->role->name === "admin";
     }
 
     /**
@@ -37,7 +36,7 @@ class TeacherPolicy
      */
     public function update(User $user, Teacher $teacher): bool
     {
-        return $user->is_admin;
+        return $user->role->name === "superadmin" || $user->role->name === "admin";
     }
 
     /**
@@ -45,7 +44,7 @@ class TeacherPolicy
      */
     public function delete(User $user, Teacher $teacher): bool
     {
-        return $user->is_admin;
+        return $user->role->name === "superadmin" || $user->role->name === "admin";
     }
 
     /**
@@ -53,7 +52,7 @@ class TeacherPolicy
      */
     public function restore(User $user, Teacher $teacher): bool
     {
-        return $user->is_admin;
+        return $user->role->name === "superadmin" || $user->role->name === "admin";
     }
 
     /**
@@ -61,6 +60,6 @@ class TeacherPolicy
      */
     public function forceDelete(User $user, Teacher $teacher): bool
     {
-        return $user->is_admin;
+        return $user->role->name === "superadmin" || $user->role->name === "admin";
     }
 }

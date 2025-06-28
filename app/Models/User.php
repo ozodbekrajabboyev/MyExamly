@@ -4,12 +4,14 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -25,14 +27,10 @@ class User extends Authenticatable implements FilamentUser
      * @var list<string>
      */
 
-    protected $casts = [
-        'is_admin' => 'boolean',
-    ];
-
     protected $fillable = [
         'name',
         'email',
-        'is_admin',
+        'role_id',
         'password',
     ];
 
@@ -68,6 +66,17 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasOne(Teacher::class);
     }
+
+    public function role(): BelongsTo
+    {
+        return $this->belongsTo(Role::class);
+    }
+
+    public function maktab():BelongsTo
+    {
+        return $this->belongsTo(Maktab::class);
+    }
+
     public static function get_form(): array
     {
         return [
@@ -89,11 +98,14 @@ class User extends Authenticatable implements FilamentUser
                         ->revealable(true)
                         ->password()
                         ->required(),
-                    Toggle::make('is_admin')
-                        ->label("Foydalanuvchining adminlik statusi")
-                        ->onColor('success')
-                        ->offColor('danger')
+                    Select::make('maktab_id')
+                        ->label("Foydalanuvchining maktabi")
+                        ->relationship('maktab', 'name')
                         ->required(),
+                    Select::make('role_id')
+                        ->label("Foydalanuvchining roli")
+                        ->relationship('role', 'name')
+                        ->required()
                 ])
         ];
     }

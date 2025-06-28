@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\ScopesSchool;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Section;
@@ -18,19 +19,25 @@ use Illuminate\Validation\ValidationException;
 class Mark extends Model
 {
     /** @use HasFactory<\Database\Factories\MarkFactory> */
-    use HasFactory;
+    use HasFactory, ScopesSchool;
 
     protected $fillable = [
         'student_id',
         'problem_id',
         'exam_id',
         'sinf_id',
-        'mark',
+        'maktab_id',
+        'mark'
     ];
 
     public function exam():BelongsTo
     {
         return $this->belongsTo(Exam::class);
+    }
+
+    public function maktab(): BelongsTo
+    {
+        return $this->belongsTo(Maktab::class);
     }
 
     public function sinf():BelongsTo
@@ -55,14 +62,32 @@ class Mark extends Model
                 ->description("O'quvchilarning baholarini kiritish uchun quyidagilarni to'ldiring")
                 ->icon('heroicon-o-information-circle')
                 ->schema([
+                    Forms\Components\Hidden::make('maktab_id')
+                        ->default(fn () => auth()->user()->maktab_id)
+                        ->required(),
                     Forms\Components\Select::make('exam_id')
                         ->label('Imtihon tanlang')
-                        ->options(Exam::whereDoesntHave('problems.marks')
-                            ->with(['sinf', 'subject'])
-                            ->get()
-                            ->mapWithKeys(fn ($exam) => [
-                            $exam->id => "{$exam->sinf->name} | {$exam->subject->name} | {$exam->serial_number}-{$exam->type}"
-                        ]))
+                        ->options(function () {
+                            $user = auth()->user();
+
+                            $query = \App\Models\Exam::query()
+                                ->where('maktab_id', $user->maktab_id) // ✅ Filter by school
+                                ->whereDoesntHave('problems.marks')   // ✅ Only exams without marks
+                                ->with(['sinf', 'subject']);
+
+                            // Optional: If teacher should only see their own exams
+                            if ($user->role->name === 'teacher') {
+                                $query->where('teacher_id', $user->teacher->id); // assuming Exam has a teacher_id
+                            }
+
+                            return $query->get()
+                                ->mapWithKeys(function ($exam) {
+                                    $label = "{$exam->sinf->name} | {$exam->subject->name} | {$exam->serial_number}-{$exam->type}";
+
+                                    return [$exam->id => $label];
+                                });
+                        })
+
                         ->live()
                         ->disabled(fn(string $operation): bool => $operation === 'edit')
                         ->required()
@@ -118,8 +143,8 @@ class Mark extends Model
                                         ->hiddenLabel()
                                         ->numeric()
                                         ->minValue(0)
-                                        ->maxValue($problem->max_score)
-                                        ->default(1);
+                                        ->maxValue($problem->max_mark)
+                                        ->default(0);
                                 }
 
                                 $schema[] = Grid::make(count($row))->schema($row);

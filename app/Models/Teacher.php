@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\ScopesSchool;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\Section;
@@ -10,11 +11,12 @@ use Filament\Forms\Components\Select;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Filament\Forms;
 
 class Teacher extends Model
 {
     /** @use HasFactory<\Database\Factories\TeacherFactory> */
-    use HasFactory;
+    use HasFactory, ScopesSchool;
 
     public function exams():HasMany
     {
@@ -30,6 +32,11 @@ class Teacher extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function maktab(): BelongsTo
+    {
+        return $this->belongsTo(Maktab::class);
+    }
+
     public static function getForm(): array
     {
         return [
@@ -39,18 +46,19 @@ class Teacher extends Model
                 ->description("Yangi o'qituvchi qo'shish uchun quyidagilarni to'ldiring")
                 ->icon('heroicon-o-information-circle')
                 ->schema([
+                    Forms\Components\Hidden::make('maktab_id')
+                        ->default(fn () => auth()->user()->maktab_id)
+                        ->required(),
                     TextInput::make('full_name')
                         ->label("O'qituvchining to'liq IFSH")
                         ->helperText("O'qituvchining to'liq Ism, Familiya va Sharifini kiriting.")
                         ->columnSpanFull()
                         ->required(),
-                    Select::make('user_id')
-                        ->label("Foydalanuvchi nomi")
-                        ->helperText("Foydalanuvchi nomini tanlang.")
-                        ->hintIcon("heroicon-o-exclamation-circle")
-                        ->hint("Bitta o'qituvchi bitta foydalanuvchiga bog'lanishi shart")
-                        ->relationship('user', 'name')
-                        ->required(),
+                    TextInput::make('email')
+                        ->label("O'qituvchining emailini kiriting")
+                        ->required()
+                        ->placeholder("example@example.com")
+                        ->columnSpanFull(),
                     Select::make('subjects')
                         ->label("Fanni tanlang")
                         ->helperText("O'qituvchining fan(lar)ini tanlang.")

@@ -15,6 +15,9 @@ use App\Policies\UserPolicy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Filament\Support\Assets\Js;
+use Filament\Support\Facades\FilamentAsset;
+use Illuminate\Support\Facades\Vite;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -37,5 +40,6 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Teacher::class, TeacherPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
         Model::unguard();
+
     }
 }

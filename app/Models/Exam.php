@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\ScopesSchool;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\Section;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -13,15 +14,23 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Filament\Forms\Get;  // $get uchun
 use Filament\Forms\Set;  // $set uchun
 use Illuminate\Database\Eloquent\Builder; // Builder uchun
-use Filament\Forms; // Forms namespace uchun (agar kerak bo'lsa)
+use Filament\Forms;
+use Illuminate\Support\Facades\Auth;
+
+// Forms namespace uchun (agar kerak bo'lsa)
 class Exam extends Model
 {
     /** @use HasFactory<\Database\Factories\ExamFactory> */
-    use HasFactory;
+    use HasFactory, ScopesSchool;
 
     public function sinf():BelongsTo
     {
         return $this->belongsTo(Sinf::class);
+    }
+
+    public function maktab(): BelongsTo
+    {
+        return $this->belongsTo(Maktab::class);
     }
 
     public function marks():HasMany
@@ -48,68 +57,6 @@ class Exam extends Model
         return $this->hasMany(Problem::class);
     }
 
-    public static function getForm1():array
-    {
-        return [
-            Section::make('Yangi imtihon yaratish')
-                ->collapsible()
-                ->columns(2)
-                ->description("Yangi imtihon yaratish uchun quyidagilarni to'ldiring!")
-                ->icon('heroicon-o-information-circle')
-                ->schema([
-                    Select::make('sinf_id')
-                        ->label('Sinfni tanlang')
-                        ->relationship('sinf', 'name')
-                        ->required(),
-                    Select::make('subject_id')
-                        ->label('Fanni tanlang')
-                        ->relationship('subject', 'name')
-                        ->required()
-                        ->live()
-                        ->afterStateUpdated(function ($state, Forms\Set $set) {
-                            $set('teacher_id', null); // Fan o'zgarganda o'qituvchini nolga tenglashtirish
-                        }),
-                    Select::make('teacher_id')
-                        ->label("Fan o'qituvchisini tanlang")
-                        ->options(function (Forms\Get $get) {
-                            $subjectId = $get('subject_id');
-
-                            if (!$subjectId) {
-                                return [];
-                            }
-
-                            return \App\Models\Teacher::whereHas('subjects', function (Builder $query) use ($subjectId) {
-                                $query->where('subjects.id', $subjectId);
-                            })
-                                ->pluck('full_name', 'id');
-                        })
-                        ->searchable()
-                        ->required(),
-//                        ->disabled(fn (Forms\Get $get) => !$get('subject_id')),
-                    Select::make('type')
-                        ->label('Imtihon turini tanlang')
-                        ->options(['BSB', 'CHSB'])
-                        ->required(),
-                    TextInput::make('serial_number')
-                        ->label('Imtihon tartib raqamini kiriting')
-                        ->columnSpanFull()
-                        ->hint("Masalan, 5-BSB, 2-CHSB dagi tartib raqamini kiriting")
-                        ->hintIcon('heroicon-o-information-circle')
-                        ->required()
-                        ->numeric(),
-                    TextInput::make('problems_count')
-                        ->label('Topshiriqlar sonini kiriting')
-                        ->required()
-                        ->numeric(),
-                    Select::make('metod_id')
-                        ->label('Metodbirlashma rahbarini tanlang')
-                        ->relationship('metod', 'full_name')
-                        ->required(),
-                ]),
-
-        ];
-    }
-
     public static function getForm(): array
     {
         return [
@@ -119,18 +66,41 @@ class Exam extends Model
                 ->description("Yangi imtihon yaratish uchun quyidagilarni to'ldiring!")
                 ->icon('heroicon-o-information-circle')
                 ->schema([
+                    Forms\Components\Hidden::make('maktab_id')
+                        ->default(fn () => auth()->user()->maktab_id)
+                        ->required(),
                     Select::make('sinf_id')
                         ->label('Sinfni tanlang')
                         ->relationship('sinf', 'name')
+                        ->options(function () {
+                            return \App\Models\Sinf::where('maktab_id', auth()->user()->maktab_id)
+                                ->pluck('name', 'id');
+                        })
                         ->required(),
+
 
                     Select::make('subject_id')
                         ->label('Fanni tanlang')
-                        ->relationship('subject', 'name')
+                        ->relationship(
+                            name: 'subject',
+                            titleAttribute: 'name',
+                            modifyQueryUsing: function ($query) {
+                                $user = Auth::user();
+
+                                if ($user->role->name === 'teacher') {
+                                    // Adjust this according to your subject-teacher relationship
+                                    return $query->whereHas('teachers', function ($q) use ($user) {
+                                        $q->where('teachers.id', $user->teacher->id);
+                                    });
+                                }
+
+                                return $query;
+                            }
+                        )
                         ->required()
                         ->live()
                         ->afterStateUpdated(function ($state, Set $set) {
-                            $set('teacher_id', null); // Fan o'zgarganda o'qituvchini nolga tenglashtirish
+                            $set('teacher_id', null); // Reset teacher when subject changes
                         }),
 
                     Select::make('teacher_id')
@@ -175,6 +145,10 @@ class Exam extends Model
                     Select::make('metod_id')
                         ->label('Metodbirlashma rahbarini tanlang')
                         ->relationship('metod', 'full_name')
+                        ->options(function () {
+                            return \App\Models\Teacher::where('maktab_id', auth()->user()->maktab_id)
+                                ->pluck('full_name', 'id');
+                        })
                         ->required(),
                 ]),
         ];

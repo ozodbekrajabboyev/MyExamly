@@ -2,21 +2,29 @@
 
 namespace App\Models;
 
+use App\Traits\ScopesSchool;
 use Filament\Forms\Components\Section;
+use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Filament\Forms;
 
 class Student extends Model
 {
     /** @use HasFactory<\Database\Factories\StudentFactory> */
-    use HasFactory;
+    use HasFactory, ScopesSchool;
 
     public function sinf(): BelongsTo
     {
         return $this->belongsTo(Sinf::class);
+    }
+
+    public function maktab(): BelongsTo
+    {
+        return $this->belongsTo(Maktab::class);
     }
 
     public static function getForm():array
@@ -27,6 +35,9 @@ class Student extends Model
                 ->description("Iltimos yangi o'quvchi qo'shish uchun quyidagilarni to'ldiring")
                 ->icon('heroicon-o-information-circle')
                 ->schema([
+                    Forms\Components\Hidden::make('maktab_id')
+                        ->default(fn () => auth()->user()->maktab_id)
+                        ->required(),
                     TextInput::make('full_name')
                         ->label("O'quvchining to'liq IFSH")
                         ->helperText("O'quvchining to'liq Ism, Familiya va Sharifini kiriting.")

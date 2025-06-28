@@ -35,9 +35,9 @@ class MakeUserAdmin extends Command
             return;
         }
 
-        $user->is_admin = true;
+        $user->role_id = 3;
         $user->save();
 
-        $this->info("✅ {$user->name} is now an admin.");
+        $this->info("✅ {$user->name} is now a superadmin.");
     }
 }
