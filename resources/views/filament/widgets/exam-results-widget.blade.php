@@ -1,34 +1,46 @@
-<x-filament-widgets::widget>
-    <x-filament::section>
+<x-filament-widgets::widget xmlns:x-filament="http://www.w3.org/1999/html">
+    {{-- This root div stacks the sections vertically with a gap. --}}
+    <div class="space-y-6">
 
-        <h2 class="text-xl font-semibold text-gray-800 dark:text-gray-100">Maktab Ma’lumotingiz</h2>
+        {{-- Section 1: The redesigned, prominent School Info block. --}}
+        <x-filament::section>
+            {{-- Use the 'header-actions' slot to add a button or link if needed --}}
+            <x-slot name="header-actions">
+                <x-filament::link
+                    href="#"
+                    icon="heroicon-m-book-open"
+                >
+                    Qo'llanma
+                </x-filament::link>
+            </x-slot>
 
+            {{-- This div creates the layout: Icon on the left, text on the right --}}
+            <div class="flex items-center gap-x-6">
+                {{-- Prominent Icon --}}
+                <div class="flex-shrink-0">
+                    <div class="rounded-full bg-blue-100 p-4 dark:bg-blue-500/20">
+                        <x-heroicon-o-academic-cap class="h-8 w-8 text-blue-500 dark:text-blue-400" />
+                    </div>
+                </div>
+                {{-- Text Content --}}
+                <div class="flex-1">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                        {{ auth()->user()->maktab->name }}
+                    </h2>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        Siz tizimga ushbu maktab foydalanuvchisi sifatida kirgansiz. Barcha ma'lumotlar shu maktabga tegishli bo'ladi.
+                    </p>
+                </div>
+            </div>
+        </x-filament::section>
 
-        <div class="mt-2 flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
-            <p>
-                Siz hozirda quyidagi maktab foydalanuvchisi sifatida tizimga kirgansiz:
-            </p>
-        </div>
+        {{-- Section 2: The interactive Exam Report table. --}}
+        <x-filament::section>
+            @push('styles')
+                <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+            @endpush
+            @livewire('dashboard')
+        </x-filament::section>
 
-
-
-        <div class="mt-2 flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 rounded-md text-gray-900 dark:text-gray-100 font-medium">
-            <x-heroicon-o-academic-cap class="w-5 h-5 text-blue-500 dark:text-blue-400" />
-            {{ auth()->user()->maktab->name }}
-        </div>
-
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            Sizga ko‘rsatilayotgan barcha ma’lumotlar — masalan, o‘quvchilar, imtihonlar va hisobotlar — aynan shu maktabga tegishli bo‘ladi.
-        </p>
-    </x-filament::section>
-
-
-    <br>
-    <x-filament::section>
-        @push('styles')
-            <link rel="stylesheet" href="{{ asset('css/app.css') }}">
-        @endpush
-        @livewire('dashboard')
-    </x-filament::section>
-
+    </div>
 </x-filament-widgets::widget>

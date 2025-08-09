@@ -17,7 +17,6 @@ class StatisticsChartWidget extends ChartWidget
      * @var string
      */
     protected static ?string $heading = 'Average Exam Scores by Class';
-    protected static bool $showOnDashboard = false;
 
     /**
      * The polling interval for the chart. Null means no polling.

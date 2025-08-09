@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Filament\Widgets\ChsbBsbWidget;
 use App\Filament\Widgets\StatisticsChartWidget;
 use Filament\Pages\Page;
 
@@ -42,6 +43,7 @@ class Statistics extends Page
      *
      * @return array<class-string<\Filament\Widgets\Widget>|string>
      */
+
     public function getFooterWidgets(): array
     {
         return [

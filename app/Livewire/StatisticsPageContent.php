@@ -72,6 +72,8 @@ class StatisticsPageContent extends Component
         $this->applyFilters();
     }
 
+
+
     /**
      * The render method returns the component's view and passes any
      * necessary data to it, like the lists for the dropdowns.

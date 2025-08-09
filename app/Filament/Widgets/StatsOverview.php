@@ -9,9 +9,8 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 
 class StatsOverview extends BaseWidget
 {
-    protected ?string $heading = 'Analytics';
+    protected int | string | array $columnSpan = 'full';
 
-    protected ?string $description = 'An overview of some analytics.';
     protected function getStats(): array
     {
         $teachers = Teacher::all()->where('maktab_id', auth()->user()->maktab_id)->count();
@@ -20,6 +19,7 @@ class StatsOverview extends BaseWidget
             Stat::make("O'qituvchilar", $teachers)
                 ->icon('heroicon-o-academic-cap'),
             Stat::make("O'quvchilar", $students)
+                ->icon('heroicon-o-user'),
         ];
     }
 }
