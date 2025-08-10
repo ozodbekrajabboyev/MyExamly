@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Widgets\ChsbBsbWidget;
+use App\Filament\Widgets\OnlyCHSBChart;
 use App\Filament\Widgets\StatisticsChartWidget;
 use Filament\Pages\Page;
 
@@ -48,6 +49,7 @@ class Statistics extends Page
     {
         return [
             StatisticsChartWidget::class,
+            OnlyCHSBChart::class
         ];
     }
 

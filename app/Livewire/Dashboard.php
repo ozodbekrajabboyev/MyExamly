@@ -51,6 +51,7 @@ class Dashboard extends Component
         $students = Student::where('sinf_id', $exam->sinf_id)->orderBy('full_name')->get();
         $totalMaxScore = $problems->sum('max_mark');
 
+
         $pdf = Pdf::loadView('pdf.dashboard-table', [
             'exam' => $exam,
             'students' => $this->students,
