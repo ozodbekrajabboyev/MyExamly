@@ -18,6 +18,11 @@ class StatisticsChartWidget extends ChartWidget
      */
     protected static ?string $heading = 'BSB Chart';
 
+    public static function canView(): bool
+    {
+        return request()->routeIs('filament.app.pages.statistics');
+    }
+
     /**
      * The polling interval for the chart. Null means no polling.
      *

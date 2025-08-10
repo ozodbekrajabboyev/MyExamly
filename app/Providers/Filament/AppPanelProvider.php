@@ -56,9 +56,9 @@ class AppPanelProvider extends PanelProvider
             ])
             ->widgets([
                 StatsOverview::class,
-                OnlyCHSBChart::class,
                 ExamResultsWidget::class,
                 StatisticsChartWidget::class,
+                OnlyCHSBChart::class,
             ])
             ->databaseNotifications()
             ->authMiddleware([

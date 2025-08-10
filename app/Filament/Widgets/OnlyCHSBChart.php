@@ -105,6 +105,11 @@ class OnlyCHSBChart extends ChartWidget
         ];
     }
 
+    public static function canView(): bool
+    {
+        return request()->routeIs('filament.app.pages.statistics');
+    }
+
     protected function getType(): string
     {
         return 'bar';
