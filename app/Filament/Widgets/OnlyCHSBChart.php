@@ -7,37 +7,17 @@ use App\Models\Mark;
 use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\DB;
-use Livewire\Attributes\On;
+use Livewire\Attributes\On; // Bu import qo'shildi
 
-class StatisticsChartWidget extends ChartWidget
+class OnlyCHSBChart extends ChartWidget
 {
-    /**
-     * The heading to be displayed on the chart widget.
-     *
-     * @var string
-     */
-    protected static ?string $heading = 'BSB Chart';
+    protected static ?string $heading = 'CHSB Chart'; // Nom o'zgartirildi
 
-    /**
-     * The polling interval for the chart. Null means no polling.
-     *
-     * @var string|null
-     */
-    protected static ?string $pollingInterval = null;
-
-    /**
-     * Properties to store the current filter state.
-     */
     public ?int $sinfId = null;
     public ?int $subjectId = null;
     public ?string $startDate = null;
     public ?string $endDate = null;
 
-    /**
-     * The mount method sets the initial state when the widget loads.
-     * We'll set a default date range to match the filter component.
-     * We also trigger an initial data load.
-     */
     public function mount(): void
     {
         $this->startDate = Carbon::now()->subDays(7)->format('Y-m-d');
@@ -45,16 +25,8 @@ class StatisticsChartWidget extends ChartWidget
     }
 
     /**
-     * This method listens for the 'updateStats' event dispatched by our filter component.
-     * The #[On] attribute is Livewire 3's modern syntax for event listeners.
-     * When the event is received, it updates the widget's public properties.
-     * Livewire will automatically re-render the component, calling getData() again.
-     *
-     * @param int|null $sinfId
-     * @param int|null $subjectId
-     * @param string|null $startDate
-     * @param string|null $endDate
-     * @return void
+     * Bu event listener qo'shildi - eng muhim qism!
+     * Filtr o'zgarganda bu metod chaqiriladi
      */
     #[On('updateStats')]
     public function updateStats(?int $sinfId, ?int $subjectId, ?string $startDate, ?string $endDate): void
@@ -65,12 +37,6 @@ class StatisticsChartWidget extends ChartWidget
         $this->endDate = $endDate;
     }
 
-    /**
-     * This is the core data retrieval method for the chart.
-     * It builds a query based on the current filter properties.
-     *
-     * @return array
-     */
     protected function getData(): array
     {
         if (!$this->sinfId || !$this->subjectId || !$this->startDate || !$this->endDate) {
@@ -83,8 +49,8 @@ class StatisticsChartWidget extends ChartWidget
         $exams = Exam::query()
             ->where('maktab_id', auth()->user()->maktab_id)
             ->where('sinf_id', $this->sinfId)
-            ->where('type', 'BSB')
             ->where('subject_id', $this->subjectId)
+            ->where('type', 'CHSB')
             ->whereBetween('created_at', [
                 Carbon::parse($this->startDate)->startOfDay(),
                 Carbon::parse($this->endDate)->endOfDay()
@@ -120,17 +86,16 @@ class StatisticsChartWidget extends ChartWidget
             if (!$marksForThisExam || $marksForThisExam->isEmpty()) continue;
 
             $averageScore = round($marksForThisExam->avg('total_student_mark'), 1);
-
             $masteryPercentage = round(($averageScore / $totalMaxScore) * 100, 1);
 
             $labels[] = "{$exam->serial_number}-{$exam->type} (" . Carbon::parse($exam->created_at)->format('M d') . ")";
-            $data[] = $masteryPercentage; // Use the new, correct percentage
+            $data[] = $masteryPercentage;
         }
 
         return [
             'datasets' => [
                 [
-                    'label' => "O'zlashtirish foizi (%)", // Updated label to match
+                    'label' => "O'zlashtirish foizi (%)",
                     'data' => $data,
                     'backgroundColor' => 'rgba(59, 130, 246, 0.5)',
                     'borderColor' => 'rgba(59, 130, 246, 1)',
@@ -140,11 +105,6 @@ class StatisticsChartWidget extends ChartWidget
         ];
     }
 
-    /**
-     * Defines the type of chart to be rendered.
-     *
-     * @return string
-     */
     protected function getType(): string
     {
         return 'bar';
