@@ -4,7 +4,6 @@ namespace App\Providers\Filament;
 
 
 use App\Filament\Pages\Statistics;
-use App\Filament\Widgets\ChsbBsbWidget;
 use App\Filament\Widgets\ExamResultsWidget;
 use App\Filament\Widgets\StatisticsChartWidget;
 use App\Filament\Widgets\StatsOverview;
@@ -55,9 +54,8 @@ class AppPanelProvider extends PanelProvider
                 DispatchServingFilamentEvent::class,
             ])
             ->widgets([
-                ExamResultsWidget::class,
                 StatsOverview::class,
-                ChsbBsbWidget::class,
+                ExamResultsWidget::class,
                 StatisticsChartWidget::class,
             ])
             ->databaseNotifications()

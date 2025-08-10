@@ -9,6 +9,15 @@
         th, td { border: 1px solid #000; padding: 4px 6px; text-align: center; }
         th { background-color: #eee; }
         p {font-size: 13px}
+        .label-spacing::after {
+            content: "";
+            display: inline-block;
+            width: 200px; /* Adjust as needed */
+        }
+
+        .director-spacing::after { width: 120px; }
+        .methodist-spacing::after { width: 150px; }
+        .teacher-spacing::after { width: 210px; }
     </style>
 </head>
 <body>
@@ -106,8 +115,9 @@
     </tfoot>
 </table>
 <br><br>
-<h3><strong>Maktab-internatining  O‘IBDO‘:</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;F.F.Raxmonov</h3>
-<h3><strong>Metodbirlashma rahbari:</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{$exam->metod->full_name ?? "Noma'lum"}}</h3>
-<h3><strong>Fan o‘qituvchisi:</strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{{$exam->teacher->full_name ?? "Noma'lum"}}</h3>
+
+<h3><strong class="label-spacing director-spacing">Maktab-internatining O'IBDO':</strong>{{ App\Models\User::where('maktab_id', auth()->user()->maktab_id)->where('role_id', 2)->pluck('name')[0] }}</h3>
+<h3><strong class="label-spacing methodist-spacing">Metodbirlashma rahbari:</strong>{{$exam->metod->full_name ?? "Noma'lum"}}</h3>
+<h3><strong class="label-spacing teacher-spacing">Fan o'qituvchisi:</strong>{{$exam->teacher->full_name ?? "Noma'lum"}}</h3>
 </body>
 </html>
