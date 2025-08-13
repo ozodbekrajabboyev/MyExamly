@@ -9,14 +9,14 @@ use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 
-class StatisticsChartWidget extends ChartWidget
+class StatisticsChartWidgetByBSB extends ChartWidget
 {
     /**
      * The heading to be displayed on the chart widget.
      *
      * @var string
      */
-    protected static ?string $heading = 'BSB Chart';
+    protected static ?string $heading = 'BSB imtihonlar grafiki';
 
     public static function canView(): bool
     {

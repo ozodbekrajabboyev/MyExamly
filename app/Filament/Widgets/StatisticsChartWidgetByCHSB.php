@@ -9,9 +9,9 @@ use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On; // Bu import qo'shildi
 
-class OnlyCHSBChart extends ChartWidget
+class StatisticsChartWidgetByCHSB extends ChartWidget
 {
-    protected static ?string $heading = 'CHSB Chart'; // Nom o'zgartirildi
+    protected static ?string $heading = 'CHSB imtihonlar grafiki'; // Nom o'zgartirildi
 
     public ?int $sinfId = null;
     public ?int $subjectId = null;

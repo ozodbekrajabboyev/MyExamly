@@ -3,8 +3,8 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Widgets\ChsbBsbWidget;
-use App\Filament\Widgets\OnlyCHSBChart;
-use App\Filament\Widgets\StatisticsChartWidget;
+use App\Filament\Widgets\StatisticsChartWidgetByCHSB;
+use App\Filament\Widgets\StatisticsChartWidgetByBSB;
 use Filament\Pages\Page;
 
 class Statistics extends Page
@@ -28,7 +28,7 @@ class Statistics extends Page
      *
      * @var string
      */
-    protected static ?string $title = 'Exam Statistics';
+    protected static ?string $title = 'Baholash Hisoboti';
 
     /**
      * The navigation group for the page.
@@ -36,7 +36,7 @@ class Statistics extends Page
      *
      * @var string|null
      */
-    protected static ?string $navigationGroup = 'Reports';
+    protected static ?string $navigationGroup = 'Hisobotlar';
 
     /**
      * Get the header widgets that should be displayed on the page.
@@ -48,8 +48,8 @@ class Statistics extends Page
     public function getFooterWidgets(): array
     {
         return [
-            StatisticsChartWidget::class,
-            OnlyCHSBChart::class
+            StatisticsChartWidgetByBSB::class,
+            StatisticsChartWidgetByCHSB::class
         ];
     }
 

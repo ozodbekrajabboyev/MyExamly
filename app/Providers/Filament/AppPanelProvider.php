@@ -5,8 +5,8 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Statistics;
 use App\Filament\Widgets\ExamResultsWidget;
-use App\Filament\Widgets\OnlyCHSBChart;
-use App\Filament\Widgets\StatisticsChartWidget;
+use App\Filament\Widgets\StatisticsChartWidgetByCHSB;
+use App\Filament\Widgets\StatisticsChartWidgetByBSB;
 use App\Filament\Widgets\StatsOverview;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -57,8 +57,8 @@ class AppPanelProvider extends PanelProvider
             ->widgets([
                 StatsOverview::class,
                 ExamResultsWidget::class,
-                StatisticsChartWidget::class,
-                OnlyCHSBChart::class,
+                StatisticsChartWidgetByBSB::class,
+                StatisticsChartWidgetByCHSB::class,
             ])
             ->databaseNotifications()
             ->authMiddleware([

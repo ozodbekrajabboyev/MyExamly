@@ -9,7 +9,7 @@
             {{-- Sinf (Class) Dropdown --}}
             <x-filament::input.wrapper>
                 <x-filament::input.select wire:model="sinfId">
-                    <option value="">All Classes</option>
+                    <option>Sinfni tanlang</option>
                     @foreach($sinfs as $id => $name)
                         <option value="{{ $id }}">{{ $name }}</option>
                     @endforeach
@@ -18,8 +18,12 @@
 
             {{-- Subject Dropdown --}}
             <x-filament::input.wrapper>
+                <x-slot name="label">
+                    Fanni tanlang
+                </x-slot>
+
                 <x-filament::input.select wire:model="subjectId">
-                    <option value="">All Subjects</option>
+                    <option>Fanni tanlang</option>
                     @foreach($subjects as $id => $name)
                         <option value="{{ $id }}">{{ $name }}</option>
                     @endforeach
@@ -44,21 +48,21 @@
             {{-- Main "Apply" button --}}
             <div>
                 <x-filament::button wire:click="applyFilters">
-                    Apply Filters
+                    Hisobot qurish
                 </x-filament::button>
             </div>
 
             {{-- Quick filter buttons --}}
             <div class="flex flex-wrap items-center gap-2">
-                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Quick Filters:</span>
+                <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Tezkor Filtrlar:</span>
                 <x-filament::button color="gray" wire:click="filterLast7Days">
-                    Last 7 days
+                    So‘nggi 7 kun
                 </x-filament::button>
                 <x-filament::button color="gray" wire:click="filterLast30Days">
-                    Last 30 days
+                    So‘nggi 30 kun
                 </x-filament::button>
                 <x-filament::button color="gray" wire:click="filterLast3Months">
-                    Last 3 months
+                    So‘nggi 3 oy
                 </x-filament::button>
             </div>
         </div>
