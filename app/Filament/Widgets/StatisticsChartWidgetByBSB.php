@@ -23,6 +23,12 @@ class StatisticsChartWidgetByBSB extends ChartWidget
         return request()->routeIs('filament.app.pages.statistics');
     }
 
+    public static function canView(): bool
+    {
+        return request()->routeIs('filament.app.pages.statistics');
+    }
+
+
     /**
      * The polling interval for the chart. Null means no polling.
      *
@@ -129,7 +135,7 @@ class StatisticsChartWidgetByBSB extends ChartWidget
             $masteryPercentage = round(($averageScore / $totalMaxScore) * 100, 1);
 
             $labels[] = "{$exam->serial_number}-{$exam->type} (" . Carbon::parse($exam->created_at)->format('M d') . ")";
-            $data[] = $masteryPercentage; // Use the new, correct percentage
+            $data[] = $masteryPercentage;
         }
 
         return [
