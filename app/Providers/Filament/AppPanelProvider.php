@@ -4,6 +4,10 @@ namespace App\Providers\Filament;
 
 
 use App\Filament\Pages\Statistics;
+use App\Filament\Widgets\StatisticsByFanBSB;
+use App\Filament\Widgets\StatisticsByFanCHSB;
+use App\Filament\Widgets\StatisticsBySinfBSB;
+use App\Filament\Widgets\StatisticsBySinfCHSB;
 use App\Filament\Widgets\ExamResultsWidget;
 use App\Filament\Widgets\OnlyCHSBChart;
 use App\Filament\Widgets\StatisticsChartWidget;
@@ -56,9 +60,13 @@ class AppPanelProvider extends PanelProvider
             ])
             ->widgets([
                 StatsOverview::class,
-                OnlyCHSBChart::class,
                 ExamResultsWidget::class,
                 StatisticsChartWidget::class,
+                OnlyCHSBChart::class,
+                StatisticsBySinfBSB::class,
+                StatisticsBySinfCHSB::class,
+                StatisticsByFanBSB::class,
+                StatisticsByFanCHSB::class,
             ])
             ->databaseNotifications()
             ->authMiddleware([

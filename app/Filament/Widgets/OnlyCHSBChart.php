@@ -11,7 +11,13 @@ use Livewire\Attributes\On; // Bu import qo'shildi
 
 class OnlyCHSBChart extends ChartWidget
 {
-    protected static ?string $heading = 'CHSB Chart'; // Nom o'zgartirildi
+    protected static ?string $heading = 'CHSB Chart';
+
+
+    public static function canView(): bool
+    {
+        return request()->routeIs('filament.app.pages.statistics');
+    }
 
     public ?int $sinfId = null;
     public ?int $subjectId = null;
