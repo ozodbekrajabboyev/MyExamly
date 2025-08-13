@@ -21,6 +21,7 @@ class MarkResource extends Resource
 {
     protected static ?string $model = Mark::class;
     protected static ?string $navigationLabel = "Baholar";
+    protected static ?string $navigationGroup = "Imtihonlar boshqaruvi";
     protected static ?string $navigationIcon = 'heroicon-o-pencil';
 
     public static function form(Form $form): Form

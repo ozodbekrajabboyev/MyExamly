@@ -22,8 +22,13 @@ class StudentResource extends Resource
     protected static ?string $model = Student::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
+    protected static ?string $navigationGroup = "O‘quv boshqaruvi";
     protected static ?string $navigationLabel = "O'quvchilar";
 
+    public static function getNavigationSort(): ?int
+    {
+        return 3;
+    }
     public static function getNavigationBadge(): ?string
     {
         return static::getModel()::count();

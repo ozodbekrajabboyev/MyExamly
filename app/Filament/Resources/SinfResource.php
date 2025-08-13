@@ -21,7 +21,14 @@ class SinfResource extends Resource
     protected static ?string $model = Sinf::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
+
+    protected static ?string $navigationGroup = "O‘quv boshqaruvi";
     protected static ?string $navigationLabel = "Sinflar";
+
+    public static function getNavigationSort(): ?int
+    {
+        return 3;
+    }
 
     public static function form(Form $form): Form
     {

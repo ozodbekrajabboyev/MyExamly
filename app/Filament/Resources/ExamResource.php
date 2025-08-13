@@ -19,6 +19,7 @@ class ExamResource extends Resource
 
     protected static ?string $navigationLabel = "Imtihonlar";
 
+    protected static ?string $navigationGroup = "Imtihonlar boshqaruvi";
     protected static ?string $navigationIcon = 'heroicon-o-clipboard';
 
     public static function form(Form $form): Form

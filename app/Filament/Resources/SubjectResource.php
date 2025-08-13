@@ -17,9 +17,14 @@ class SubjectResource extends Resource
 {
     protected static ?string $model = Subject::class;
 
+    protected static ?string $navigationGroup = "O‘quv boshqaruvi";
     protected static ?string $navigationIcon = 'heroicon-o-book-open';
     protected static ?string $navigationLabel = "Fanlar";
 
+    public static function getNavigationSort(): ?int
+    {
+        return 3;
+    }
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery();

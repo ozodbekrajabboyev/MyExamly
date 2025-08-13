@@ -97,32 +97,33 @@ class Exam extends Model
                                 return $query;
                             }
                         )
-                        ->required()
-                        ->live()
-                        ->afterStateUpdated(function ($state, Set $set) {
-                            $set('teacher_id', null); // Reset teacher when subject changes
-                        }),
+                        ->required(),
 
-                    Select::make('teacher_id')
-                        ->label("Fan o'qituvchisini tanlang")
-                        ->options(function (Get $get) {
-                            $subjectId = $get('subject_id');
+                    Forms\Components\Hidden::make('teacher_id')
+                        ->default(fn () => auth()->user()->teacher->id)
+                        ->required(),
 
-                            if (!$subjectId) {
-                                return [];
-                            }
-
-                            return \App\Models\Teacher::whereHas('subjects', function (Builder $query) use ($subjectId) {
-                                $query->where('subjects.id', $subjectId);
-                            })
-                                ->pluck('full_name', 'id');
-                        })
-                        ->searchable()
-                        ->required()
-                        ->disabled(fn (Get $get): bool => !$get('subject_id')),
+//                    Select::make('teacher_id')
+//                        ->label("Fan o'qituvchisini tanlang")
+//                        ->options(function (Get $get) {
+//                            $subjectId = $get('subject_id');
+//
+//                            if (!$subjectId) {
+//                                return [];
+//                            }
+//
+//                            return \App\Models\Teacher::whereHas('subjects', function (Builder $query) use ($subjectId) {
+//                                $query->where('subjects.id', $subjectId);
+//                            })
+//                                ->pluck('full_name', 'id');
+//                        })
+//                        ->searchable()
+//                        ->required()
+//                        ->disabled(fn (Get $get): bool => !$get('subject_id')),
 
                     Select::make('type')
                         ->label('Imtihon turini tanlang')
+                        ->columnSpanFull()
                         ->options([
                             'BSB' => 'BSB',
                             'CHSB' => 'CHSB'

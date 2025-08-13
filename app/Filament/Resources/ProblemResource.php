@@ -21,6 +21,7 @@ class ProblemResource extends Resource
     protected static ?string $model = Problem::class;
 
     protected static ?string $navigationLabel = "Topshiriqlar";
+    protected static ?string $navigationGroup = "Imtihonlar boshqaruvi";
     protected static ?string $navigationIcon = 'heroicon-o-puzzle-piece';
 
     public static function form(Form $form): Form

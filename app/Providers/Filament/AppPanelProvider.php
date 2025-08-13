@@ -16,6 +16,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -67,6 +68,12 @@ class AppPanelProvider extends PanelProvider
                 StatisticsBySinfCHSB::class,
                 StatisticsByFanBSB::class,
                 StatisticsByFanCHSB::class,
+            ])
+            ->navigationGroups([
+                NavigationGroup::make('O\'quv boshqaruvi')->icon('heroicon-o-book-open'),
+                NavigationGroup::make('Imtihonlar boshqaruvi'),
+                NavigationGroup::make('Hisobotlar'),
+                NavigationGroup::make('Foydalanuvchilar boshqaruvi')
             ])
             ->databaseNotifications()
             ->authMiddleware([
