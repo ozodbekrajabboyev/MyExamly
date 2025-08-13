@@ -71,7 +71,10 @@ class MarkResource extends Resource
                     ->label('Tahrirlash')
                     ->icon('heroicon-o-pencil')
                     ->url(fn (Exam $record): string => MarkResource::getUrl('edit', ['record' => $record->marks()->first()->id]))
-                    ->visible(fn (Exam $record): bool => $record->marks()->exists()),
+                    ->visible(fn (Exam $record): bool =>
+                        $record->marks()->exists() &&
+                        in_array(auth()->user()->role->name, ['superadmin', 'teacher']) // if you have role relationship
+                    ),
             ]);
     }
 
