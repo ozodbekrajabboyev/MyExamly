@@ -23,10 +23,6 @@ class StatisticsChartWidgetByBSB extends ChartWidget
         return request()->routeIs('filament.app.pages.statistics');
     }
 
-    public static function canView(): bool
-    {
-        return request()->routeIs('filament.app.pages.statistics');
-    }
 
 
     /**

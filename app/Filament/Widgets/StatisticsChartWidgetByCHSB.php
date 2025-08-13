@@ -11,17 +11,14 @@ use Livewire\Attributes\On; // Bu import qo'shildi
 
 class StatisticsChartWidgetByCHSB extends ChartWidget
 {
-<<<<<<< HEAD:app/Filament/Widgets/StatisticsChartWidgetByCHSB.php
-    protected static ?string $heading = 'CHSB imtihonlar grafiki'; // Nom o'zgartirildi
-=======
-    protected static ?string $heading = 'CHSB Chart';
+    protected static ?string $heading = 'CHSB imtihonlar grafiki';
 
 
     public static function canView(): bool
     {
         return request()->routeIs('filament.app.pages.statistics');
     }
->>>>>>> main:app/Filament/Widgets/OnlyCHSBChart.php
+
 
     public ?int $sinfId = null;
     public ?int $subjectId = null;
@@ -34,10 +31,6 @@ class StatisticsChartWidgetByCHSB extends ChartWidget
         $this->endDate = Carbon::now()->format('Y-m-d');
     }
 
-    /**
-     * Bu event listener qo'shildi - eng muhim qism!
-     * Filtr o'zgarganda bu metod chaqiriladi
-     */
     #[On('updateStats')]
     public function updateStats(?int $sinfId, ?int $subjectId, ?string $startDate, ?string $endDate): void
     {
@@ -115,10 +108,6 @@ class StatisticsChartWidgetByCHSB extends ChartWidget
         ];
     }
 
-    public static function canView(): bool
-    {
-        return request()->routeIs('filament.app.pages.statistics');
-    }
 
     protected function getType(): string
     {
