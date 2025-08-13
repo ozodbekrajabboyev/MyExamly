@@ -93,9 +93,13 @@ class ProblemResource extends Resource
             ->searchable()
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()->icon('heroicon-o-trash')->label("O'chirish"),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->icon('heroicon-o-trash')
+                        ->label("O'chirish")
+                        ->visible(fn () => auth()->user()->role_id != 2), // faqat roli 2 bo‘lmaganlarga
                 ])->label("Ko'proq"),
             ]);
+
     }
 
     public static function getRelations(): array
