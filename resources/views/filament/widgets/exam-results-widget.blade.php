@@ -19,7 +19,7 @@
                 {{-- Prominent Icon --}}
                 <div class="flex-shrink-0">
                     <div class="rounded-full bg-blue-100 p-4 dark:bg-blue-500/20">
-                        <x-heroicon-o-academic-cap class="h-8 w-8 text-blue-500 dark:text-blue-400" />
+                        <img src="{{ asset('logo.svg') }}" alt="{{ auth()->user()->maktab->name }} Logo" class="h-11 w-11" />
                     </div>
                 </div>
                 {{-- Text Content --}}
@@ -39,7 +39,7 @@
             @push('styles')
                 <link rel="stylesheet" href="{{ asset('css/app.css') }}">
             @endpush
-            @livewire('dashboard')
+            @livewire('dashboard') @livewire('database-notifications')
         </x-filament::section>
 
     </div>

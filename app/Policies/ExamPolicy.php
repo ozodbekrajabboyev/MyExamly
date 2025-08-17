@@ -37,7 +37,7 @@ class ExamPolicy
      */
     public function update(User $user, Exam $exam): bool
     {
-        return $user->role->name === "superadmin" || $user->role->name === "teacher";
+        return true;
     }
 
     /**

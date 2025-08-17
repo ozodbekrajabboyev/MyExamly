@@ -4,38 +4,82 @@
     <meta charset="UTF-8">
     <title>Imtihon Natijalari</title>
     <style>
-        body { font-family: DejaVu Sans, sans-serif; font-size: 12px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #000; padding: 4px 6px; text-align: center; }
-        th { background-color: #eee; }
-        p {font-size: 13px}
-        .label-spacing::after {
-            content: "";
-            display: inline-block;
-            width: 200px; /* Adjust as needed */
+        @page {
+            size: A4 landscape;
+            margin: 6mm;
+        }
+        body {
+            font-family: DejaVu Sans, sans-serif;
+            font-size: 6px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+            margin-top: 10px;
+        }
+        th, td {
+            border: 1px solid #000;
+            padding: 1px;
+            text-align: center;
+            font-size: 7px;
+            word-break: break-word;
+        }
+        th {
+            background-color: #eee;
         }
 
-        .director-spacing::after { width: 120px; }
-        .methodist-spacing::after { width: 150px; }
-        .teacher-spacing::after { width: 210px; }
+        /* Column widths */
+        th:first-child, td:first-child {
+            width: 15px; /* № column */
+        }
+        th:last-child, td:last-child {
+            width: 25px; /* Foiz (%) column */
+        }
+
+        h2 {
+            font-size: 8px;
+            margin-bottom: 2px;
+        }
+        p {
+            font-size: 6px;
+            margin: 1px 0;
+        }
+
+        .signatures {
+            margin-top: 10px;
+            font-size: 10px;
+        }
+        .signatures h3 {
+            margin: 4px 0;
+            font-size: 10px;
+        }
+        .signatures img {
+            width: 60px;
+            height: auto;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
-<h2>Imtihon natijalari</h2>
-<p><strong>Sinf:</strong> {{ $exam->sinf->name ?? 'Nomaʼlum' }}</p>
-<p><strong>Fan:</strong> {{ $exam->subject->name ?? 'Nomaʼlum' }}</p>
-<p><strong>Imtihon:</strong> {{ $exam->serial_number }} - {{ $exam->type }}</p>
+<h1>Imtihon natijalari</h1>
+<p style="font-size: 10px">
+    <strong>Sinf:</strong> {{ $exam->sinf->name ?? 'Nomaʼlum' }} &nbsp;&nbsp;&nbsp;
+    <strong>Fan:</strong> {{ $exam->subject->name ?? 'Nomaʼlum' }} &nbsp;&nbsp;&nbsp;
+    <strong>Imtihon:</strong> {{ $exam->serial_number }} - {{ $exam->type }}
+</p>
 
 <table>
     <thead>
-    <tr>
+    <tr style="margin: 30px">
         <th>№</th>
-        <th style="text-align: left;">F.I.Sh.</th>
+        <th style="width:25px">F.I.Sh.</th>
         @foreach($problems as $problem)
-            <th>{{ $problem->problem_number }}-topshiriq<br><small>({{ $problem->max_mark }})</small></th>
+            <th style="width: 5px">{{ $problem->problem_number }}<br><small>({{ $problem->max_mark }})</small></th>
         @endforeach
-        <th>Jami<br><small>({{ $totalMaxScore }})</small></th>
-        <th>Foiz (%)</th>
+        <th style="width:25px;">Jami<br><small>({{ $totalMaxScore }})</small></th>
+        <th style="width:25px;">Foiz (%)</th>
     </tr>
     </thead>
     <tbody>
@@ -44,31 +88,24 @@
         $problemCounts = [];
         $totalScores = [];
     @endphp
-
     @foreach($students as $index => $student)
         @php $overall = 0; @endphp
         <tr>
             <td>{{ $index + 1 }}</td>
-            <td style="text-align: left;">{{ $student->full_name }}</td>
-
+            <td style="width: 30px">{{ $student->full_name }}</td>
             @foreach($problems as $problem)
                 @php
                     $mark = $marks->first(function ($m) use ($student, $problem) {
                         return $m->student_id == $student->id && $m->problem_id == $problem->id;
                     });
                     $score = $mark->mark ?? 0;
-
                     $overall += $score;
-
                     $problemTotals[$problem->id] = ($problemTotals[$problem->id] ?? 0) + $score;
                     $problemCounts[$problem->id] = ($problemCounts[$problem->id] ?? 0) + 1;
                 @endphp
                 <td>{{ $score }}</td>
             @endforeach
-
-
             <td><strong>{{ $overall }}</strong></td>
-
             @php
                 $percentage = $totalMaxScore > 0 ? round(($overall / $totalMaxScore) * 100, 1) : 0;
                 $totalScores[] = $overall;
@@ -77,7 +114,6 @@
         </tr>
     @endforeach
     </tbody>
-
     <tfoot>
     <tr>
         <td colspan="2"><strong>O'rtacha ball</strong></td>
@@ -89,12 +125,10 @@
             @endphp
             <td>{{ $avg }}</td>
         @endforeach
-
         @php
             $avgTotal = count($totalScores) > 0 ? round(array_sum($totalScores) / count($totalScores), 1) : 0;
             $avgPercentage = $totalMaxScore > 0 ? round(($avgTotal / $totalMaxScore) * 100, 1) : 0;
         @endphp
-
         <td rowspan="2"><strong>{{ $avgTotal }}</strong></td>
         <td rowspan="2"><strong>{{ $avgPercentage }}%</strong></td>
     </tr>
@@ -114,10 +148,21 @@
     </tr>
     </tfoot>
 </table>
-<br><br>
 
-<h3><strong class="label-spacing director-spacing">Maktab-internatining O'IBDO':</strong>{{ App\Models\User::where('maktab_id', auth()->user()->maktab_id)->where('role_id', 2)->pluck('name')[0] }}</h3>
-<h3><strong class="label-spacing methodist-spacing">Metodbirlashma rahbari:</strong>{{$exam->metod->full_name ?? "Noma'lum"}}</h3>
-<h3><strong class="label-spacing teacher-spacing">Fan o'qituvchisi:</strong>{{$exam->teacher->full_name ?? "Noma'lum"}}</h3>
+<div class="signatures">
+    <h3><strong>Maktab-internatining O'IBDO':</strong>
+        <img src="{{ public_path('signature.png') }}">
+        {{ App\Models\User::where('maktab_id', auth()->user()->maktab_id)->where('role_id', 2)->pluck('name')[0] }}
+    </h3>
+    <h3><strong>Metodbirlashma rahbari:</strong>
+        <img src="{{ public_path('signature.png') }}">
+        {{$exam->metod->full_name ?? "Noma'lum"}}
+    </h3>
+    <h3><strong>Fan o'qituvchisi:</strong>
+        <img src="{{ public_path('signature.png') }}">
+        {{$exam->teacher->full_name ?? "Noma'lum"}}
+    </h3>
+</div>
+
 </body>
 </html>

@@ -4,7 +4,9 @@ namespace App\Models;
 
 use App\Traits\ScopesSchool;
 use Filament\Forms\Components\Fieldset;
+use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Section;
+use Filament\Forms\Components\ToggleButtons;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\Select;
@@ -66,6 +68,7 @@ class Exam extends Model
                 ->description("Yangi imtihon yaratish uchun quyidagilarni to'ldiring!")
                 ->icon('heroicon-o-information-circle')
                 ->schema([
+
                     Forms\Components\Hidden::make('maktab_id')
                         ->default(fn () => auth()->user()->maktab_id)
                         ->required(),
@@ -151,6 +154,25 @@ class Exam extends Model
                                 ->pluck('full_name', 'id');
                         })
                         ->required(),
+                    ToggleButtons::make('status')
+                        ->label('Imtihon Holati')
+                        ->options([
+                            'pending' => 'Pending',
+                            'approved' => 'Approved',
+                            'rejected' => 'Rejected',
+                        ])
+                        ->inline()
+                        ->colors([
+                            'pending' => 'warning',
+                            'approved' => 'success',
+                            'rejected' => 'danger',
+                        ])
+                        ->icons([
+                            'pending' => 'heroicon-m-clock',
+                            'approved' => 'heroicon-m-check-circle',
+                            'rejected' => 'heroicon-m-x-circle',
+                        ])
+                        ->visible(fn () => Auth::user()?->role?->name === 'admin'),
                 ]),
         ];
     }

@@ -16,6 +16,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class MarkResource extends Resource
 {
@@ -62,6 +63,15 @@ class MarkResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('sinf.name')
                     ->label('Sinf')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'pending' => 'warning',
+                        'approved' => 'success',
+                        'rejected' => 'danger',
+                    })
                     ->sortable(),
             ])
             ->filters([
