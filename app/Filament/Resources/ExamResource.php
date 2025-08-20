@@ -19,6 +19,19 @@ class ExamResource extends Resource
 
     protected static ?string $navigationLabel = "Imtihonlar";
 
+    public static function getModelLabel(): string
+    {
+        return "Imtihon";
+    }
+
+    /**
+     * @return string|null
+     */
+    public static function getPluralModelLabel(): string
+    {
+        return "Imtihonlar";
+    }
+
     protected static ?string $navigationGroup = "Imtihonlar boshqaruvi";
     protected static ?string $navigationIcon = 'heroicon-o-clipboard';
 

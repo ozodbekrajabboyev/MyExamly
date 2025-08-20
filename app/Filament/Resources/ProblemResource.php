@@ -20,6 +20,18 @@ class ProblemResource extends Resource
 {
     protected static ?string $model = Problem::class;
 
+    public static function getModelLabel(): string
+    {
+        return "Topshiriq";
+    }
+
+    /**
+     * @return string|null
+     */
+    public static function getPluralModelLabel(): string
+    {
+        return "Topshiriqlar";
+    }
     protected static ?string $navigationLabel = "Topshiriqlar";
     protected static ?string $navigationGroup = "Imtihonlar boshqaruvi";
     protected static ?string $navigationIcon = 'heroicon-o-puzzle-piece';

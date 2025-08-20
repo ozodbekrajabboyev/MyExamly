@@ -22,6 +22,18 @@ class MarkResource extends Resource
 {
     protected static ?string $model = Mark::class;
     protected static ?string $navigationLabel = "Baholar";
+    public static function getModelLabel(): string
+    {
+        return "Baho";
+    }
+
+    /**
+     * @return string|null
+     */
+    public static function getPluralModelLabel(): string
+    {
+        return "Baholar";
+    }
     protected static ?string $navigationGroup = "Imtihonlar boshqaruvi";
     protected static ?string $navigationIcon = 'heroicon-o-pencil';
 
@@ -67,6 +79,11 @@ class MarkResource extends Resource
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                        'pending' => 'Jarayonda',
+                        'approved' => 'Tasdiqlangan',
+                        'rejected' => 'Rad etilgan',
+                    })
                     ->color(fn (string $state): string => match ($state) {
                         'pending' => 'warning',
                         'approved' => 'success',

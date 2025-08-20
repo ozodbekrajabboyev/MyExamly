@@ -16,7 +16,18 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class SubjectResource extends Resource
 {
     protected static ?string $model = Subject::class;
+    public static function getModelLabel(): string
+    {
+        return "Fan";
+    }
 
+    /**
+     * @return string|null
+     */
+    public static function getPluralModelLabel(): string
+    {
+        return "Fanlar";
+    }
     protected static ?string $navigationGroup = "O‘quv boshqaruvi";
     protected static ?string $navigationIcon = 'heroicon-o-book-open';
     protected static ?string $navigationLabel = "Fanlar";

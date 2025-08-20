@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 
+use App\Filament\Pages\CustomProfile;
 use App\Filament\Pages\Statistics;
 use App\Filament\Widgets\StatisticsByFanBSB;
 use App\Filament\Widgets\StatisticsByFanCHSB;
@@ -37,12 +38,19 @@ class AppPanelProvider extends PanelProvider
             ->brandName('MyExamly')
 //            ->default()
             ->id('app')
+            ->profile(isSimple: false)
+            ->loginRouteSlug('login')
+            ->registrationRouteSlug('register')
+            ->passwordResetRoutePrefix('password-reset')
+            ->passwordResetRequestRouteSlug('request')
+            ->passwordResetRouteSlug('reset')
+            ->emailVerificationRoutePrefix('email-verification')
+            ->emailVerificationPromptRouteSlug('prompt')
+            ->emailVerificationRouteSlug('verify')
             ->path('/')
             ->login()
-            ->unsavedChangesAlerts()
             ->colors([
-                'primary' => Color::Blue,
-                'gray' => Color::Gray,
+                'primary' => Color::Sky,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')

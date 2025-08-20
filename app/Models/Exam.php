@@ -157,9 +157,9 @@ class Exam extends Model
                     ToggleButtons::make('status')
                         ->label('Imtihon Holati')
                         ->options([
-                            'pending' => 'Pending',
-                            'approved' => 'Approved',
-                            'rejected' => 'Rejected',
+                            'pending' => 'Jarayonda',
+                            'approved' => 'Tasdiqlangan',
+                            'rejected' => 'Rad etilgan',
                         ])
                         ->inline()
                         ->colors([

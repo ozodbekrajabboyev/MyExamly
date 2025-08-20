@@ -22,6 +22,18 @@ class SinfResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
 
+    public static function getModelLabel(): string
+    {
+        return "Sinf";
+    }
+
+    /**
+     * @return string|null
+     */
+    public static function getPluralModelLabel(): string
+    {
+        return "Sinflar";
+    }
     protected static ?string $navigationGroup = "O‘quv boshqaruvi";
     protected static ?string $navigationLabel = "Sinflar";
 

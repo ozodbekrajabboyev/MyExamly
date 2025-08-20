@@ -19,6 +19,18 @@ class MaktabResource extends Resource
 
     protected static ?string $navigationLabel = "Maktablar";
     protected static ?string $navigationGroup = 'Foydalanuvchilar boshqaruvi';
+    public static function getModelLabel(): string
+    {
+        return "Maktab";
+    }
+
+    /**
+     * @return string|null
+     */
+    public static function getPluralModelLabel(): string
+    {
+        return "Maktablar";
+    }
 
     protected static ?string $navigationIcon = 'heroicon-o-building-library';
 

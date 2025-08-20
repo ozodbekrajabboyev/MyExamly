@@ -18,6 +18,18 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
+    public static function getModelLabel(): string
+    {
+        return "Foydalanuvchi";
+    }
+
+    /**
+     * @return string|null
+     */
+    public static function getPluralModelLabel(): string
+    {
+        return "Foydalanuvchilar";
+    }
     protected static ?string $navigationIcon = 'heroicon-o-users';
     protected static ?string $navigationLabel = "Foydalanuvchilar";
 

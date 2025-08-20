@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Filament\Forms;
+use Illuminate\Support\Facades\Storage;
 
 class Teacher extends Model
 {
@@ -35,6 +36,38 @@ class Teacher extends Model
     public function maktab(): BelongsTo
     {
         return $this->belongsTo(Maktab::class);
+    }
+    public function getPassportPhotoUrlAttribute(): ?string
+    {
+        return $this->passport_photo_path ? Storage::disk('public')->url($this->passport_photo_path) : null;
+    }
+
+    public function getDiplomUrlAttribute(): ?string
+    {
+        return $this->diplom_path ? Storage::disk('public')->url($this->diplom_path) : null;
+    }
+
+    public function getMalakaToifaUrlAttribute(): ?string
+    {
+        return $this->malaka_toifa_path ? Storage::disk('public')->url($this->malaka_toifa_path) : null;
+    }
+
+    public function getMilliySertifikatUrlAttribute(): ?string
+    {
+        return $this->milliy_sertifikat_path ? Storage::disk('public')->url($this->milliy_sertifikat_path) : null;
+    }
+
+    public function getXalqaroSertifikatUrlAttribute(): ?string
+    {
+        return $this->xalqaro_sertifikat_path ? Storage::disk('public')->url($this->xalqaro_sertifikat_path) : null;
+    }
+
+    public function getMalumotnomaUrlAttribute(): ?string
+    {
+        if (!$this->malumotnoma_path) {
+            return null;
+        }
+        return Storage::disk('public')->url($this->malumotnoma_path);
     }
 
     public static function getForm(): array
