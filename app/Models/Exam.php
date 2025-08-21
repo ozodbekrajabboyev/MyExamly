@@ -25,6 +25,11 @@ class Exam extends Model
     /** @use HasFactory<\Database\Factories\ExamFactory> */
     use HasFactory, ScopesSchool;
 
+    protected $casts = [
+        'problems' => 'array', // Cast JSONB to array
+    ];
+
+
     public function sinf():BelongsTo
     {
         return $this->belongsTo(Sinf::class);
@@ -54,10 +59,45 @@ class Exam extends Model
     {
         return $this->belongsTo(Teacher::class, 'metod_id');
     }
-    public function problems(): HasMany
+
+    public function addProblem($id, $maxMark)
     {
-        return $this->hasMany(Problem::class);
+        $problems = $this->problems ?? [];
+        $problems[] = [
+            'id' => $id,
+            'max_mark' => $maxMark
+        ];
+        $this->problems = $problems;
+        $this->save();
     }
+
+    // Method to get a specific problem by its ID
+    public function getProblem($problemId)
+    {
+        $problems = $this->problems ?? [];
+        return collect($problems)->firstWhere('id', $problemId);
+    }
+
+    // Method to get all problems
+    public function getProblems()
+    {
+        return $this->problems ?? [];
+    }
+
+    // Method to update a problem
+    public function updateProblem($problemId, $maxMark)
+    {
+        $problems = $this->problems ?? [];
+        foreach ($problems as &$problem) {
+            if ($problem['id'] == $problemId) {
+                $problem['max_mark'] = $maxMark;
+                break;
+            }
+        }
+        $this->problems = $problems;
+        $this->save();
+    }
+
 
     public static function getForm(): array
     {
@@ -106,24 +146,6 @@ class Exam extends Model
                         ->default(fn () => auth()->user()->teacher->id)
                         ->required(),
 
-//                    Select::make('teacher_id')
-//                        ->label("Fan o'qituvchisini tanlang")
-//                        ->options(function (Get $get) {
-//                            $subjectId = $get('subject_id');
-//
-//                            if (!$subjectId) {
-//                                return [];
-//                            }
-//
-//                            return \App\Models\Teacher::whereHas('subjects', function (Builder $query) use ($subjectId) {
-//                                $query->where('subjects.id', $subjectId);
-//                            })
-//                                ->pluck('full_name', 'id');
-//                        })
-//                        ->searchable()
-//                        ->required()
-//                        ->disabled(fn (Get $get): bool => !$get('subject_id')),
-
                     Select::make('type')
                         ->label('Imtihon turini tanlang')
                         ->columnSpanFull()
@@ -138,11 +160,6 @@ class Exam extends Model
                         ->columnSpanFull()
                         ->hint("Masalan, 5-BSB, 2-CHSB dagi tartib raqamini kiriting")
                         ->hintIcon('heroicon-o-information-circle')
-                        ->required()
-                        ->numeric(),
-
-                    TextInput::make('problems_count')
-                        ->label('Topshiriqlar sonini kiriting')
                         ->required()
                         ->numeric(),
 

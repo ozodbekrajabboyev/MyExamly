@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\Maktab;
 use App\Models\Role;
+use App\Models\User;
 use Illuminate\Console\Command;
 
 class InsertSchool extends Command
@@ -39,7 +40,17 @@ class InsertSchool extends Command
         $school = Maktab::firstOrCreate([
             'name' => 'MyExamly Platform'
         ]);
-
         $this->info("School '" . $school->name . "' " . ($school->wasRecentlyCreated ? "created." : "already exists."));
+
+        $user = User::firstOrCreate([
+            'name' => 'Admin',
+            'email' => 'admin@example.com',
+            'maktab_id' => 1,
+            'role_id' => 3,
+            'password' => bcrypt('password'),
+        ]);
+
+        $this->info("✅ {$user->name} is now a superadmin successfully!");
+
     }
 }

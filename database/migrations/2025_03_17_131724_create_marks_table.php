@@ -22,7 +22,7 @@ return new class extends Migration
             $table->foreignIdFor(Exam::class);
             $table->foreignIdFor(Sinf::class);
             $table->foreignIdFor(Student::class);
-            $table->foreignIdFor(Problem::class);
+            $table->tinyInteger('problem_id');
             $table->integer('mark');
             $table->timestamps();
         });

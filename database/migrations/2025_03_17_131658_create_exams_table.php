@@ -23,8 +23,9 @@ return new class extends Migration
             $table->foreignIdFor(Teacher::class)->constrained()->cascadeOnDelete();
             $table->text('type');
             $table->integer('serial_number');
-            $table->integer('problems_count');
             $table->foreignId('metod_id')->constrained('teachers')->cascadeOnDelete();
+            $table->jsonb('problems')->nullable();
+            $table->string('status')->default('pending');
             $table->timestamps();
         });
     }

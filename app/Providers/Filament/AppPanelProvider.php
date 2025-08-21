@@ -2,9 +2,6 @@
 
 namespace App\Providers\Filament;
 
-
-use App\Filament\Pages\CustomProfile;
-use App\Filament\Pages\Statistics;
 use App\Filament\Widgets\StatisticsByFanBSB;
 use App\Filament\Widgets\StatisticsByFanCHSB;
 use App\Filament\Widgets\StatisticsBySinfBSB;
@@ -18,11 +15,9 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\NavigationGroup;
-use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
-use Filament\Widgets;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
