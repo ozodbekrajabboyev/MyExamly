@@ -18,6 +18,7 @@ use Filament\Forms\Set;  // $set uchun
 use Illuminate\Database\Eloquent\Builder; // Builder uchun
 use Filament\Forms;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 // Forms namespace uchun (agar kerak bo'lsa)
 class Exam extends Model
@@ -98,6 +99,10 @@ class Exam extends Model
         $this->save();
     }
 
+    public function getProblemsCountAttribute()
+    {
+        return count($this->problems ?? []);
+    }
 
     public static function getForm(): array
     {
@@ -108,7 +113,6 @@ class Exam extends Model
                 ->description("Yangi imtihon yaratish uchun quyidagilarni to'ldiring!")
                 ->icon('heroicon-o-information-circle')
                 ->schema([
-
                     Forms\Components\Hidden::make('maktab_id')
                         ->default(fn () => auth()->user()->maktab_id)
                         ->required(),
@@ -120,8 +124,6 @@ class Exam extends Model
                                 ->pluck('name', 'id');
                         })
                         ->required(),
-
-
                     Select::make('subject_id')
                         ->label('Fanni tanlang')
                         ->relationship(
@@ -170,7 +172,50 @@ class Exam extends Model
                             return \App\Models\Teacher::where('maktab_id', auth()->user()->maktab_id)
                                 ->pluck('full_name', 'id');
                         })
+                        ->columnSpanFull()
                         ->required(),
+
+                    \Filament\Forms\Components\Repeater::make('problems')
+                        ->label('Topshiriqlar')
+                        ->schema([
+                            TextInput::make('id')
+                                ->label('Topshiriq T/R')
+                                ->disabled()
+                                ->dehydrated(true),
+                            TextInput::make('max_mark')
+                                ->numeric()
+                                ->required()
+                                ->label('Maksimal ball'),
+                        ])
+                        ->columns(2)
+                        ->default([])
+                        ->columnSpanFull()
+                        ->addAction(
+                            fn (\Filament\Forms\Components\Actions\Action $action) => $action
+                                ->action(function (array $data, \Filament\Forms\Components\Repeater $component, Get $get, Set $set) {
+                                    $currentProblems = $get('problems') ?? [];
+                                    // Calculate next ID
+                                    if (empty($currentProblems)) {
+                                        $nextId = 1;
+                                    } else {
+                                        $maxId = collect($currentProblems)
+                                            ->filter(fn($problem) => isset($problem['id']) && is_numeric($problem['id']))
+                                            ->max('id') ?? 0;
+                                        $nextId = $maxId + 1;
+                                    }
+                                    $newProblem = [
+                                        'id' => $nextId,
+                                        'max_mark' => null,
+                                    ];
+                                    $currentProblems[] = $newProblem;
+                                    $set('problems', $currentProblems);
+                                })
+                                ->label('Topshiriq qo\'shish')
+                        ),
+//                        ->reorderableWithButtons()
+//                        ->collapsible()
+//                        ->itemLabel(fn (array $state): ?string => 'Topshiriq ' . ($state['id'] ?? '?') . ' - ' . ($state['max_mark'] ?? '0') . ' ball'),
+
                     ToggleButtons::make('status')
                         ->label('Imtihon Holati')
                         ->options([

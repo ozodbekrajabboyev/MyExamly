@@ -76,8 +76,12 @@
         <th>№</th>
         <th style="width:25px">F.I.Sh.</th>
         @foreach($problems as $problem)
-            <th style="width: 5px">{{ $problem->problem_number }}<br><small>({{ $problem->max_mark }})</small></th>
+            <th style="width: 5px">
+                {{ $problem['id'] ?? '' }}<br>
+                <small>({{ $problem['max_mark'] ?? '' }})</small>
+            </th>
         @endforeach
+
         <th style="width:25px;">Jami<br><small>({{ $totalMaxScore }})</small></th>
         <th style="width:25px;">Foiz (%)</th>
     </tr>
@@ -96,15 +100,16 @@
             @foreach($problems as $problem)
                 @php
                     $mark = $marks->first(function ($m) use ($student, $problem) {
-                        return $m->student_id == $student->id && $m->problem_id == $problem->id;
+                        return $m->student_id == $student->id && $m->problem_id == $problem['id'];
                     });
                     $score = $mark->mark ?? 0;
                     $overall += $score;
-                    $problemTotals[$problem->id] = ($problemTotals[$problem->id] ?? 0) + $score;
-                    $problemCounts[$problem->id] = ($problemCounts[$problem->id] ?? 0) + 1;
+                    $problemTotals[$problem['id']] = ($problemTotals[$problem['id']] ?? 0) + $score;
+                    $problemCounts[$problem['id']] = ($problemCounts[$problem['id']] ?? 0) + 1;
                 @endphp
                 <td>{{ $score }}</td>
             @endforeach
+
             <td><strong>{{ $overall }}</strong></td>
             @php
                 $percentage = $totalMaxScore > 0 ? round(($overall / $totalMaxScore) * 100, 1) : 0;
@@ -119,8 +124,8 @@
         <td colspan="2"><strong>O'rtacha ball</strong></td>
         @foreach ($problems as $problem)
             @php
-                $avg = isset($problemTotals[$problem->id]) && $problemCounts[$problem->id] > 0
-                    ? round($problemTotals[$problem->id] / $problemCounts[$problem->id], 1)
+                $avg = isset($problemTotals[$problem['id']]) && $problemCounts[$problem['id']] > 0
+                    ? round($problemTotals[$problem['id']] / $problemCounts[$problem['id']], 1)
                     : 0;
             @endphp
             <td>{{ $avg }}</td>
@@ -136,11 +141,11 @@
         <td colspan="2"><strong>O'zlashtirish foizi (%)</strong></td>
         @foreach ($problems as $problem)
             @php
-                $avg = isset($problemTotals[$problem->id]) && $problemCounts[$problem->id] > 0
-                    ? round($problemTotals[$problem->id] / $problemCounts[$problem->id], 1)
+                $avg = isset($problemTotals[$problem['id']]) && $problemCounts[$problem['id']] > 0
+                    ? round($problemTotals[$problem['id']] / $problemCounts[$problem['id']], 1)
                     : 0;
-                $mastery = $problem->max_mark > 0
-                    ? round(($avg / $problem->max_mark) * 100, 1)
+                $mastery = $problem['max_mark'] > 0
+                    ? round(($avg / $problem['max_mark']) * 100, 1)
                     : 0;
             @endphp
             <td>{{ $mastery }}%</td>
