@@ -35,10 +35,9 @@
                                    rounded-md shadow-sm transition-colors
                                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
                                    dark:focus:ring-offset-gray-900"
-                                                >
-                                                    Hisobot qurish
+                        >
+                            Hisobot qurish
                         </button>
-
                     </div>
                 </div>
             </div>
@@ -56,55 +55,52 @@
             <button
                 type="button"
                 @click="
-    isDisabled = true;
-    loading = true;
-    $wire.downloadPdf();
-    setTimeout(() => {
-      isDisabled = false;
-      loading = false;
-    }, 10000);
-  "
+                    isDisabled = true;
+                    loading = true;
+                    $wire.downloadPdf();
+                    setTimeout(() => {
+                      isDisabled = false;
+                      loading = false;
+                    }, 10000);
+                "
                 :disabled="isDisabled"
                 class="px-4 py-2 w-44 flex justify-center items-center
-         bg-white text-gray-800 hover:bg-gray-100
-         dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700
-         border border-gray-300 dark:border-gray-600
-         text-sm font-medium rounded-md shadow-sm transition-colors
-         focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
-         dark:focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                       bg-white text-gray-800 hover:bg-gray-100
+                       dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700
+                       border border-gray-300 dark:border-gray-600
+                       text-sm font-medium rounded-md shadow-sm transition-colors
+                       focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+                       dark:focus:ring-offset-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 <!-- Loader Spinner (visible only when loading) -->
                 <template x-if="loading">
-                  <span class="flex items-center gap-2">
-                    <x-filament::loading-indicator class="h-5 w-5 text-sm text-gray-700 dark:text-gray-300" />
-                    <span class="text-sm text-gray-700 dark:text-gray-400">Loading...</span>
-                  </span>
+                    <span class="flex items-center gap-2">
+                        <x-filament::loading-indicator class="h-5 w-5 text-sm text-gray-700 dark:text-gray-300" />
+                        <span class="text-sm text-gray-700 dark:text-gray-400">Loading...</span>
+                    </span>
                 </template>
-
 
                 <!-- Button Text & Icon (visible only when NOT loading) -->
                 <template x-if="!loading">
                     <span class="flex items-center gap-2">
-                      <svg
-                          class="w-5 h-5"
-                          xmlns="http://www.w3.org/2000/svg"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke-width="2"
-                          stroke="currentColor"
-                      >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
-                        />
-                      </svg>
-                      Yuklab olish
+                        <svg
+                            class="w-5 h-5"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="2"
+                            stroke="currentColor"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+                            />
+                        </svg>
+                        Yuklab olish
                     </span>
                 </template>
             </button>
-
-
         </div>
 
         <div class="mt-6 overflow-x-auto">
@@ -113,10 +109,10 @@
                 <tr>
                     <th rowspan="2" class="border border-gray-300 dark:border-gray-600 py-2 px-3 text-sm font-bold text-center text-gray-800 dark:text-gray-200">№</th>
                     <th rowspan="2" class="border border-gray-300 dark:border-gray-600 py-2 px-3 text-sm font-bold text-left text-gray-800 dark:text-gray-200">F.I.Sh.</th>
-                    @foreach($problems as $problem)
+                    @foreach($problems as $index => $problem)
                         <th class="border border-gray-300 dark:border-gray-600 py-2 px-3 text-sm font-bold text-center text-gray-800 dark:text-gray-200">
-                            {{ $problem->problem_number }}-topshiriq<br>
-                            <span class="text-xs font-normal">({{ $problem->max_mark }})</span>
+                            {{ $problem['id'] }}-topshiriq<br>
+                            <span class="text-xs font-normal">({{ $problem['max_mark'] }})</span>
                         </th>
                     @endforeach
                     <th class="border border-gray-300 dark:border-gray-600 py-2 px-3 text-sm font-bold text-center text-gray-800 dark:text-gray-200">Jami ball<br><span class="text-xs font-normal">({{ $totalMaxScore }})</span></th>
@@ -139,22 +135,22 @@
 
                         @foreach($problems as $problem)
                             @php
-                                $mark = \App\Models\Mark::all()
-                                   ->where('student_id', $student->id)
-                                   ->where('problem_id', $problem->id)
-                                   ->first();
-                                $score = $mark->mark ?? 0;
+                                $mark = \App\Models\Mark::where('student_id', $student->id)
+                                    ->where('problem_id', $problem['id'])
+                                    ->where('exam_id', $selectedExamId)
+                                    ->first();
+                                $score = $mark ? $mark->mark : 0;
                                 $overall += $score;
 
-                                if (!isset($problemTotals[$problem->id])) {
-                                    $problemTotals[$problem->id] = 0;
-                                    $problemCounts[$problem->id] = 0;
+                                if (!isset($problemTotals[$problem['id']])) {
+                                    $problemTotals[$problem['id']] = 0;
+                                    $problemCounts[$problem['id']] = 0;
                                 }
-                                $problemTotals[$problem->id] += $score;
-                                $problemCounts[$problem->id]++;
+                                $problemTotals[$problem['id']] += $score;
+                                $problemCounts[$problem['id']]++;
                             @endphp
                             <td class="border border-gray-300 dark:border-gray-600 py-2 px-3 text-center text-gray-800 dark:text-gray-200">
-                                <x-rowblock :mark="$score" />
+                                {{ $score }}
                             </td>
                         @endforeach
 
@@ -176,8 +172,8 @@
                     <td class="border border-gray-300 dark:border-gray-600 py-2 px-3 text-gray-800 dark:text-yellow-200" colspan="2">O'rtacha ball</td>
                     @foreach ($problems as $problem)
                         @php
-                            $average = isset($problemTotals[$problem->id]) && $problemCounts[$problem->id] > 0
-                                ? round($problemTotals[$problem->id] / $problemCounts[$problem->id], 1)
+                            $average = isset($problemTotals[$problem['id']]) && $problemCounts[$problem['id']] > 0
+                                ? round($problemTotals[$problem['id']] / $problemCounts[$problem['id']], 1)
                                 : 0;
                         @endphp
                         <td class="border border-gray-300 dark:border-gray-600 py-2 px-3 text-center text-gray-800 dark:text-yellow-200">
@@ -195,7 +191,7 @@
                     </td>
 
                     <td class="border border-gray-300 dark:border-gray-600 py-2 px-3 text-center bg-green-100 dark:bg-green-900/30 font-bold text-gray-800 dark:text-green-200" rowspan="2">
-                        {{$avgPercentage}}%
+                        {{ $avgPercentage }}%
                     </td>
                 </tr>
 
@@ -203,11 +199,11 @@
                     <td class="border border-gray-300 dark:border-gray-600 py-2 px-3 text-gray-800 dark:text-yellow-200" colspan="2">O'zlashtirish foizi (%)</td>
                     @foreach ($problems as $problem)
                         @php
-                            $average = isset($problemTotals[$problem->id]) && $problemCounts[$problem->id] > 0
-                                ? round($problemTotals[$problem->id] / $problemCounts[$problem->id], 1)
+                            $average = isset($problemTotals[$problem['id']]) && $problemCounts[$problem['id']] > 0
+                                ? round($problemTotals[$problem['id']] / $problemCounts[$problem['id']], 1)
                                 : 0;
-                            $masteryPercentage = $problem->max_mark > 0
-                                ? round(($average / $problem->max_mark) * 100, 1)
+                            $masteryPercentage = $problem['max_mark'] > 0
+                                ? round(($average / $problem['max_mark']) * 100, 1)
                                 : 0;
                         @endphp
                         <td class="border border-gray-300 dark:border-gray-600 py-2 px-3 text-center text-gray-800 dark:text-yellow-200">
@@ -220,5 +216,3 @@
         </div>
     @endif
 </div>
-
-

@@ -9,14 +9,13 @@ use Illuminate\Support\Facades\DB;
 
 class StatisticsBySinfCHSB extends ChartWidget
 {
-
     protected static ?string $heading = "Sinflar kesimida CHSB imtihon natijalari";
 
     protected function getData(): array
     {
         $maktabId = auth()->user()->maktab_id;
 
-        // Get all sinfs for this maktab
+        // Barcha sinflar
         $allSinfs = DB::table('sinfs')
             ->where('maktab_id', $maktabId)
             ->orderBy('name')
@@ -26,12 +25,11 @@ class StatisticsBySinfCHSB extends ChartWidget
         $values = [];
 
         foreach ($allSinfs as $sinf) {
-            // Get exams for this sinf
+            // Shu sinfga oid CHSB imtihonlar
             $exams = Exam::query()
                 ->where('maktab_id', $maktabId)
                 ->where('sinf_id', $sinf->id)
                 ->where('type', 'CHSB')
-                ->whereHas('problems')
                 ->get();
 
             if ($exams->isEmpty()) {
@@ -42,15 +40,7 @@ class StatisticsBySinfCHSB extends ChartWidget
 
             $examIds = $exams->pluck('id');
 
-            // Get maximum marks per exam
-            $maxMarksPerExam = DB::table('problems')
-                ->whereIn('exam_id', $examIds)
-                ->groupBy('exam_id')
-                ->select('exam_id', DB::raw('SUM(max_mark) as total_max_mark'))
-                ->get()
-                ->keyBy('exam_id');
-
-            // Get student marks per exam
+            // Student ballari
             $studentMarksPerExam = Mark::query()
                 ->whereIn('exam_id', $examIds)
                 ->groupBy('exam_id', 'student_id')
@@ -61,11 +51,18 @@ class StatisticsBySinfCHSB extends ChartWidget
             $totalMasteryPercentages = [];
 
             foreach ($exams as $exam) {
-                $totalMaxScore = $maxMarksPerExam->get($exam->id)?->total_max_mark;
-                if (!$totalMaxScore || $totalMaxScore == 0) continue;
+                // JSONB problems ustunidan umumiy maksimal ball
+                $problems = collect($exam->problems ?? []);
+                $totalMaxScore = $problems->sum('max_mark');
+
+                if (!$totalMaxScore || $totalMaxScore == 0) {
+                    continue;
+                }
 
                 $marksForThisExam = $studentMarksPerExam->get($exam->id);
-                if (!$marksForThisExam || $marksForThisExam->isEmpty()) continue;
+                if (!$marksForThisExam || $marksForThisExam->isEmpty()) {
+                    continue;
+                }
 
                 $averageScore = $marksForThisExam->avg('total_student_mark');
                 $masteryPercentage = ($averageScore / $totalMaxScore) * 100;
@@ -73,8 +70,10 @@ class StatisticsBySinfCHSB extends ChartWidget
                 $totalMasteryPercentages[] = $masteryPercentage;
             }
 
-            // Calculate average mastery percentage for this sinf
-            $avgMasteryPercentage = empty($totalMasteryPercentages) ? 0 : round(array_sum($totalMasteryPercentages) / count($totalMasteryPercentages), 1);
+            // O‘rtacha natija sinf bo‘yicha
+            $avgMasteryPercentage = empty($totalMasteryPercentages)
+                ? 0
+                : round(array_sum($totalMasteryPercentages) / count($totalMasteryPercentages), 1);
 
             $labels[] = $sinf->name;
             $values[] = $avgMasteryPercentage;
@@ -93,6 +92,7 @@ class StatisticsBySinfCHSB extends ChartWidget
             'labels' => $labels,
         ];
     }
+
     protected function getType(): string
     {
         return 'bar';

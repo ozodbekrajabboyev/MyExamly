@@ -4,12 +4,10 @@ namespace App\Livewire;
 
 use App\Models\Exam;
 use App\Models\Mark;
-use App\Models\Problem;
 use App\Models\Student;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Notifications\Notification;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -36,26 +34,20 @@ class Dashboard extends Component
 
         if ($exam) {
             $this->marks = Mark::where('exam_id', $exam->id)->get();
-            $this->problems = Problem::where('exam_id', $exam->id)
-                ->orderBy('problem_number')
-                ->get();
+
+            // Fix: Handle problems as JSON array, not objects
+            $problemsData = is_string($exam->problems) ? json_decode($exam->problems, true) : ($exam->problems ?? []);
+            $this->problems = collect($problemsData)
+                ->sortBy('id') // Sort by id instead of problem_number
+                ->values();
+
             $this->students = Student::where('sinf_id', $exam->sinf_id)
                 ->orderBy('full_name')
                 ->get();
 
-            $this->totalMaxScore = $this->problems->sum('max_mark');
+            $this->totalMaxScore = collect($this->problems)->sum('max_mark');
         }
     }
-
-    /**
-     * Sends an approval request notification to administrators.
-     *
-     * UPDATED: This method now correctly queries for admin users using a `whereHas`
-     * clause on the 'role' relationship. The original `where('role', 'admin')`
-     * was incorrect. Added checks to ensure an exam is selected and that
-     * admins exist before sending notifications.
-     */
-
 
     /**
      * Generates and downloads a PDF of the exam results.
@@ -68,16 +60,16 @@ class Dashboard extends Component
         if (!$exam || $exam->status !== 'approved') {
             Notification::make()
                 ->title('Tasdiqlash jarayoni!')
-                ->body('Natijalarni PDF shaklida yuklab olish imkoniyati faqat imtihon tasdiqlangandan so‘ng beriladi.')
+                ->body("Natijalarni PDF shaklida yuklab olish imkoniyati faqat imtihon tasdiqlangandan so'ng beriladi.")
                 ->warning()
                 ->persistent()
                 ->actions([
                     \Filament\Notifications\Actions\Action::make('requestApproval')
-                        ->label('Tasdiqlashni so‘rash')
+                        ->label("Tasdiqlashni so'rash")
                         ->button()
-                        ->color('warning')
-                        ->dispatch('requestApproval', [$exam->id])
-                        ->close()
+                ->color('warning')
+                ->dispatch('requestApproval', [$exam->id])
+                ->close()
                 ])
                 ->send();
 
@@ -86,7 +78,12 @@ class Dashboard extends Component
 
         // Fetch the necessary data for the PDF
         $marks = Mark::where('exam_id', $exam->id)->get();
-        $problems = Problem::where('exam_id', $exam->id)->orderBy('problem_number')->get();
+
+        // Fix: Handle problems as JSON array
+        $problemsData = is_string($exam->problems) ? json_decode($exam->problems, true) : ($exam->problems ?? []);
+        $problems = collect($problemsData)->sortBy('id')->values();
+//        dd($problems->count());
+
         $students = Student::where('sinf_id', $exam->sinf_id)->orderBy('full_name')->get();
         $totalMaxScore = $problems->sum('max_mark');
 
@@ -130,7 +127,6 @@ class Dashboard extends Component
             return;
         }
 
-
         // Send notification to all found admins
         Notification::make()
             ->title('Imtihonni tasdiqlash so‘rovi')
@@ -138,7 +134,6 @@ class Dashboard extends Component
             ->icon('heroicon-o-document-check')
             ->iconColor('warning')
             ->sendToDatabase($admins);
-
 
         // Show success notification to the current user
         Notification::make()
@@ -154,7 +149,7 @@ class Dashboard extends Component
         $user = Auth::user();
 
         $exams = \App\Models\Exam::query()
-            ->whereHas('problems.marks') // only exams that have at least one mark
+            ->whereHas('marks') // mark bor bo'lsa
             ->when($user->role->name === 'teacher', function ($query) use ($user) {
                 $query->where('teacher_id', $user->teacher->id);
             })

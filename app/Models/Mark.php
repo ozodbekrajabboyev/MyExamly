@@ -23,14 +23,14 @@ class Mark extends Model
 
     protected $fillable = [
         'student_id',
-        'problem_id',
         'exam_id',
         'sinf_id',
         'maktab_id',
+        'problem_id', // This will store the problem ID from JSON
         'mark'
     ];
 
-    public function exam():BelongsTo
+    public function exam(): BelongsTo
     {
         return $this->belongsTo(Exam::class);
     }
@@ -40,22 +40,29 @@ class Mark extends Model
         return $this->belongsTo(Maktab::class);
     }
 
-    public function sinf():BelongsTo
+    public function sinf(): BelongsTo
     {
         return $this->belongsTo(Sinf::class);
     }
 
-    public function student():BelongsTo
+    public function student(): BelongsTo
     {
         return $this->belongsTo(Student::class);
     }
 
-    public function problem(): BelongsTo
+    // Helper method to get problem details from exam's JSON
+    public function getProblemAttribute()
     {
-        return $this->belongsTo(Problem::class);
+        if (!$this->exam || !$this->problem_id) {
+            return null;
+        }
+
+        $problems = collect(is_string($this->exam->problems) ? json_decode($this->exam->problems, true) : $this->exam->problems);
+        return $problems->firstWhere('id', $this->problem_id);
     }
 
-    public static function getForm(){
+    public static function getForm()
+    {
         return [
             Section::make("O'quvchilarni baholarini kiriting")
                 ->collapsible()
@@ -65,29 +72,34 @@ class Mark extends Model
                     Forms\Components\Hidden::make('maktab_id')
                         ->default(fn () => auth()->user()->maktab_id)
                         ->required(),
+
                     Forms\Components\Select::make('exam_id')
                         ->label('Imtihon tanlang')
                         ->options(function () {
                             $user = auth()->user();
 
                             $query = \App\Models\Exam::query()
-                                ->where('maktab_id', $user->maktab_id) // ✅ Filter by school
-                                ->whereDoesntHave('problems.marks')   // ✅ Only exams without marks
+                                ->where('maktab_id', $user->maktab_id)
+                                ->whereNotNull('problems') // Only exams with problems
+                                ->whereDoesntHave('marks')   // Only exams without marks
                                 ->with(['sinf', 'subject']);
 
-                            // Optional: If teacher should only see their own exams
+                            // If teacher should only see their own exams
                             if ($user->role->name === 'teacher') {
-                                $query->where('teacher_id', $user->teacher->id); // assuming Exam has a teacher_id
+                                $query->where('teacher_id', $user->teacher->id);
                             }
 
                             return $query->get()
+                                ->filter(function ($exam) {
+                                    // Additional check to ensure problems JSON is valid and not empty
+                                    $problems = is_string($exam->problems) ? json_decode($exam->problems, true) : $exam->problems;
+                                    return is_array($problems) && count($problems) > 0;
+                                })
                                 ->mapWithKeys(function ($exam) {
                                     $label = "{$exam->sinf->name} | {$exam->subject->name} | {$exam->serial_number}-{$exam->type}";
-
                                     return [$exam->id => $label];
                                 });
                         })
-
                         ->live()
                         ->disabled(fn(string $operation): bool => $operation === 'edit')
                         ->required()
@@ -99,35 +111,36 @@ class Mark extends Model
 
                             if (!$examId) return [];
 
-                            $exam = Exam::with(['sinf.students', 'problems' => fn($q) => $q->orderBy('problem_number')])->find($examId);
-                            if (!$exam) return [];
+                            $exam = Exam::with(['sinf.students'])->find($examId);
+                            if (!$exam || !$exam->problems) return [];
+
+                            // Parse problems from JSON or array
+                            $problems = collect(is_string($exam->problems) ? json_decode($exam->problems, true) : $exam->problems);
+                            if ($problems->isEmpty()) {
+                                return [
+                                    Placeholder::make('')
+                                        ->content(new HtmlString("<span class='text-red-500 font-bold text-l'>Bu imtihonda hech qanday topshiriq yo'q</span>"))
+                                ];
+                            }
 
                             $students = $exam->sinf->students->sortBy('full_name');
-                            $problems = $exam->problems;
-
-                            $cur = $problems->count();
-                            $Needed = Exam::find($examId)->problems_count;
 
                             $schema = [];
+
+                            // Create header row
                             $headerC = new HtmlString("<span class='text-green-500 font-bold text-l'>O'quvchi / Topshiriq</span>");
                             $header = [
                                 Placeholder::make('')->content(fn () => $headerC),
                             ];
 
-                            if($cur < $Needed){
-                                $header[] = Placeholder::make('')
-                                    ->content(new HtmlString("<span class='text-green-500 font-bold text-l'>Yetarlicha topshiriq qo'shilmagan</span>"));
-                                return $header;
-                            }
-
                             foreach ($problems as $problem) {
                                 $header[] = Placeholder::make('')
-                                    ->content(new HtmlString("<span class='text-green-500 font-bold text-l'>{$problem->problem_number}-topshiriq (Max: {$problem->max_mark})</span>"));
+                                    ->content(new HtmlString("<span class='text-green-500 font-bold text-l'>{$problem['id']}-topshiriq (Max: {$problem['max_mark']})</span>"));
                             }
 
                             $schema[] = Grid::make(count($header))->schema($header);
 
-                            // Students + Inputs
+                            // Create student rows with input fields
                             foreach ($students as $student) {
                                 $row = [
                                     Placeholder::make('')
@@ -135,16 +148,18 @@ class Mark extends Model
                                 ];
 
                                 foreach ($problems as $problem) {
+                                    // Check if mark already exists
                                     $existingMark = Mark::where('student_id', $student->id)
-                                        ->where('problem_id', $problem->id)
+                                        ->where('problem_id', $problem['id'])
+                                        ->where('exam_id', $examId)
                                         ->first();
 
-                                    $row[] = TextInput::make("marks.{$student->id}_{$problem->id}")
+                                    $row[] = TextInput::make("marks.{$student->id}_{$problem['id']}")
                                         ->hiddenLabel()
                                         ->numeric()
                                         ->minValue(0)
-                                        ->maxValue($problem->max_mark)
-                                        ->default(0);
+                                        ->maxValue($problem['max_mark'])
+                                        ->default($existingMark ? $existingMark->mark : 0);
                                 }
 
                                 $schema[] = Grid::make(count($row))->schema($row);
@@ -157,4 +172,3 @@ class Mark extends Model
         ];
     }
 }
-

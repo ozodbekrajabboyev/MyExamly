@@ -22,18 +22,17 @@ class MarkResource extends Resource
 {
     protected static ?string $model = Mark::class;
     protected static ?string $navigationLabel = "Baholar";
+
     public static function getModelLabel(): string
     {
         return "Baho";
     }
 
-    /**
-     * @return string|null
-     */
     public static function getPluralModelLabel(): string
     {
         return "Baholar";
     }
+
     protected static ?string $navigationGroup = "Imtihonlar boshqaruvi";
     protected static ?string $navigationIcon = 'heroicon-o-pencil';
 
@@ -48,7 +47,7 @@ class MarkResource extends Resource
 
         return parent::getEloquentQuery()
             ->when($user->role->name === 'teacher', function ($query) use ($user) {
-                $query->whereHas('problem.exam', function ($q) use ($user) {
+                $query->whereHas('exam', function ($q) use ($user) {
                     $q->where('teacher_id', $user->teacher->id);
                 });
             });
@@ -61,21 +60,28 @@ class MarkResource extends Resource
 
                 return Exam::query()
                     ->whereHas('marks') // only exams with marks
+                    ->whereNotNull('problems') // only exams with problems
                     ->when($user->role->name === 'teacher', function ($query) use ($user) {
                         $query->where('teacher_id', $user->teacher->id);
+                    })
+                    ->when($user->role->name !== 'superadmin', function ($query) use ($user) {
+                        $query->where('maktab_id', $user->maktab_id);
                     });
             })
             ->columns([
                 Tables\Columns\TextColumn::make('subject.name')
                     ->label('Fan')
                     ->sortable(),
+
                 Tables\Columns\TextColumn::make('type')
                     ->label('Imtihon turi')
-                    ->formatStateUsing(fn (Exam $record): string => $record->serial_number .'-'.$record->type)
+                    ->formatStateUsing(fn (Exam $record): string => $record->serial_number . '-' . $record->type)
                     ->sortable(),
+
                 Tables\Columns\TextColumn::make('sinf.name')
                     ->label('Sinf')
                     ->sortable(),
+
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')
                     ->badge()
@@ -92,7 +98,18 @@ class MarkResource extends Resource
                     ->sortable(),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('status')
+                    ->label('Status')
+                    ->options([
+                        'pending' => 'Jarayonda',
+                        'approved' => 'Tasdiqlangan',
+                        'rejected' => 'Rad etilgan',
+                    ]),
+
+                Tables\Filters\SelectFilter::make('subject_id')
+                    ->label('Fan')
+                    ->relationship('subject', 'name')
+                    ->preload(),
             ])
             ->actions([
                 Tables\Actions\Action::make('edit')
@@ -101,7 +118,7 @@ class MarkResource extends Resource
                     ->url(fn (Exam $record): string => MarkResource::getUrl('edit', ['record' => $record->marks()->first()->id]))
                     ->visible(fn (Exam $record): bool =>
                         $record->marks()->exists() &&
-                        in_array(auth()->user()->role->name, ['superadmin', 'teacher']) // if you have role relationship
+                        in_array(auth()->user()->role->name, ['superadmin', 'teacher'])
                     ),
             ]);
     }
@@ -115,10 +132,10 @@ class MarkResource extends Resource
 
     public static function getPages(): array
     {
-        return array(
+        return [
             'index' => Pages\ListMarks::route('/'),
             'create' => Pages\CreateMark::route('/create'),
             'edit' => Pages\EditMark::route('/{record}/edit'),
-        );
+        ];
     }
 }

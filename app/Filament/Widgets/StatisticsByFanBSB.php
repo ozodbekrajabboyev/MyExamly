@@ -15,23 +15,21 @@ class StatisticsByFanBSB extends ChartWidget
     {
         $maktabId = auth()->user()->maktab_id;
 
-        // Get all subjects for this maktab (assuming subjects table structure)
-        // NEED TO CONFIRM: What's your subjects table name and structure?
-        $allSubjects = DB::table('subjects') // or 'fans'?
-        ->where('maktab_id', $maktabId) // if subjects are school-specific
-        ->orderBy('name')
+        // Fanlar
+        $allSubjects = DB::table('subjects')
+            ->where('maktab_id', $maktabId)
+            ->orderBy('name')
             ->get();
 
         $labels = [];
         $values = [];
 
         foreach ($allSubjects as $subject) {
-            // Get all BSB exams for this subject across all sinfs
+            // Shu fanga oid BSB imtihonlar
             $exams = Exam::query()
                 ->where('maktab_id', $maktabId)
                 ->where('subject_id', $subject->id)
                 ->where('type', 'BSB')
-                ->whereHas('problems')
                 ->get();
 
             if ($exams->isEmpty()) {
@@ -42,15 +40,7 @@ class StatisticsByFanBSB extends ChartWidget
 
             $examIds = $exams->pluck('id');
 
-            // Get maximum marks per exam
-            $maxMarksPerExam = DB::table('problems')
-                ->whereIn('exam_id', $examIds)
-                ->groupBy('exam_id')
-                ->select('exam_id', DB::raw('SUM(max_mark) as total_max_mark'))
-                ->get()
-                ->keyBy('exam_id');
-
-            // Get student marks per exam (across all sinfs for this subject)
+            // Student ballari
             $studentMarksPerExam = Mark::query()
                 ->whereIn('exam_id', $examIds)
                 ->groupBy('exam_id', 'student_id')
@@ -61,20 +51,25 @@ class StatisticsByFanBSB extends ChartWidget
             $totalMasteryPercentages = [];
 
             foreach ($exams as $exam) {
-                $totalMaxScore = $maxMarksPerExam->get($exam->id)?->total_max_mark;
+                // JSONB problems dan umumiy maksimal ball hisoblash
+                $problems = collect($exam->problems ?? []);
+                $totalMaxScore = $problems->sum('max_mark');
+
                 if (!$totalMaxScore || $totalMaxScore == 0) continue;
 
                 $marksForThisExam = $studentMarksPerExam->get($exam->id);
                 if (!$marksForThisExam || $marksForThisExam->isEmpty()) continue;
 
                 $averageScore = round($marksForThisExam->avg('total_student_mark'), 1);
-                $masteryPercentage = round(($averageScore / $totalMaxScore) * 100,1);
+                $masteryPercentage = round(($averageScore / $totalMaxScore) * 100, 1);
 
                 $totalMasteryPercentages[] = $masteryPercentage;
             }
 
-            // Calculate average mastery percentage for this subject
-            $avgMasteryPercentage = empty($totalMasteryPercentages) ? 0 : round(array_sum($totalMasteryPercentages) / count($totalMasteryPercentages), 1);
+            // O‘rtacha mastery % fanga ko‘ra
+            $avgMasteryPercentage = empty($totalMasteryPercentages)
+                ? 0
+                : round(array_sum($totalMasteryPercentages) / count($totalMasteryPercentages), 1);
 
             $labels[] = $subject->name;
             $values[] = $avgMasteryPercentage;

@@ -4,42 +4,85 @@ namespace App\Filament\Resources\MarkResource\Pages;
 
 use App\Filament\Resources\MarkResource;
 use App\Models\Exam;
-use Filament\Pages\Page;
-use Filament\Actions\Action;
-use Illuminate\Contracts\Support\Htmlable;
+use App\Services\MarkService;
+use Filament\Resources\Pages\Page;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Form;
+use Filament\Forms\Get;
+use Illuminate\Support\HtmlString;
 
 class ViewMarks extends Page
 {
-    protected static string $view = 'filament.pages.view-marks';
+    protected static string $resource = MarkResource::class;
+    protected static string $view = 'filament.resources.mark-resource.pages.view-marks';
 
-    public Exam $exam;
+    public ?array $data = [];
+    public ?Exam $selectedExam = null;
+    public ?array $reportData = null;
 
-    public function getTitle(): string|Htmlable
+    public function mount(): void
     {
-        return $this->exam->subject->name . ' - ' . $this->exam->type;
+        $this->form->fill();
     }
 
-    public function getSubheading(): string|Htmlable|null
+    public function form(Form $form): Form
     {
-        return 'Sinf: ' . $this->exam->sinf->name;
+        return $form
+            ->schema([
+                Select::make('exam_id')
+                    ->label('Imtihonni tanlang')
+                    ->options(function () {
+                        $user = auth()->user();
+
+                        $query = Exam::query()
+                            ->whereHas('marks') // Only exams with marks
+                            ->where('maktab_id', $user->maktab_id)
+                            ->with(['sinf', 'subject']);
+
+                        if ($user->role->name === 'teacher') {
+                            $query->where('teacher_id', $user->teacher->id);
+                        }
+
+                        return $query->get()
+                            ->mapWithKeys(function ($exam) {
+                                $label = "{$exam->sinf->name} | {$exam->subject->name} | {$exam->serial_number}-{$exam->type}";
+                                return [$exam->id => $label];
+                            });
+                    })
+                    ->live()
+                    ->afterStateUpdated(function (Get $get, $state) {
+                        if ($state) {
+                            $this->loadExamReport($state);
+                        } else {
+                            $this->selectedExam = null;
+                            $this->reportData = null;
+                        }
+                    })
+                    ->columnSpanFull()
+            ])
+            ->statePath('data');
     }
 
-    public function mount(Exam $exam): void
+    protected function loadExamReport(int $examId): void
     {
-        $this->exam = $exam->load([
-            'sinf.students',
-            'problems',
-            'marks' => fn($query) => $query->with(['student', 'problem'])
-        ]);
+        $this->selectedExam = Exam::with(['sinf.students', 'subject', 'teacher'])->find($examId);
+
+        if ($this->selectedExam) {
+            $markService = new MarkService();
+            $this->reportData = $markService->generateExamReport($this->selectedExam);
+        }
     }
 
-    protected function getHeaderActions(): array
+    public function getTitle(): string
+    {
+        return 'Baho hisoboti';
+    }
+
+    protected function getViewData(): array
     {
         return [
-            Action::make('back')
-                ->label('Orqaga')
-                ->url(MarkResource::getUrl('index'))
-                ->color('gray'),
+            'selectedExam' => $this->selectedExam,
+            'reportData' => $this->reportData,
         ];
     }
 }
