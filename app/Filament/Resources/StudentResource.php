@@ -74,6 +74,7 @@ class StudentResource extends Resource
                     ->formatStateUsing(fn (Student $record): string => $record->sinf->name .'-sinf')
                     ->sortable(),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 Tables\Filters\SelectFilter::make('sinf_nomi')
                     ->relationship('sinf', 'name')

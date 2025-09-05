@@ -45,7 +45,7 @@ class MarkPolicy
      */
     public function delete(User $user, Mark $mark): bool
     {
-        return $user->role->name === "superadmin" || $user->role->name === "teacher";
+        return $user->role->name === "superadmin";
     }
 
     /**

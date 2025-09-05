@@ -16,6 +16,58 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\HtmlString;
 use Illuminate\Validation\ValidationException;
 
+function createGroupedProblemsForm($students, \Illuminate\Support\Collection $problems, mixed $examId)
+{
+    $problemsGrouped = $problems->chunk(7); // Group into chunks of 5
+    $schema = [];
+
+    foreach ($problemsGrouped as $groupIndex => $problemGroup) {
+        $schema[] = Section::make("Topshiriqlar guruhi " . ($groupIndex + 1))
+            ->schema([
+                Grid::make($problemGroup->count() + 1)
+                    ->schema(function () use ($students, $problemGroup, $examId) {
+                        $groupSchema = [];
+
+                        // Header for this group
+                        $header = [Placeholder::make('')->content(new HtmlString("<span class='font-bold text-l'>O'quvchi/Topshiriq</span>"))];
+                        foreach ($problemGroup as $problem) {
+                            $header[] = Placeholder::make('')
+                                ->content(new HtmlString("<span class='font-bold'>{$problem['id']}-(Max: {$problem['max_mark']})<span>"));
+                        }
+                        $groupSchema[] = Grid::make(count($header))->schema($header);
+
+                        // Student rows for this group
+                        foreach ($students as $student) {
+                            $row = [Placeholder::make('')->content($student->full_name)];
+
+                            foreach ($problemGroup as $problem) {
+                                $existingMark = Mark::where('student_id', $student->id)
+                                    ->where('problem_id', $problem['id'])
+                                    ->where('exam_id', $examId)
+                                    ->first();
+
+                                $row[] = TextInput::make("marks.{$student->id}_{$problem['id']}")
+                                    ->hiddenLabel()
+                                    ->numeric()
+                                    ->minValue(0)
+                                    ->maxValue($problem['max_mark'])
+                                    ->default($existingMark ? $existingMark->mark : 0);
+                            }
+
+                            $groupSchema[] = Grid::make(count($row))->schema($row);
+                        }
+
+                        return $groupSchema;
+                    })
+            ])
+            ->collapsible()
+            ->collapsed(false);
+    }
+
+    return $schema;
+
+}
+
 class Mark extends Model
 {
     /** @use HasFactory<\Database\Factories\MarkFactory> */
@@ -63,6 +115,7 @@ class Mark extends Model
 
     public static function getForm()
     {
+
         return [
             Section::make("O'quvchilarni baholarini kiriting")
                 ->collapsible()
@@ -114,7 +167,6 @@ class Mark extends Model
                             $exam = Exam::with(['sinf.students'])->find($examId);
                             if (!$exam || !$exam->problems) return [];
 
-                            // Parse problems from JSON or array
                             $problems = collect(is_string($exam->problems) ? json_decode($exam->problems, true) : $exam->problems);
                             if ($problems->isEmpty()) {
                                 return [
@@ -125,30 +177,34 @@ class Mark extends Model
 
                             $students = $exam->sinf->students->sortBy('full_name');
 
+                            // If too many problems, group them
+                            if ($problems->count() > 10) {
+                                return createGroupedProblemsForm($students, $problems, $examId);
+                            }
+
+                            // Original grid approach for smaller datasets
                             $schema = [];
+                            $columnCount = $problems->count() + 1; // +1 for student name column
 
                             // Create header row
-                            $headerC = new HtmlString("<span class='text-green-500 font-bold text-l'>O'quvchi / Topshiriq</span>");
-                            $header = [
-                                Placeholder::make('')->content(fn () => $headerC),
-                            ];
+                            $headerC = new HtmlString("<span class='text-green-500 font-bold text-l'>O'quvchi/Topshiriq</span>");
+                            $header = [Placeholder::make('')->content(fn () => $headerC)];
 
                             foreach ($problems as $problem) {
                                 $header[] = Placeholder::make('')
-                                    ->content(new HtmlString("<span class='text-green-500 font-bold text-l'>{$problem['id']}-topshiriq (Max: {$problem['max_mark']})</span>"));
+                                    ->content(new HtmlString("<span class='text-green-500 font-bold text-xs sm:text-sm'>{$problem['id']}-<span class='text-xs'>(Max: {$problem['max_mark']})</span></span>"));
                             }
 
-                            $schema[] = Grid::make(count($header))->schema($header);
+                            $schema[] = Grid::make($columnCount)->schema($header);
 
-                            // Create student rows with input fields
+                            // Create student rows
                             foreach ($students as $student) {
                                 $row = [
                                     Placeholder::make('')
-                                        ->content($student->full_name),
+                                        ->content(new HtmlString("<span class='font-medium font-bold text-l'>{$student['full_name']}</span>"))
                                 ];
 
                                 foreach ($problems as $problem) {
-                                    // Check if mark already exists
                                     $existingMark = Mark::where('student_id', $student->id)
                                         ->where('problem_id', $problem['id'])
                                         ->where('exam_id', $examId)
@@ -159,15 +215,20 @@ class Mark extends Model
                                         ->numeric()
                                         ->minValue(0)
                                         ->maxValue($problem['max_mark'])
-                                        ->default($existingMark ? $existingMark->mark : 0);
+                                        ->default($existingMark ? $existingMark->mark : 0)
+                                        ->extraAttributes(['class' => 'text-center text-sm w-16']);
                                 }
 
-                                $schema[] = Grid::make(count($row))->schema($row);
+                                $schema[] = Grid::make($columnCount)->schema($row);
                             }
 
                             return $schema;
                         })
-                        ->extraAttributes(['class' => 'mark-table'])
+                        ->extraAttributes([
+                            'class' => 'mark-table overflow-x-auto',
+                            'style' => 'max-width: 100vw;'
+                        ])
+
                 ]),
         ];
     }

@@ -29,7 +29,7 @@ class EditExam extends EditRecord
         $subject = Subject::find($data['subject_id'])->name ?? null;
         $serial_number = $data['serial_number'] ?? null;
         $type = $data['type'];
-        if($data['status'] === 'approved'){
+        if(isset($data['status']) && $data['status'] === 'approved'){
             Notification::make()
                 ->title('🎉 Imtihon tasdiqlandi!')
                 ->body("$class-sinf | $subject | $serial_number-$type imtihoningiz tasdiqlandi va yuklab olish uchun tayyor.")
@@ -39,7 +39,7 @@ class EditExam extends EditRecord
                 ->sendToDatabase([$teacher]);
         }
 
-        if($data['status'] === 'rejected'){
+        if(isset($data['status']) && $data['status'] === 'rejected'){
             Notification::make()
                 ->title('Imtihon rad etildi')
                 ->body("$class-sinf | $subject | $serial_number-$type imtihoningiz rad etildi. Iltimos, maʼlumotlarni qayta tekshirib, yana tasdiqlash uchun yuboring.")
