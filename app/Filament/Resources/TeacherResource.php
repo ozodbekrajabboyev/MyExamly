@@ -319,6 +319,7 @@ class TeacherResource extends Resource
                 Tables\Columns\TextColumn::make('phone')
                     ->searchable(),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 //
             ]);

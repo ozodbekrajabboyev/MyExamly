@@ -58,6 +58,7 @@ class SinfResource extends Resource
                     ->label("Sinf nomi")
                     ->searchable(),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 //
             ])

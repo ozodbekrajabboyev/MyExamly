@@ -62,6 +62,7 @@ class SubjectResource extends Resource
                     ->label("Fan nomi")
                     ->searchable(),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 //
             ])

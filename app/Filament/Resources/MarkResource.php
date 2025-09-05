@@ -97,6 +97,7 @@ class MarkResource extends Resource
                     })
                     ->sortable(),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Status')
@@ -115,7 +116,10 @@ class MarkResource extends Resource
                 Tables\Actions\Action::make('edit')
                     ->label('Tahrirlash')
                     ->icon('heroicon-o-pencil')
-                    ->url(fn (Exam $record): string => MarkResource::getUrl('edit', ['record' => $record->marks()->first()->id]))
+                    ->url(fn (Exam $record): string => MarkResource::getUrl('edit', [
+                            'record' => \App\Models\Mark::where('exam_id', $record->id)->first()?->id,
+                        ])
+                    )
                     ->visible(fn (Exam $record): bool =>
                         $record->marks()->exists() &&
                         in_array(auth()->user()->role->name, ['superadmin', 'teacher'])
