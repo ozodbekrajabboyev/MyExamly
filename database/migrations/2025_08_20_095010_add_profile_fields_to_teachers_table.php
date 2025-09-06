@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('milliy_sertifikat_path')->nullable();
             $table->string('xalqaro_sertifikat_path')->nullable();
             $table->string('malumotnoma_path')->nullable();
+            $table->string('signature_path')->nullable();
             $table->string('telegram_id')->nullable();
         });
     }
@@ -39,6 +40,7 @@ return new class extends Migration
                 'milliy_sertifikat_path',
                 'xalqaro_sertifikat_path',
                 'malumotnoma_path',
+                'signature_path',
                 'telegram_id'
             ]);
         });

@@ -64,6 +64,13 @@
                             </div>
                         @endif
 
+                        @if($teacher->signature_path)
+                            <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
+                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Elektron Imzo</h4>
+                                <img src="{{ $teacher->signature_url }}" alt="Elektron Imzo" class="w-full h-32 object-cover rounded">
+                            </div>
+                        @endif
+
                         @if($teacher->diplom_path)
                             <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
                                 <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Diplom</h4>

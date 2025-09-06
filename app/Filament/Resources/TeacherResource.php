@@ -190,7 +190,25 @@ class TeacherResource extends Resource
                                         ->badge()
                                         ->color('secondary')
                                         ->placeholder('Kiritilmagan'),
+                                    TextEntry::make('signature_path')
+                                        ->label('Imzo Holati')
+                                        ->formatStateUsing(fn ($state) => $state ? 'Elektron imzo mavjud' : 'Elektron imzo yuklanmagan')
+                                        ->badge()
+                                        ->color(fn ($state) => $state ? 'success' : 'warning')
+                                        ->icon(fn ($state) => $state ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle'),
+
+                                    TextEntry::make('signature_path')
+                                        ->label('Imzoni Ko\'rish')
+                                        ->formatStateUsing(fn ($state) => $state ? 'Imzoni Yuklash' : 'Mavjud Emas')
+                                        ->url(fn ($record) => $record->teacher && $record->teacher->signature_path ?
+                                            Storage::disk('public')->url($record->teacher->signature_path) : null)
+                                        ->openUrlInNewTab()
+                                        ->badge()
+                                        ->color(fn ($state) => $state ? 'info' : 'gray')
+                                        ->icon('heroicon-o-arrow-down-tray')
+                                        ->visible(fn ($record) => $record->user && $record->user->signature_path),
                                 ])->columnSpan(2),
+
                             ]),
                     ])
                     ->collapsible(),

@@ -70,45 +70,16 @@ class Teacher extends Model
         return Storage::disk('public')->url($this->malumotnoma_path);
     }
 
-    public static function getForm(): array
+    public function getSignatureUrlAttribute(): ?string
     {
-        return [
-            Section::make("Yangi o'qituvchi qo'shish")
-                ->collapsible()
-                ->columns(1)
-                ->description("Yangi o'qituvchi qo'shish uchun quyidagilarni to'ldiring")
-                ->icon('heroicon-o-information-circle')
-                ->schema([
-                    Forms\Components\Hidden::make('maktab_id')
-                        ->default(fn () => auth()->user()->maktab_id)
-                        ->required(),
-                    TextInput::make('full_name')
-                        ->label("O'qituvchining to'liq IFSH")
-                        ->helperText("O'qituvchining to'liq Ism, Familiya va Sharifini kiriting.")
-                        ->columnSpanFull()
-                        ->required(),
-                    TextInput::make('email')
-                        ->label("O'qituvchining emailini kiriting")
-                        ->required()
-                        ->placeholder("example@example.com")
-                        ->columnSpanFull(),
-                    Select::make('subjects')
-                        ->label("Fanni tanlang")
-                        ->helperText("O'qituvchining fan(lar)ini tanlang.")
-                        ->hint("Bir nechta fanni tanlashingiz mumkin")
-                        ->columnSpanFull()
-                        ->required()
-                        ->relationship('subjects', 'name')
-                        ->multiple()
-                        ->preload()
-                        ->searchable(),
-                    TextInput::make('phone')
-                        ->label("Telefon raqam")
-                        ->helperText("O'qituvchining telefon raqamini kiriting.")
-                        ->columnSpanFull()
-                        ->prefix('+998')
-                        ->tel(),
-                ]),
-        ];
+        if (!$this->signature_path) {
+            return null;
+        }
+        return Storage::disk('public')->url($this->signature_path);
+    }
+
+    public function hasSignature(): bool
+    {
+        return !empty($this->signature_path);
     }
 }

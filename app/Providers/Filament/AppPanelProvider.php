@@ -33,6 +33,7 @@ class AppPanelProvider extends PanelProvider
             ->brandName('MyExamly')
 //            ->default()
             ->id('app')
+            ->favicon('logo1.png')
             ->profile(isSimple: false)
             ->brandLogo(asset('logo1.png'))
             ->brandLogoHeight('8.5rem')
