@@ -44,6 +44,7 @@ class TeacherProfile extends Page implements HasForms
             'milliy_sertifikat_path' => $this->teacher->milliy_sertifikat_path,
             'xalqaro_sertifikat_path' => $this->teacher->xalqaro_sertifikat_path,
             'malumotnoma_path' => $this->teacher->malumotnoma_path,
+            'signature_path' => $this->teacher->signature_path,
             'telegram_id' => $this->teacher->telegram_id,
         ]);
     }
@@ -79,6 +80,21 @@ class TeacherProfile extends Page implements HasForms
                             ->maxSize(5120) // 5MB
                             ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/jpg'])
                             ->maxFiles(1),
+
+                        FileUpload::make('signature_path')
+                            ->label("Elektron imzoyingizni yuklang")
+                            ->image()
+                            ->acceptedFileTypes(['image/png', 'image/svg+xml'])
+                            ->maxSize(5096)
+                            ->directory('signatures')
+                            ->visibility('public')
+                            ->imageEditor()
+                            ->imageEditorAspectRatios([
+                                '16:9',
+                                '4:3',
+                                '1:1',
+                            ])
+                            ->helperText("PNG yoki SVG formatda imzo rasmini yuklang"),
                     ])
                     ->columns(2)
                     ->collapsible(),

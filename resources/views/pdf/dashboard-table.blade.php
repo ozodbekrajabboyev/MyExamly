@@ -155,16 +155,22 @@
 </table>
 
 <div class="signatures">
+    <?php
+        $user = $exam->teacher;
+        $admin = App\Models\User::where('maktab_id', $user->maktab_id)->where('role_id', 2)->first();
+//        dd(public_path('signature.png'), public_path('/storage/'.$admin->signature_path));
+//        dd(public_path());
+    ?>
     <h3><strong>Maktab-internatining O'IBDO':</strong>
-        <img src="{{ public_path('signature.png') }}">
+        <img src="{{ public_path('/storage/' . $admin->signature_path) }}">
         {{ App\Models\User::where('maktab_id', auth()->user()->maktab_id)->where('role_id', 2)->pluck('name')[0] }}
     </h3>
     <h3><strong>Metodbirlashma rahbari:</strong>
-        <img src="{{ public_path('signature.png') }}">
+        <img src="{{ public_path('/storage/'. $exam->metod->signature_path) }}">
         {{$exam->metod->full_name ?? "Noma'lum"}}
     </h3>
     <h3><strong>Fan o'qituvchisi:</strong>
-        <img src="{{ public_path('signature.png') }}">
+        <img src="{{ public_path('/storage/'. $exam->teacher->signature_path) }}">
         {{$exam->teacher->full_name ?? "Noma'lum"}}
     </h3>
 </div>

@@ -75,6 +75,15 @@ class Dashboard extends Component
 
             return;
         }
+        if (!optional(auth()->user()->teacher)->signature_path) {
+            Notification::make()
+                ->title('Profil ma\'lumotlaringizni to\'ldiring.')
+                ->danger()
+                ->persistent()
+                ->send();
+
+            return;
+        }
 
         // Fetch the necessary data for the PDF
         $marks = Mark::where('exam_id', $exam->id)->get();
