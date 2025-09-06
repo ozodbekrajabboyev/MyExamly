@@ -34,6 +34,8 @@ class AppPanelProvider extends PanelProvider
 //            ->default()
             ->id('app')
             ->profile(isSimple: false)
+            ->brandLogo(asset('logo1.png'))
+            ->brandLogoHeight('8.5rem')
             ->loginRouteSlug('login')
             ->registrationRouteSlug('register')
             ->passwordResetRoutePrefix('password-reset')
