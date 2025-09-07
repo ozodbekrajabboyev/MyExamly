@@ -29,13 +29,13 @@ class AppPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
-        return $panel
+        return Panel::make()
             ->brandName('MyExamly')
-//            ->default()
             ->id('app')
             ->favicon('logo1.png')
             ->profile(isSimple: false)
             ->brandLogo(asset('logo1.png'))
+            ->DarkModeBrandLogo(asset('logoDark.png'))
             ->brandLogoHeight('8.5rem')
             ->loginRouteSlug('login')
             ->registrationRouteSlug('register')
