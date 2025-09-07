@@ -27,7 +27,7 @@ class LoginPasswordSend extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your credentials are ready to use for MyExamly',
+            subject: 'Xush kelibsiz! MyExamly login ma’lumotlaringiz tayyor 🎉',
         );
     }
 
