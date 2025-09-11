@@ -17,7 +17,7 @@ return [
 
     'paths' => ['api/*'],
 
-    'allowed_methods' => ['POST'],
+    'allowed_methods' => ['*'],
 
     'allowed_origins' => [
         'https://my-examly-front.vercel.app',
@@ -31,6 +31,6 @@ return [
 
     'max_age' => 0,
 
-    'supports_credentials' => false,
+    'supports_credentials' => true,
 
 ];
