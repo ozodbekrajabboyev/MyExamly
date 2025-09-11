@@ -19,7 +19,9 @@ return [
 
     'allowed_methods' => ['POST'],
 
-    'allowed_origins' => ['*'],
+    'allowed_origins' => [
+        'https://my-examly-front.vercel.app',
+    ],
 
     'allowed_origins_patterns' => [],
 
