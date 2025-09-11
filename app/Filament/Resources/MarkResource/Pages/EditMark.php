@@ -156,7 +156,8 @@ class EditMark extends EditRecord
 
     protected function handleRecordUpdate(Mark|\Illuminate\Database\Eloquent\Model $record, array $data): Mark
     {
-        $exam = Exam::findOrFail($data['exam_id']);
+
+        $exam = Exam::findOrFail($record['exam_id']);
 
         $savedMarksCount = 0;
         $updatedMarksCount = 0;
@@ -200,10 +201,12 @@ class EditMark extends EditRecord
         // Send appropriate notification
         if ($savedMarksCount > 0 && $updatedMarksCount > 0) {
             $message = "{$savedMarksCount} ta yangi baho saqlandi va {$updatedMarksCount} ta baho yangilandi!";
+            $exam->update(['status' => 'pending']);
         } elseif ($savedMarksCount > 0) {
             $message = "{$savedMarksCount} ta baho muvaffaqiyatli saqlandi!";
         } elseif ($updatedMarksCount > 0) {
             $message = "{$updatedMarksCount} ta baho muvaffaqiyatli yangilandi!";
+            $exam->update(['status' => 'pending']);
         } else {
             $message = "Hech qanday baho o'zgartirilmadi.";
         }

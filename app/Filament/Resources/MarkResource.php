@@ -97,7 +97,7 @@ class MarkResource extends Resource
                     })
                     ->sortable(),
             ])
-            ->defaultSort('created_at', 'desc')
+            ->defaultSort('created_at', 'asc')
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Status')
