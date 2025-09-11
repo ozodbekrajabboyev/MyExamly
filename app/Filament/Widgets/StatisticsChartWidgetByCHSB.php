@@ -58,7 +58,6 @@ class StatisticsChartWidgetByCHSB extends ChartWidget
                 Carbon::parse($this->startDate)->startOfDay(),
                 Carbon::parse($this->endDate)->endOfDay()
             ])
-            ->whereHas('problems')
             ->orderBy('created_at')
             ->get();
 
@@ -68,10 +67,14 @@ class StatisticsChartWidgetByCHSB extends ChartWidget
 
         $examIds = $exams->pluck('id');
 
-        $maxMarksPerExam = DB::table('problems')
-            ->whereIn('exam_id', $examIds)->groupBy('exam_id')
-            ->select('exam_id', DB::raw('SUM(max_mark) as total_max_mark'))
-            ->get()->keyBy('exam_id');
+        $maxMarksPerExam = DB::table('exams')
+            ->whereIn('id', $examIds)
+            ->select('id as exam_id',
+                DB::raw("(SELECT SUM((value->>'max_mark')::integer)
+                  FROM jsonb_array_elements(problems) AS value) as total_max_mark")
+            )
+            ->get()
+            ->keyBy('exam_id');
 
         $studentMarksPerExam = Mark::query()
             ->whereIn('exam_id', $examIds)->groupBy('exam_id', 'student_id')
