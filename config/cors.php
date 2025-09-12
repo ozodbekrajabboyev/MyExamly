@@ -20,7 +20,8 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://my-examly-front.vercel.app',
+        'https://wwww.myexamly.uz',
+        'https://myexamly.uz',
     ],
 
     'allowed_origins_patterns' => [],
