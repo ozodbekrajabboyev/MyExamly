@@ -20,7 +20,7 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://wwww.myexamly.uz',
+        'https://www.myexamly.uz',
     ],
 
     'allowed_origins_patterns' => [],
