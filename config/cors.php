@@ -21,7 +21,6 @@ return [
 
     'allowed_origins' => [
         'https://wwww.myexamly.uz',
-        'https://myexamly.uz',
     ],
 
     'allowed_origins_patterns' => [],
