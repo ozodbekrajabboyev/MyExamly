@@ -4,6 +4,9 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\TeacherResource\Pages;
 use App\Filament\Resources\TeacherResource\RelationManagers;
+use App\Models\District;
+use App\Models\Maktab;
+use App\Models\Region;
 use App\Models\Role;
 use App\Models\Subject;
 use App\Models\Teacher;
@@ -325,23 +328,62 @@ class TeacherResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('full_name')
+                    ->label('F.I.Sh')
                     ->searchable(),
+
                 Tables\Columns\TextColumn::make('user.name')
-                    ->numeric()
+                    ->label('Foydalanuvchi')
                     ->sortable(),
+
                 Tables\Columns\TextColumn::make('subjects.name')
                     ->label("Fanlar")
-                    ->formatStateUsing(function ($state, $record) {
-                        return $record->subjects->pluck('name')->implode(', ');
-                    }),
+                    ->formatStateUsing(fn ($state, $record) => $record->subjects->pluck('name')->implode(', ')),
+
                 Tables\Columns\TextColumn::make('phone')
+                    ->label('Telefon')
                     ->searchable(),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('region_id')
+                    ->label('Viloyat')
+                    ->options(fn () => Region::pluck('name', 'id')->toArray())
+                    ->searchable()
+                    ->preload()
+                    ->query(function ($query, $data) {
+                        if ($data['value']) {
+                            $query->whereHas('maktab.district.region', function ($q) use ($data) {
+                                $q->where('id', $data['value']);
+                            });
+                        }
+                    }),
+
+                Tables\Filters\SelectFilter::make('district_id')
+                    ->label('Tuman/Shahar')
+                    ->options(fn () => District::pluck('name', 'id')->toArray())
+                    ->searchable()
+                    ->preload()
+                    ->query(function ($query, $data) {
+                        if ($data['value']) {
+                            $query->whereHas('maktab.district', function ($q) use ($data) {
+                                $q->where('id', $data['value']);
+                            });
+                        }
+                    }),
+
+                Tables\Filters\SelectFilter::make('maktab_id')
+                    ->label('Maktab')
+                    ->options(fn () => Maktab::pluck('name', 'id')->toArray())
+                    ->searchable()
+                    ->preload()
+                    ->query(function ($query, $data) {
+                        if ($data['value']) {
+                            $query->where('maktab_id', $data['value']);
+                        }
+                    }),
             ]);
     }
+
 
     public static function getRelations(): array
     {

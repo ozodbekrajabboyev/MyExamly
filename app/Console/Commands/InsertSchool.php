@@ -38,7 +38,9 @@ class InsertSchool extends Command
 
         // Insert dummy school
         $school = Maktab::firstOrCreate([
-            'name' => 'MyExamly Platform'
+            "region_id" => 14,
+            "district_id" => 183,
+            'name' => 'MyExamly Platform',
         ]);
         $this->info("School '" . $school->name . "' " . ($school->wasRecentlyCreated ? "created." : "already exists."));
 
