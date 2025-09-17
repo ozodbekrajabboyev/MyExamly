@@ -12,6 +12,11 @@ class StatsOverview extends BaseWidget
 {
     protected int | string | array $columnSpan = 'full';
 
+    public static function canView(): bool
+    {
+        return auth()->check() && auth()->user()->role_id !== 3;
+    }
+
     protected function getStats(): array
     {
         $teachers = Teacher::all()->where('maktab_id', auth()->user()->maktab_id)->count();

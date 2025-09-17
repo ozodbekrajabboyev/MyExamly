@@ -23,8 +23,6 @@ class StatisticsChartWidgetByBSB extends ChartWidget
         return request()->routeIs('filament.app.pages.statistics');
     }
 
-
-
     /**
      * The polling interval for the chart. Null means no polling.
      *
@@ -96,7 +94,6 @@ class StatisticsChartWidgetByBSB extends ChartWidget
                 Carbon::parse($this->startDate)->startOfDay(),
                 Carbon::parse($this->endDate)->endOfDay()
             ])
-            ->whereHas('problems')
             ->orderBy('created_at')
             ->get();
 
@@ -106,10 +103,22 @@ class StatisticsChartWidgetByBSB extends ChartWidget
 
         $examIds = $exams->pluck('id');
 
-        $maxMarksPerExam = DB::table('problems')
-            ->whereIn('exam_id', $examIds)->groupBy('exam_id')
-            ->select('exam_id', DB::raw('SUM(max_mark) as total_max_mark'))
-            ->get()->keyBy('exam_id');
+        // Calculate total max marks from the problems JSONB column
+        $maxMarksPerExam = collect();
+        foreach ($exams as $exam) {
+            $problems = $exam->problems ? json_decode($exam->problems, true) : [];
+            $totalMaxMark = 0;
+
+            if (is_array($problems)) {
+                foreach ($problems as $problem) {
+                    if (isset($problem['max_mark'])) {
+                        $totalMaxMark += (float) $problem['max_mark'];
+                    }
+                }
+            }
+
+            $maxMarksPerExam->put($exam->id, (object) ['total_max_mark' => $totalMaxMark]);
+        }
 
         $studentMarksPerExam = Mark::query()
             ->whereIn('exam_id', $examIds)->groupBy('exam_id', 'student_id')
@@ -137,7 +146,7 @@ class StatisticsChartWidgetByBSB extends ChartWidget
         return [
             'datasets' => [
                 [
-                    'label' => "O'zlashtirish foizi (%)", // Updated label to match
+                    'label' => "O'zlashtirish foizi (%)",
                     'data' => $data,
                     'backgroundColor' => 'rgba(59, 130, 246, 0.5)',
                     'borderColor' => 'rgba(59, 130, 246, 1)',

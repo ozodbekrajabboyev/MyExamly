@@ -13,7 +13,7 @@ class StudentPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->role->name === "superadmin" || $user->role->name === "admin";
+        return $user->role->name === "admin";
     }
 
     /**
@@ -21,7 +21,7 @@ class StudentPolicy
      */
     public function view(User $user, Student $student): bool
     {
-        return $user->role->name === "superadmin" || $user->role->name === "admin";
+        return $user->role->name === "admin";
     }
 
     /**

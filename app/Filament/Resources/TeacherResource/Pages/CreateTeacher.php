@@ -67,6 +67,7 @@ class CreateTeacher extends CreateRecord
         // Sending creadentials via email
         Mail::to($data['email'])->queue(new LoginPasswordSend($data['email'], $password));
 
+
         // Notify the the admin also
         Notification::make()
             ->title('Your credentials are ready!')

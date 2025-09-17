@@ -2,14 +2,18 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Widgets\StatisticsBSBbyViloyatlar;
 use App\Filament\Widgets\StatisticsByFanBSB;
 use App\Filament\Widgets\StatisticsByFanCHSB;
+use App\Filament\Widgets\StatisticsByRegionsAndSubjects;
 use App\Filament\Widgets\StatisticsBySinfBSB;
 use App\Filament\Widgets\StatisticsBySinfCHSB;
 use App\Filament\Widgets\ExamResultsWidget;
 use App\Filament\Widgets\StatisticsChartWidgetByCHSB;
 use App\Filament\Widgets\StatisticsChartWidgetByBSB;
+use App\Filament\Widgets\StatisticsCHSBbyViloyatlar;
 use App\Filament\Widgets\StatsOverview;
+use App\Filament\Widgets\TeacherQualificationChartWidget;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -67,14 +71,19 @@ class AppPanelProvider extends PanelProvider
             ])
             ->widgets([
                 StatsOverview::class,
+                StatisticsBSBbyViloyatlar::class,
+                StatisticsCHSBbyViloyatlar::class,
+                StatisticsByRegionsAndSubjects::class,
                 ExamResultsWidget::class,
-                StatisticsChartWidgetByBSB::class,
-                StatisticsChartWidgetByCHSB::class,
                 StatisticsBySinfBSB::class,
                 StatisticsBySinfCHSB::class,
                 StatisticsByFanBSB::class,
                 StatisticsByFanCHSB::class,
+                StatisticsChartWidgetByBSB::class,
+                StatisticsChartWidgetByCHSB::class,
+                TeacherQualificationChartWidget::class
             ])
+            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->navigationGroups([
                 NavigationGroup::make('O\'quv boshqaruvi')->icon('heroicon-o-book-open'),
                 NavigationGroup::make('Imtihonlar boshqaruvi'),

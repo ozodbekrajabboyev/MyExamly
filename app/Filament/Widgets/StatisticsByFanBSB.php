@@ -11,6 +11,10 @@ class StatisticsByFanBSB extends ChartWidget
 {
     protected static ?string $heading = "Fanlar kesimida BSB o‘zlashtirish foizi";
 
+    public static function canView(): bool
+    {
+        return auth()->check() && auth()->user()->role_id !== 3;
+    }
     protected function getData(): array
     {
         $maktabId = auth()->user()->maktab_id;
