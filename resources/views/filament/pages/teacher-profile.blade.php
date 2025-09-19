@@ -8,7 +8,7 @@
                 </h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-white-300">To'liq IFSH</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-white-300">To'liq I.F.SH</label>
                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $teacher->full_name }}</p>
                     </div>
                     <div>
@@ -24,7 +24,7 @@
                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $teacher->user->email }}</p>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Malaka Toifa Daraja</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">Malaka toifa daraja</label>
                         <p class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $teacher->malaka_toifa_daraja ?? 'Kiritilmagan' }}</p>
                     </div>
                     <div>
@@ -71,15 +71,17 @@
                         <!-- Pasport rasmi -->
                         @if($teacher->passport_photo_path)
                             <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
-                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Pasport rasmi</h4>
-                                <img src="{{ $teacher->passport_photo_url }}" alt="Pasport rasmi" class="w-full h-32 object-cover rounded">
+                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Pasport hujjati</h4>
+                                <a href="{{ $teacher->passport_photo_url }}" target="_blank" class="w-full h-32 object-cover rounded">
+                                    Hujjatni ko'rish
+                                </a>
                             </div>
                         @endif
 
                         <!-- Elektron Imzo -->
                         @if($teacher->signature_path)
                             <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
-                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Elektron Imzo</h4>
+                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Shaxsiy imzo</h4>
                                 <img src="{{ $teacher->signature_url }}" alt="Elektron Imzo" class="w-full h-32 object-cover rounded">
                             </div>
                         @endif
@@ -107,7 +109,7 @@
                         <!-- 1-Milliy sertifikat -->
                         @if($teacher->milliy_sertifikat1_path)
                             <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
-                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">1-Milliy sertifikat</h4>
+                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">1-milliy sertifikat</h4>
                                 <a href="{{ $teacher->milliy_sertifikat1_url }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm">
                                     Hujjatni ko'rish
                                 </a>
@@ -117,7 +119,7 @@
                         <!-- 2-Milliy sertifikat -->
                         @if($teacher->milliy_sertifikat2_path)
                             <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
-                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">2-Milliy sertifikat</h4>
+                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">2-milliy sertifikat</h4>
                                 <a href="{{ $teacher->milliy_sertifikat2_url }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm">
                                     Hujjatni ko'rish
                                 </a>
@@ -147,7 +149,7 @@
                         <!-- Vazir buyruq -->
                         @if($teacher->vazir_buyruq_path)
                             <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
-                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Vazir buyruq</h4>
+                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Vazir buyruqnomasi</h4>
                                 <a href="{{ $teacher->vazir_buyruq_url }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm">
                                     Hujjatni ko'rish
                                 </a>

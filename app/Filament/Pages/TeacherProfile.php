@@ -60,11 +60,11 @@ class TeacherProfile extends Page implements HasForms
     {
         return $form
             ->schema([
-                Section::make('Pasport Maʼlumotlari')
+                Section::make('Pasport maʼlumotlari')
                     ->description('Iltimos, pasport maʼlumotlaringizni kiriting')
                     ->schema([
                         TextInput::make('passport_serial_number')
-                            ->label('Pasport Seriya Raqami')
+                            ->label('Pasport seriya raqami')
                             ->placeholder('Masalan: AB1234567')
                             ->maxLength(50),
 
@@ -74,7 +74,7 @@ class TeacherProfile extends Page implements HasForms
                             ->maxLength(50),
 
                         FileUpload::make('passport_photo_path')
-                            ->label('Pasport Fotosurati')
+                            ->label('Pasportingizni yuklang')
                             ->disk('public')
                             ->directory('teacher-documents/passport-photos')
                             ->image()
@@ -106,7 +106,7 @@ class TeacherProfile extends Page implements HasForms
                     ->columns(2)
                     ->collapsible(),
 
-                Section::make('Taʼlimga Oid Hujjatlar')
+                Section::make('Taʼlimga oid hujjatlar')
                     ->description('Diplom va boshqa malaka hujjatlaringizni yuklang')
                     ->schema([
                         FileUpload::make('diplom_path')
@@ -119,7 +119,7 @@ class TeacherProfile extends Page implements HasForms
                             ->maxFiles(1),
 
                         Select::make('malaka_toifa_daraja')
-                            ->label('Malaka Toifa Daraja')
+                            ->label('Malaka toifa daraja')
                             ->options([
                                 'mutaxasis' => 'Mutaxasis',
                                 '1-toifa' => '1-toifa',
@@ -130,7 +130,7 @@ class TeacherProfile extends Page implements HasForms
                             ->reactive(),
 
                         FileUpload::make('malaka_toifa_path')
-                            ->label('Malaka Toifa Hujjati')
+                            ->label('Malaka toifa hujjati')
                             ->disk('public')
                             ->directory('teacher-documents/malaka-toifa')
                             ->maxSize(10240) // 10MB
@@ -147,7 +147,7 @@ class TeacherProfile extends Page implements HasForms
                     ->description('Milliy va xalqaro sertifikatlaringizni yuklang')
                     ->schema([
                         FileUpload::make('milliy_sertifikat1_path')
-                            ->label('Milliy Sertifikat 1')
+                            ->label('Milliy sertifikat 1')
                             ->disk('public')
                             ->directory('teacher-documents/milliy-sertifikat1')
                             ->maxSize(10240) // 10MB
@@ -156,7 +156,7 @@ class TeacherProfile extends Page implements HasForms
                             ->maxFiles(1),
 
                         FileUpload::make('milliy_sertifikat2_path')
-                            ->label('Milliy Sertifikat 2')
+                            ->label('Milliy sertifikat 2')
                             ->disk('public')
                             ->directory('teacher-documents/milliy-sertifikat2')
                             ->maxSize(10240) // 10MB
@@ -165,7 +165,7 @@ class TeacherProfile extends Page implements HasForms
                             ->maxFiles(1),
 
                         FileUpload::make('xalqaro_sertifikat_path')
-                            ->label('Xalqaro Sertifikat')
+                            ->label('Xalqaro sertifikat')
                             ->disk('public')
                             ->directory('teacher-documents/xalqaro-sertifikat')
                             ->maxSize(10240) // 10MB
@@ -174,7 +174,7 @@ class TeacherProfile extends Page implements HasForms
                             ->maxFiles(1),
 
                         FileUpload::make('ustama_sertifikat_path')
-                            ->label('Ustama Sertifikat')
+                            ->label('Ustama sertifikat')
                             ->disk('public')
                             ->directory('teacher-documents/ustama-sertifikat')
                             ->maxSize(10240) // 10MB
@@ -185,7 +185,7 @@ class TeacherProfile extends Page implements HasForms
                     ->columns(2)
                     ->collapsible(),
 
-                Section::make('Rasmiy Hujjatlar')
+                Section::make('Rasmiy hujjatlar')
                     ->description('Boshqa rasmiy hujjatlar')
                     ->schema([
                         FileUpload::make('vazir_buyruq_path')
@@ -209,7 +209,7 @@ class TeacherProfile extends Page implements HasForms
                     ->columns(2)
                     ->collapsible(),
 
-                Section::make('Aloqa Maʼlumotlari')
+                Section::make('Aloqa maʼlumotlari')
                     ->description('Qoʻshimcha aloqaga oid maʼlumotlar')
                     ->schema([
                         TextInput::make('telegram_id')
@@ -231,7 +231,7 @@ class TeacherProfile extends Page implements HasForms
         $this->teacher->update($data);
 
         Notification::make()
-            ->title('Profil Yangilandi')
+            ->title('Profil yangilandi')
             ->body('Profil maʼlumotlaringiz muvaffaqiyatli yangilandi.')
             ->success()
             ->send();
@@ -241,7 +241,7 @@ class TeacherProfile extends Page implements HasForms
     {
         return [
             Action::make('save')
-                ->label('Profilni Yangilash')
+                ->label('Profilni yangilash')
                 ->submit('save')
                 ->color('primary'),
         ];

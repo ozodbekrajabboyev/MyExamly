@@ -79,14 +79,14 @@ class TeacherResource extends Resource
                             // Left Column - Primary Information
                             Group::make([
                                 // Personal Details Card
-                                Section::make('Shaxsiy Ma\'lumotlar')
+                                Section::make('Shaxsiy ma\'lumotlar')
                                     ->icon('heroicon-o-user')
                                     ->description('Asosiy shaxsiy va kasbiy ma\'lumotlar')
                                     ->schema([
                                         Grid::make(2)
                                             ->schema([
                                                 TextEntry::make('full_name')
-                                                    ->label('To\'liq IFSH')
+                                                    ->label('To\'liq I.F.SH')
                                                     ->size(TextEntry\TextEntrySize::Large)
                                                     ->weight(FontWeight::Bold)
                                                     ->color('primary'),
@@ -98,14 +98,14 @@ class TeacherResource extends Resource
                                                     ->color('success'),
 
                                                 TextEntry::make('user.email')
-                                                    ->label('Elektron Pochta')
+                                                    ->label('Elektron pochta')
                                                     ->icon('heroicon-o-envelope')
                                                     ->copyable()
                                                     ->copyMessage('Email nusxalandi!')
                                                     ->color('gray'),
 
                                                 TextEntry::make('phone')
-                                                    ->label('Telefon Raqami')
+                                                    ->label('Telefon raqami')
                                                     ->icon('heroicon-o-phone')
                                                     ->copyable()
                                                     ->copyMessage('Telefon nusxalandi!')
@@ -113,7 +113,7 @@ class TeacherResource extends Resource
                                                     ->color('gray'),
 
                                                 TextEntry::make('malaka_toifa_daraja')
-                                                    ->label('Malaka Toifa Daraja')
+                                                    ->label('Malaka toifa daraja')
                                                     ->icon('heroicon-o-academic-cap')
                                                     ->badge()
                                                     ->color('primary')
@@ -123,7 +123,7 @@ class TeacherResource extends Resource
                                     ->compact(),
 
                                 // Contact & Social
-                                Section::make('Aloqa Ma\'lumotlari')
+                                Section::make('Aloqa ma\'lumotlari')
                                     ->icon('heroicon-o-chat-bubble-left-ellipsis')
                                     ->schema([
                                         Grid::make(2)
@@ -151,7 +151,7 @@ class TeacherResource extends Resource
                     ->compact(),
 
                 // Identification Section with Passport Photo
-                Section::make('Shaxsni Tasdiqlovchi Hujjatlar')
+                Section::make('Shaxsni tasdiqlovchi hujjatlar')
                     ->icon('heroicon-o-identification')
                     ->description('Rasmiy shaxsni tasdiqlovchi hujjatlar va pasport ma\'lumotlari')
                     ->schema([
@@ -159,31 +159,27 @@ class TeacherResource extends Resource
                             ->schema([
                                 // Passport Photo
                                 Group::make([
-                                    ImageEntry::make('passport_photo_path')
-                                        ->label('Pasport Rasmi')
-                                        ->disk('public')
-                                        ->height(200)
-                                        ->width('100%')
-                                        ->extraAttributes([
-                                            'class' => 'rounded-lg shadow-md border-2 border-gray-100'
-                                        ])
-                                        ->placeholder('Rasm yuklanmagan'),
+//                                    ImageEntry::make('passport_photo_path')
+//                                        ->label('Pasport hujjati')
+//                                        ->disk('public')
+//                                        ->height(200)
+//                                        ->width('100%')
+//                                        ->extraAttributes([
+//                                            'class' => 'rounded-lg shadow-md border-2 border-gray-100'
+//                                        ])
+//                                        ->placeholder('Hujjat yuklanmagan'),
 
                                     TextEntry::make('passport_photo_path')
-                                        ->label('Rasmni Yuklash')
-                                        ->formatStateUsing(fn ($state) => $state ? 'Rasmni Yuklash' : 'Yuklanmagan')
+                                        ->label('Passportni yuklash')
+                                        ->formatStateUsing(fn ($state) => $state ? 'Passportni yuklash' : 'Yuklanmagan')
                                         ->url(fn ($record) => $record->passport_photo_path ?
                                             Storage::disk('public')->url($record->passport_photo_path) : null)
                                         ->openUrlInNewTab()
                                         ->badge()
                                         ->color(fn ($state) => $state ? 'success' : 'gray')
                                         ->icon('heroicon-o-arrow-down-tray'),
-                                ])->columnSpan(1),
-
-                                // Passport Information
-                                Group::make([
                                     TextEntry::make('passport_serial_number')
-                                        ->label('Pasport Seriyasi')
+                                        ->label('Pasport seriyasi')
                                         ->icon('heroicon-o-hashtag')
                                         ->copyable()
                                         ->badge()
@@ -197,17 +193,20 @@ class TeacherResource extends Resource
                                         ->badge()
                                         ->color('secondary')
                                         ->placeholder('Kiritilmagan'),
+                                ])->columnSpan(1),
 
+                                // Passport Information
+                                Group::make([
                                     TextEntry::make('signature_path')
-                                        ->label('Imzo Holati')
+                                        ->label('Imzo holati')
                                         ->formatStateUsing(fn ($state) => $state ? 'Elektron imzo mavjud' : 'Elektron imzo yuklanmagan')
                                         ->badge()
                                         ->color(fn ($state) => $state ? 'success' : 'warning')
                                         ->icon(fn ($state) => $state ? 'heroicon-o-check-circle' : 'heroicon-o-x-circle'),
 
                                     TextEntry::make('signature_path')
-                                        ->label('Imzoni Ko\'rish')
-                                        ->formatStateUsing(fn ($state) => $state ? 'Imzoni Yuklash' : 'Mavjud Emas')
+                                        ->label('Imzoni ko\'rish')
+                                        ->formatStateUsing(fn ($state) => $state ? 'Imzoni yuklash' : 'Mavjud Emas')
                                         ->url(fn ($record) => $record->signature_path ?
                                             Storage::disk('public')->url($record->signature_path) : null)
                                         ->openUrlInNewTab()
@@ -215,13 +214,13 @@ class TeacherResource extends Resource
                                         ->color(fn ($state) => $state ? 'info' : 'gray')
                                         ->icon('heroicon-o-arrow-down-tray')
                                         ->visible(fn ($record) => $record->signature_path),
-                                ])->columnSpan(2),
+                                ])->columnSpan(1),
                             ]),
                     ])
                     ->collapsible(),
 
                 // Professional Documents
-                Section::make('Kasbiy Hujjatlar')
+                Section::make('Kasbiy hujjatlar')
                     ->icon('heroicon-o-document-text')
                     ->description('Ta\'lim sertifikatlari va kasbiy hujjatlar')
                     ->schema([
@@ -231,7 +230,7 @@ class TeacherResource extends Resource
                                 Group::make([
                                     TextEntry::make('diplom_path')
                                         ->label('Diplom')
-                                        ->formatStateUsing(fn ($state) => $state ? 'Hujjatni Yuklash' : 'Yuklanmagan')
+                                        ->formatStateUsing(fn ($state) => $state ? 'Hujjatni yuklash' : 'Yuklanmagan')
                                         ->url(fn ($record) => $record->diplom_path ?
                                             Storage::disk('public')->url($record->diplom_path) : null)
                                         ->openUrlInNewTab()
@@ -240,8 +239,8 @@ class TeacherResource extends Resource
                                         ->icon('heroicon-o-arrow-down-tray'),
 
                                     TextEntry::make('malaka_toifa_path')
-                                        ->label('Malaka Toifasi')
-                                        ->formatStateUsing(fn ($state) => $state ? 'Hujjatni Yuklash' : 'Yuklanmagan')
+                                        ->label('Malaka toifasi')
+                                        ->formatStateUsing(fn ($state) => $state ? 'Hujjatni yuklash' : 'Yuklanmagan')
                                         ->url(fn ($record) => $record->malaka_toifa_path ?
                                             Storage::disk('public')->url($record->malaka_toifa_path) : null)
                                         ->openUrlInNewTab()
@@ -253,7 +252,7 @@ class TeacherResource extends Resource
                                 // Certificates Group
                                 Group::make([
                                     TextEntry::make('milliy_sertifikat1_path')
-                                        ->label('1-Milliy Sertifikat')
+                                        ->label('1-milliy sertifikat')
                                         ->formatStateUsing(fn ($state) => $state ? 'Sertifikatni Yuklash' : 'Yuklanmagan')
                                         ->url(fn ($record) => $record->milliy_sertifikat1_path ?
                                             Storage::disk('public')->url($record->milliy_sertifikat1_path) : null)
@@ -263,8 +262,8 @@ class TeacherResource extends Resource
                                         ->icon('heroicon-o-arrow-down-tray'),
 
                                     TextEntry::make('milliy_sertifikat2_path')
-                                        ->label('2-Milliy Sertifikat')
-                                        ->formatStateUsing(fn ($state) => $state ? 'Sertifikatni Yuklash' : 'Yuklanmagan')
+                                        ->label('2-milliy sertifikat')
+                                        ->formatStateUsing(fn ($state) => $state ? 'Sertifikatni yuklash' : 'Yuklanmagan')
                                         ->url(fn ($record) => $record->milliy_sertifikat2_path ?
                                             Storage::disk('public')->url($record->milliy_sertifikat2_path) : null)
                                         ->openUrlInNewTab()
@@ -273,8 +272,8 @@ class TeacherResource extends Resource
                                         ->icon('heroicon-o-arrow-down-tray'),
 
                                     TextEntry::make('xalqaro_sertifikat_path')
-                                        ->label('Xalqaro Sertifikat')
-                                        ->formatStateUsing(fn ($state) => $state ? 'Sertifikatni Yuklash' : 'Yuklanmagan')
+                                        ->label('Xalqaro sertifikat')
+                                        ->formatStateUsing(fn ($state) => $state ? 'Sertifikatni yuklash' : 'Yuklanmagan')
                                         ->url(fn ($record) => $record->xalqaro_sertifikat_path ?
                                             Storage::disk('public')->url($record->xalqaro_sertifikat_path) : null)
                                         ->openUrlInNewTab()
@@ -283,8 +282,8 @@ class TeacherResource extends Resource
                                         ->icon('heroicon-o-arrow-down-tray'),
 
                                     TextEntry::make('ustama_sertifikat_path')
-                                        ->label('Ustama Sertifikat')
-                                        ->formatStateUsing(fn ($state) => $state ? 'Sertifikatni Yuklash' : 'Yuklanmagan')
+                                        ->label('Ustama sertifikat')
+                                        ->formatStateUsing(fn ($state) => $state ? 'Sertifikatni yuklash' : 'Yuklanmagan')
                                         ->url(fn ($record) => $record->ustama_sertifikat_path ?
                                             Storage::disk('public')->url($record->ustama_sertifikat_path) : null)
                                         ->openUrlInNewTab()
@@ -296,8 +295,8 @@ class TeacherResource extends Resource
                                 // Official Documents Group
                                 Group::make([
                                     TextEntry::make('vazir_buyruq_path')
-                                        ->label('Vazir Buyruq')
-                                        ->formatStateUsing(fn ($state) => $state ? 'Hujjatni Yuklash' : 'Yuklanmagan')
+                                        ->label('Vazir buyruq')
+                                        ->formatStateUsing(fn ($state) => $state ? 'Hujjatni yuklash' : 'Yuklanmagan')
                                         ->url(fn ($record) => $record->vazir_buyruq_path ?
                                             Storage::disk('public')->url($record->vazir_buyruq_path) : null)
                                         ->openUrlInNewTab()
@@ -307,7 +306,7 @@ class TeacherResource extends Resource
 
                                     TextEntry::make('malumotnoma_path')
                                         ->label('Ma\'lumotnoma(obyektivka)')
-                                        ->formatStateUsing(fn ($state) => $state ? 'Hujjatni Yuklash' : 'Yuklanmagan')
+                                        ->formatStateUsing(fn ($state) => $state ? 'Hujjatni yuklash' : 'Yuklanmagan')
                                         ->url(fn ($record) => $record->malumotnoma_path ?
                                             Storage::disk('public')->url($record->malumotnoma_path) : null)
                                         ->openUrlInNewTab()
@@ -380,7 +379,7 @@ class TeacherResource extends Resource
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('malaka_toifa_daraja')
-                    ->label('Malaka Daraja')
+                    ->label('Malaka daraja')
                     ->badge()
                     ->color('primary'),
             ])
