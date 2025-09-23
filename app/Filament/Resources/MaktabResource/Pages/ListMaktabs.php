@@ -13,7 +13,7 @@ class ListMaktabs extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()->label("Yangi maktab yaratish"),
         ];
     }
 }

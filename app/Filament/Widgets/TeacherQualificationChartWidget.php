@@ -15,7 +15,7 @@ class TeacherQualificationChartWidget extends ChartWidget
 
     public static function canView(): bool
     {
-        return request()->routeIs('filament.app.pages.teacher-qualification-statistics');
+        return request()->routeIs('filament.app.pages.malaka-statistikasi');
     }
 
     protected static ?string $pollingInterval = null;

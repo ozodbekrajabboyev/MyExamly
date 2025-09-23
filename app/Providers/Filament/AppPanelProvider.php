@@ -14,6 +14,7 @@ use App\Filament\Widgets\StatisticsChartWidgetByBSB;
 use App\Filament\Widgets\StatisticsCHSBbyViloyatlar;
 use App\Filament\Widgets\StatsOverview;
 use App\Filament\Widgets\TeacherQualificationChartWidget;
+use App\Filament\Widgets\MalakaStatisticsChart;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -36,7 +37,7 @@ class AppPanelProvider extends PanelProvider
         return Panel::make()
             ->brandName('MyExamly')
             ->id('app')
-            ->favicon('logo1.png')
+            ->favicon(asset('logo1.png'))
             ->profile(isSimple: false)
             ->brandLogo(asset('logo1.png'))
             ->DarkModeBrandLogo(asset('logoDark.png'))
@@ -81,7 +82,8 @@ class AppPanelProvider extends PanelProvider
                 StatisticsByFanCHSB::class,
                 StatisticsChartWidgetByBSB::class,
                 StatisticsChartWidgetByCHSB::class,
-                TeacherQualificationChartWidget::class
+                TeacherQualificationChartWidget::class,
+                MalakaStatisticsChart::class
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->navigationGroups([

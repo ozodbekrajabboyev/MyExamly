@@ -70,6 +70,28 @@ class Teacher extends Model
         return Storage::disk('public')->url($this->malumotnoma_path);
     }
 
+    // In App/Models/Teacher.php
+    public function getLavozimAttribute(): string
+    {
+        $this->loadMissing(['subjects', 'maktab']);
+
+        $maktabName = $this->maktab?->name ?? 'Maktab';
+
+        if ($this->subjects && $this->subjects->count() > 0) {
+            $subjectNames = $this->subjects->pluck('name')->toArray();
+
+            if (count($subjectNames) === 1) {
+                return "{$maktabName}da {$subjectNames[0]} fani o'qituvchisi";
+            } else {
+                $lastSubject = array_pop($subjectNames);
+                $subjectsText = implode(', ', $subjectNames) . ' va ' . $lastSubject;
+                return "{$maktabName}da {$subjectsText} fanlari o'qituvchisi";
+            }
+        }
+
+        return "{$maktabName}da o'qituvchi";
+    }
+
     public function getSignatureUrlAttribute(): ?string
     {
         if (!$this->signature_path) {

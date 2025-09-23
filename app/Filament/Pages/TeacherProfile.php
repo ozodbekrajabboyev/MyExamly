@@ -22,7 +22,7 @@ class TeacherProfile extends Page implements HasForms
     use InteractsWithForms;
 
     protected static ?string $navigationIcon = 'heroicon-o-user';
-    protected static ?string $navigationLabel = 'Mening Profilim';
+    protected static ?string $navigationLabel = 'Mening profilim';
     protected static string $view = 'filament.pages.teacher-profile';
 
     public ?array $data = [];
@@ -89,7 +89,7 @@ class TeacherProfile extends Page implements HasForms
                             ->maxFiles(1),
 
                         FileUpload::make('signature_path')
-                            ->label("Shaxsiy imzoingizni yuklang")
+                            ->label("Shaxsiy imzoni yuklang")
                             ->image()
                             ->acceptedFileTypes(['image/png', 'image/svg+xml'])
                             ->maxSize(5096)
@@ -107,8 +107,17 @@ class TeacherProfile extends Page implements HasForms
                     ->collapsible(),
 
                 Section::make('Taʼlimga oid hujjatlar')
-                    ->description('Diplom va boshqa malaka hujjatlaringizni yuklang')
+                    ->description('Xodimning shaxsiy hujjatlari')
                     ->schema([
+                        FileUpload::make('malumotnoma_path')
+                            ->label("Maʼlumotnoma (obyektivka)")
+                            ->disk('public')
+                            ->directory('teacher-documents/malumotnoma')
+                            ->maxSize(10240) // 10MB
+                            ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'])
+                            ->columnSpanFull()
+                            ->maxFiles(1),
+
                         FileUpload::make('diplom_path')
                             ->label('Diplom')
                             ->disk('public')
@@ -122,8 +131,8 @@ class TeacherProfile extends Page implements HasForms
                             ->label('Malaka toifa daraja')
                             ->options([
                                 'mutaxasis' => 'Mutaxasis',
-                                '1-toifa' => '1-toifa',
-                                '2-toifa' => '2-toifa',
+                                '2-toifa' => 'Ikkinchi toifa',
+                                '1-toifa' => 'Birinchi toifa',
                                 'oliy-toifa' => 'Oliy toifa',
                             ])
                             ->columnSpanFull()
@@ -147,7 +156,7 @@ class TeacherProfile extends Page implements HasForms
                     ->description('Milliy va xalqaro sertifikatlaringizni yuklang')
                     ->schema([
                         FileUpload::make('milliy_sertifikat1_path')
-                            ->label('Milliy sertifikat 1')
+                            ->label('Milliy sertifikat #1')
                             ->disk('public')
                             ->directory('teacher-documents/milliy-sertifikat1')
                             ->maxSize(10240) // 10MB
@@ -156,7 +165,7 @@ class TeacherProfile extends Page implements HasForms
                             ->maxFiles(1),
 
                         FileUpload::make('milliy_sertifikat2_path')
-                            ->label('Milliy sertifikat 2')
+                            ->label('Milliy sertifikat #2')
                             ->disk('public')
                             ->directory('teacher-documents/milliy-sertifikat2')
                             ->maxSize(10240) // 10MB
@@ -172,24 +181,15 @@ class TeacherProfile extends Page implements HasForms
                             ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'])
                             ->columnSpanFull()
                             ->maxFiles(1),
-
-                        FileUpload::make('ustama_sertifikat_path')
-                            ->label('Ustama sertifikat')
-                            ->disk('public')
-                            ->directory('teacher-documents/ustama-sertifikat')
-                            ->maxSize(10240) // 10MB
-                            ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'])
-                            ->columnSpanFull()
-                            ->maxFiles(1),
                     ])
                     ->columns(2)
                     ->collapsible(),
 
-                Section::make('Rasmiy hujjatlar')
-                    ->description('Boshqa rasmiy hujjatlar')
+                Section::make('Ustama hujjatlar')
+                    ->description('Ustama buyruq va sertifikatlar')
                     ->schema([
                         FileUpload::make('vazir_buyruq_path')
-                            ->label('Vazir jamg\'armasi to\'lovi buyicha buyruq yoki ma\'lumotnoma')
+                            ->label('Vazir jamg\'armasi to\'lovi buyicha buyruq')
                             ->disk('public')
                             ->directory('teacher-documents/vazir-buyruq')
                             ->maxSize(10240) // 10MB
@@ -197,10 +197,10 @@ class TeacherProfile extends Page implements HasForms
                             ->columnSpanFull()
                             ->maxFiles(1),
 
-                        FileUpload::make('malumotnoma_path')
-                            ->label("Maʼlumotnoma (obyektivka)")
+                        FileUpload::make('ustama_sertifikat_path')
+                            ->label('70% ustama sertifikati')
                             ->disk('public')
-                            ->directory('teacher-documents/malumotnoma')
+                            ->directory('teacher-documents/ustama-sertifikat')
                             ->maxSize(10240) // 10MB
                             ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'])
                             ->columnSpanFull()
@@ -249,6 +249,6 @@ class TeacherProfile extends Page implements HasForms
 
     public function getTitle(): string|Htmlable
     {
-        return 'Oʻqituvchi Profili - ' . $this->teacher->full_name;
+        return 'Oʻqituvchi profili - ' . $this->teacher->full_name;
     }
 }
