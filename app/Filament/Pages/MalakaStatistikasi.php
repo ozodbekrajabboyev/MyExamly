@@ -40,7 +40,6 @@ class MalakaStatistikasi extends Page implements HasForms, HasTable
 
     protected static ?string $title = 'O\'qituvchilar malaka statistikasi';
 
-    protected static ?string $navigationGroup = 'Hisobotlar';
 
     protected static ?int $navigationSort = 1;
 
