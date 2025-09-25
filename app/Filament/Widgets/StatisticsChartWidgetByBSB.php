@@ -106,7 +106,7 @@ class StatisticsChartWidgetByBSB extends ChartWidget
         // Calculate total max marks from the problems JSONB column
         $maxMarksPerExam = collect();
         foreach ($exams as $exam) {
-            $problems = $exam->problems ? json_decode($exam->problems, true) : [];
+            $problems = is_string($exam->problems) ? json_decode($exam->problems, true) : $exam->problems;
             $totalMaxMark = 0;
 
             if (is_array($problems)) {

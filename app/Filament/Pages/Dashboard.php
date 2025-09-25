@@ -10,7 +10,7 @@ class Dashboard extends \Filament\Pages\Dashboard
 
     public static function canAccess(): bool
     {
-        return auth()->user()->role_id === 'admin' || auth()->user()->role_id === 'teacher';
+        return auth()->user()->role_id === 2 || auth()->user()->role_id === 1;
     }
 
 

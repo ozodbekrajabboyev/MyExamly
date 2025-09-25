@@ -54,6 +54,7 @@ class TeacherProfile extends Page implements HasForms
             'malumotnoma_path' => $this->teacher->malumotnoma_path,
             'signature_path' => $this->teacher->signature_path,
             'telegram_id' => $this->teacher->telegram_id,
+            'profile_photo_path' => $this->teacher->profile_photo_path,
         ]);
     }
 
@@ -74,16 +75,15 @@ class TeacherProfile extends Page implements HasForms
                             ->placeholder('JSHSHIR raqamini kiriting')
                             ->maxLength(50),
 
-                        FileUpload::make('passport_photo_path')
-                            ->label('Pasportingizni yuklang')
+
+                        FileUpload::make('profile_photo_path')
+                            ->label('Rasmingizni yuklang (3x4)')
                             ->disk('public')
-                            ->directory('teacher-documents/passport-photos')
+                            ->directory('teacher-documents/profile-photos')
                             ->image()
-                            ->imageEditor()
+//                            ->imageEditor()
                             ->imageEditorAspectRatios([
                                 '3:4',
-                                '4:3',
-                                '1:1',
                             ])
                             ->maxSize(5120) // 5MB
                             ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'])
@@ -103,6 +103,21 @@ class TeacherProfile extends Page implements HasForms
                                 '1:1',
                             ])
                             ->helperText("PNG yoki SVG formatda imzo rasmini yuklang"),
+
+                        FileUpload::make('passport_photo_path')
+                            ->label('Pasportingizni yuklang')
+                            ->disk('public')
+                            ->directory('teacher-documents/passport-photos')
+                            ->image()
+                            ->imageEditor()
+                            ->imageEditorAspectRatios([
+                                '3:4',
+                                '4:3',
+                                '1:1',
+                            ])
+                            ->maxSize(5120) // 5MB
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'])
+                            ->maxFiles(1),
                     ])
                     ->columns(2)
                     ->collapsible(),

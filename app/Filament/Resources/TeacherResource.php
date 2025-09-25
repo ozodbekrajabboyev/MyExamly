@@ -92,29 +92,34 @@ class TeacherResource extends Resource
                                     ->schema([
                                         TextEntry::make('full_name')
                                             ->label('To\'liq I.F.SH')
-                                            ->size(TextEntry\TextEntrySize::Large)
+                                            ->size(TextEntry\TextEntrySize::Medium)
                                             ->weight(FontWeight::Bold)
-                                            ->color('primary')
-                                            ->icon('heroicon-o-user-circle'),
+                                            ->color('primary'),
+//                                            ->icon('heroicon-o-user-circle'),
 
-                                        TextEntry::make('phone')
-                                            ->label('Telefon raqami')
-                                            ->icon('heroicon-o-device-phone-mobile')
-                                            ->copyable()
-                                            ->copyMessage('Telefon nusxalandi!')
-                                            ->placeholder('Ma\'lumot kiritilmagan')
-                                            ->badge(fn ($state) => !empty($state))
-                                            ->color(fn ($state) => $state ? 'success' : 'gray')
-                                            ->formatStateUsing(fn ($state) => $state ?: 'Telefon kiritilmagan'),
+                                        ImageEntry::make('profile_photo_path')
+                                            ->label('Profil rasmi')
+                                            ->size(200)
+                                            ->square()
+                                            ->visible(fn ($state, $record) =>
+                                            $record->profile_photo_path ? true : false),
+//                                            ->defaultImageUrl(url('/images/default-avatar.png')),
+//                                            ->extraAttributes([
+//                                                'class' => 'mx-auto shadow-lg '
+//                                            ]),
 
-                                        TextEntry::make('user.email')
-                                            ->label('Elektron pochta')
-                                            ->icon('heroicon-o-envelope')
-                                            ->copyable()
-                                            ->copyMessage('Email nusxalandi!')
+                                        TextEntry::make('profile_status')
+                                            ->default("Profile rasmi mavjud emas")
+                                            ->label('Profil rasm holati')
+                                            ->formatStateUsing(fn ($state, $record) =>
+                                            $record->profile_photo_path ? 'Rasm mavjud' : 'Rasm yuklanmagan')
                                             ->badge()
-                                            ->color('blue')
-                                            ->weight('medium'),
+                                            ->color(fn ($state, $record) => $record->profile_photo_path ? 'success' : 'warning')
+                                            ->icon(fn ($state, $record) =>
+                                            $record->profile_photo_path ? 'heroicon-o-check-circle' : 'heroicon-o-exclamation-triangle')
+                                            ->visible(fn ($state, $record) =>
+                                            $record->profile_photo_path ? false : true),
+
                                     ])
                                     ->compact()
                                     ->columnSpan(1),
@@ -182,6 +187,25 @@ class TeacherResource extends Resource
                                             ->placeholder('Telegram ID kiritilmagan')
                                             ->formatStateUsing(fn ($state) => $state ? "@{$state}" : 'ID kiritilmagan'),
 
+                                        TextEntry::make('phone')
+                                            ->label('Telefon raqami')
+                                            ->icon('heroicon-o-device-phone-mobile')
+                                            ->copyable()
+                                            ->copyMessage('Telefon nusxalandi!')
+                                            ->placeholder('Ma\'lumot kiritilmagan')
+                                            ->badge(fn ($state) => !empty($state))
+                                            ->color(fn ($state) => $state ? 'success' : 'gray')
+                                            ->formatStateUsing(fn ($state) => $state ?: 'Telefon kiritilmagan'),
+
+                                        TextEntry::make('user.email')
+                                            ->label('Elektron pochta')
+                                            ->icon('heroicon-o-envelope')
+                                            ->copyable()
+                                            ->copyMessage('Email nusxalandi!')
+                                            ->badge()
+                                            ->color('blue')
+                                            ->weight('medium'),
+
                                         TextEntry::make('created_at')
                                             ->label('Ro\'yxatdan o\'tgan sana')
                                             ->icon('heroicon-o-calendar-days')
@@ -190,14 +214,6 @@ class TeacherResource extends Resource
                                             ->color('amber')
                                             ->weight('medium'),
 
-                                        TextEntry::make('updated_at')
-                                            ->label('So\'ngi yangilanish')
-                                            ->icon('heroicon-o-clock')
-                                            ->dateTime('d.m.Y H:i')
-                                            ->badge()
-                                            ->color('gray')
-                                            ->since()
-                                            ->placeholder('Hech qachon yangilanmagan'),
                                     ])
                                     ->compact()
                                     ->columnSpan(1),
@@ -448,7 +464,7 @@ class TeacherResource extends Resource
             'diplom_path', 'malaka_toifa_daraja', 'malaka_toifa_path',
             'milliy_sertifikat1_path', 'milliy_sertifikat2_path', 'vazir_buyruq_path',
             'ustama_sertifikat_path', 'xalqaro_sertifikat_path', 'malumotnoma_path',
-            'telegram_id', 'signature_path'
+            'profile_photo_path', 'telegram_id', 'signature_path'
         ];
 
         $completed = collect($fields)->filter(fn($field) => !empty($record->$field))->count();
@@ -472,7 +488,7 @@ class TeacherResource extends Resource
         $docs = [
             'passport_photo_path', 'diplom_path', 'malaka_toifa_path',
             'milliy_sertifikat1_path', 'milliy_sertifikat2_path', 'xalqaro_sertifikat_path',
-            'malumotnoma_path', 'vazir_buyruq_path', 'ustama_sertifikat_path', 'signature_path'
+            'profile_photo_path','malumotnoma_path', 'vazir_buyruq_path', 'ustama_sertifikat_path', 'signature_path'
         ];
 
         return collect($docs)->filter(fn($doc) => !empty($record->$doc))->count();
