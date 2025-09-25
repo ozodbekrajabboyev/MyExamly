@@ -19,10 +19,12 @@ class Teacher extends Model
     /** @use HasFactory<\Database\Factories\TeacherFactory> */
     use HasFactory, ScopesSchool;
 
-    public function exams():HasMany
+
+    public function exams():BelongsToMany
     {
-        return $this->hasMany(Exam::class);
+        return $this->belongsToMany(Exam::class);
     }
+
     public function subjects(): BelongsToMany
     {
         return $this->belongsToMany(Subject::class, 'teacher_subject', 'teacher_id', 'subject_id');

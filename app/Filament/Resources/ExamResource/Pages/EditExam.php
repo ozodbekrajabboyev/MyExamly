@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\ExamResource\Pages;
 
 use App\Filament\Resources\ExamResource;
+use App\Models\Exam;
+use App\Models\Mark;
 use App\Models\Sinf;
 use App\Models\Subject;
 use App\Models\Teacher;
@@ -24,11 +26,16 @@ class EditExam extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
+        $teacher2ID = $this->getRecord()->teacher2_id ?? null;
         $teacher = Teacher::find($data['teacher_id'])->user;
+        $teacher2 = Teacher::find($teacher2ID)->user ?? null;
         $class = Sinf::find($data['sinf_id'])->name ?? null;
         $subject = Subject::find($data['subject_id'])->name ?? null;
         $serial_number = $data['serial_number'] ?? null;
         $type = $data['type'];
+
+        $teachers = $teacher2 ? [$teacher, $teacher2] : [$teacher];
+
         if(isset($data['status']) && $data['status'] === 'approved'){
             Notification::make()
                 ->title('🎉 Imtihon tasdiqlandi!')
@@ -36,7 +43,7 @@ class EditExam extends EditRecord
                 ->icon('heroicon-o-check-badge')
                 ->iconColor('success')
                 ->duration(null) // Persistent notification
-                ->sendToDatabase([$teacher]);
+                ->sendToDatabase($teachers);
         }
 
         if(isset($data['status']) && $data['status'] === 'rejected'){
@@ -46,7 +53,7 @@ class EditExam extends EditRecord
                 ->icon('heroicon-o-x-circle')
                 ->iconColor('danger')
                 ->duration(null) // Persistent notification
-                ->sendToDatabase([$teacher]);
+                ->sendToDatabase($teachers);
         }
 
 

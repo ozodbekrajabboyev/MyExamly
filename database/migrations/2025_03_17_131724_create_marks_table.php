@@ -22,7 +22,7 @@ return new class extends Migration
             $table->foreignIdFor(Sinf::class)->constrained()->cascadeOnDelete();
             $table->foreignIdFor(Maktab::class)->constrained()->cascadeOnDelete();
             $table->integer('problem_id'); // This will store the problem ID from JSON
-            $table->decimal('mark', 5, 2)->default(0); // Support decimal marks with 2 decimal places
+            $table->decimal('mark', 5, 1)->default(0);
             $table->timestamps();
 
             // Ensure unique combination of student, exam, and problem

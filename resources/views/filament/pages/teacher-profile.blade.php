@@ -156,6 +156,15 @@
                             </div>
                         @endif
 
+                        @if($teacher->qoshimcha_ustama_path)
+                            <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
+                                <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Qo'shimcha ustama hujjati</h4>
+                                <a href="{{ $teacher->qoshimcha_ustama_path }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm">
+                                    Hujjatni ko'rish
+                                </a>
+                            </div>
+                        @endif
+
                         <!-- Ma'lumotnoma -->
                         @if($teacher->malumotnoma_path)
                             <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3">

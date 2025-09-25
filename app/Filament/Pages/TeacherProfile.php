@@ -50,6 +50,7 @@ class TeacherProfile extends Page implements HasForms
             'xalqaro_sertifikat_path' => $this->teacher->xalqaro_sertifikat_path,
             'ustama_sertifikat_path' => $this->teacher->ustama_sertifikat_path,
             'vazir_buyruq_path' => $this->teacher->vazir_buyruq_path,
+            'qoshimcha_ustama_path' => $this->teacher->qoshimcha_ustama_path,
             'malumotnoma_path' => $this->teacher->malumotnoma_path,
             'signature_path' => $this->teacher->signature_path,
             'telegram_id' => $this->teacher->telegram_id,
@@ -201,6 +202,15 @@ class TeacherProfile extends Page implements HasForms
                             ->label('70% ustama sertifikati')
                             ->disk('public')
                             ->directory('teacher-documents/ustama-sertifikat')
+                            ->maxSize(10240) // 10MB
+                            ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'])
+                            ->columnSpanFull()
+                            ->maxFiles(1),
+
+                        FileUpload::make('qoshimcha_ustama_path')
+                            ->label("Qo'shimcha ustama hujjati")
+                            ->disk('public')
+                            ->directory('teacher-documents/qoshimcha-ustama')
                             ->maxSize(10240) // 10MB
                             ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'])
                             ->columnSpanFull()

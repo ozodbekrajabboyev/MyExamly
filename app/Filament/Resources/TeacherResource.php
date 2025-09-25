@@ -419,11 +419,17 @@ class TeacherResource extends Resource
                                             ->color(fn ($state) => $state ? 'info' : 'gray')
                                             ->icon(fn ($state) => $state ? 'heroicon-o-eye' : 'heroicon-o-x-circle'),
                                         // Add a placeholder for better balance if needed
-                                        TextEntry::make('placeholder')
-                                            ->label('')
-                                            ->hiddenLabel()
-                                            ->default('')
-                                            ->extraAttributes(['class' => 'invisible']),
+
+                                        TextEntry::make('qoshimcha_ustama_path')
+                                            ->label('Qo\'shimcha ustama hujjati')
+                                            ->formatStateUsing(fn ($state) => $state ? 'Hujjatni ko\'rish' : null)
+                                            ->placeholder('Hujjat yuklanmagan')
+                                            ->url(fn ($record) => $record->qoshimcha_ustama_path ?
+                                                Storage::disk('public')->url($record->qoshimcha_ustama_path) : null)
+                                            ->openUrlInNewTab()
+                                            ->badge(fn ($state) => !empty($state))
+                                            ->color(fn ($state) => $state ? 'info' : 'gray')
+                                            ->icon(fn ($state) => $state ? 'heroicon-o-eye' : 'heroicon-o-x-circle')
                                     ])
                                     ->compact()
                                     ->columnSpan(1),

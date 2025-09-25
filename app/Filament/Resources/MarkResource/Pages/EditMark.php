@@ -156,7 +156,8 @@ class EditMark extends EditRecord
 
     protected function handleRecordUpdate(Mark|\Illuminate\Database\Eloquent\Model $record, array $data): Mark
     {
-        $exam = Exam::findOrFail($data['exam_id']);
+//        dd($data);
+        $exam = Exam::findOrFail($record['exam_id']);
 
         $savedMarksCount = 0;
         $updatedMarksCount = 0;
