@@ -4,47 +4,44 @@ namespace App\Filament\Widgets;
 
 use App\Models\Exam;
 use App\Models\Mark;
+use App\Models\Region;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\DB;
 
-class StatisticsBySinfCHSB extends ChartWidget
+class StatisticsBSBbyViloyatlar extends ChartWidget
 {
-    protected static ?string $heading = "Sinflar kesimida CHSB imtihon natijalari";
+    protected static ?string $heading = 'Viloyatlar kesimida BSB natijalari';
+
 
     public static function canView(): bool
     {
-        return auth()->check() && auth()->user()->role_id !== 3;
+        return auth()->check() && auth()->user()->role_id === 3;
     }
     protected function getData(): array
     {
-        $maktabId = auth()->user()->maktab_id;
-
-        // Barcha sinflar
-        $allSinfs = DB::table('sinfs')
-            ->where('maktab_id', $maktabId)
-            ->orderBy('name')
-            ->get();
+        $regions = Region::orderBy('name')->get();
 
         $labels = [];
         $values = [];
 
-        foreach ($allSinfs as $sinf) {
-            // Shu sinfga oid CHSB imtihonlar
+        foreach ($regions as $region) {
+            // Shu viloyatga tegishli BSB imtihonlari
             $exams = Exam::query()
-                ->where('maktab_id', $maktabId)
-                ->where('sinf_id', $sinf->id)
-                ->where('type', 'CHSB')
+                ->where('type', 'BSB')
+                ->whereHas('maktab', function ($q) use ($region) {
+                    $q->where('region_id', $region->id);
+                })
                 ->get();
 
             if ($exams->isEmpty()) {
-                $labels[] = $sinf->name;
+                $labels[] = $region->name;
                 $values[] = 0;
                 continue;
             }
 
             $examIds = $exams->pluck('id');
 
-            // Student ballari
+            // Talabalar ballari
             $studentMarksPerExam = Mark::query()
                 ->whereIn('exam_id', $examIds)
                 ->groupBy('exam_id', 'student_id')
@@ -55,7 +52,7 @@ class StatisticsBySinfCHSB extends ChartWidget
             $totalMasteryPercentages = [];
 
             foreach ($exams as $exam) {
-                // JSONB problems ustunidan umumiy maksimal ball
+                // problems JSON ichidan umumiy maksimal ballni olish
                 $problems = collect($exam->problems ?? []);
                 $totalMaxScore = $problems->sum('max_mark');
 
@@ -74,19 +71,19 @@ class StatisticsBySinfCHSB extends ChartWidget
                 $totalMasteryPercentages[] = $masteryPercentage;
             }
 
-            // O‘rtacha natija sinf bo‘yicha
+            // Viloyat bo‘yicha o‘rtacha natija
             $avgMasteryPercentage = empty($totalMasteryPercentages)
                 ? 0
                 : round(array_sum($totalMasteryPercentages) / count($totalMasteryPercentages), 1);
 
-            $labels[] = $sinf->name;
+            $labels[] = $region->name;
             $values[] = $avgMasteryPercentage;
         }
 
         return [
             'datasets' => [
                 [
-                    'label' => "CHSB o‘zlashtirish foizi (%)",
+                    'label' => 'BSB o‘zlashtirish foizi (%)',
                     'data' => $values,
                     'backgroundColor' => '#3B82F6',
                     'borderColor' => '#1D4ED8',

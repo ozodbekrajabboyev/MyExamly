@@ -158,12 +158,16 @@ class Dashboard extends Component
         $user = Auth::user();
 
         $exams = \App\Models\Exam::query()
-            ->whereHas('marks') // mark bor bo'lsa
+            ->whereHas('marks') // only exams that have marks
             ->when($user->role->name === 'teacher', function ($query) use ($user) {
-                $query->where('teacher_id', $user->teacher->id);
+                $query->where(function ($q) use ($user) {
+                    $q->where('teacher_id', $user->teacher->id)
+                        ->orWhere('teacher2_id', $user->teacher->id);
+                });
             })
             ->with(['sinf', 'subject'])
             ->get();
+
 
         return view('livewire.dashboard', [
             'exams' => $exams,

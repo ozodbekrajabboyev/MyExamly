@@ -124,11 +124,11 @@ class User extends Authenticatable implements FilamentUser
                         ->columnSpanFull()
                         ->required(),
                     TextInput::make('email')
-                        ->label("Foydalanuvchining Email")
+                        ->label("Foydalanuvchining email")
                         ->email()
                         ->required(),
                     TextInput::make('password')
-                        ->label("Foydalanuvchining Paroli")
+                        ->label("Foydalanuvchining paroli")
                         ->revealable(true)
                         ->password()
                         ->required(),

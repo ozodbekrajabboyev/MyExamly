@@ -17,8 +17,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        Student::factory(5)->create();
-        Subject::factory(5)->create();
-
+        $this->call([
+           RegionSeeder::class,
+           DistrictSeeder::class,
+        ]);
     }
 }

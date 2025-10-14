@@ -11,6 +11,10 @@ class StatisticsBySinfBSB extends ChartWidget
 {
     protected static ?string $heading = "Sinflar kesimida BSB imtihon natijalari";
 
+    public static function canView(): bool
+    {
+        return auth()->check() && auth()->user()->role_id !== 3;
+    }
     protected function getData(): array
     {
         $maktabId = auth()->user()->maktab_id;

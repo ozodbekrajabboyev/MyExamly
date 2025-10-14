@@ -41,17 +41,15 @@ class MarkResource extends Resource
         return $form->schema(Mark::getForm());
     }
 
-    public static function getEloquentQuery(): Builder
-    {
-        $user = auth()->user();
-
-        return parent::getEloquentQuery()
-            ->when($user->role->name === 'teacher', function ($query) use ($user) {
-                $query->whereHas('exam', function ($q) use ($user) {
-                    $q->where('teacher_id', $user->teacher->id);
-                });
-            });
-    }
+//    public static function getEloquentQuery(): Builder
+//    {
+//        $user = auth()->user();
+//        return parent::getEloquentQuery()
+//            ->when($user->role->name === 'teacher', function ($query) use ($user) {
+//                $query->where('teacher_id', $user->teacher->id)
+//                    ->orWhere('teacher2_id', $user->teacher->id);
+//            });
+//    }
     public static function table(Table $table): Table
     {
         return $table
@@ -62,7 +60,10 @@ class MarkResource extends Resource
                     ->whereHas('marks') // only exams with marks
                     ->whereNotNull('problems') // only exams with problems
                     ->when($user->role->name === 'teacher', function ($query) use ($user) {
-                        $query->where('teacher_id', $user->teacher->id);
+                        $query->where(function ($q) use ($user) {
+                            $q->where('teacher_id', $user->teacher->id)
+                                ->orWhere('teacher2_id', $user->teacher->id);
+                        });
                     })
                     ->when($user->role->name !== 'superadmin', function ($query) use ($user) {
                         $query->where('maktab_id', $user->maktab_id);

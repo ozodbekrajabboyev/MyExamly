@@ -7,18 +7,16 @@ use App\Models\Mark;
 use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\DB;
-use Livewire\Attributes\On; // Bu import qo'shildi
+use Livewire\Attributes\On;
 
 class StatisticsChartWidgetByCHSB extends ChartWidget
 {
     protected static ?string $heading = 'CHSB imtihonlar grafiki';
 
-
     public static function canView(): bool
     {
         return request()->routeIs('filament.app.pages.statistics');
     }
-
 
     public ?int $sinfId = null;
     public ?int $subjectId = null;
@@ -75,6 +73,29 @@ class StatisticsChartWidgetByCHSB extends ChartWidget
             )
             ->get()
             ->keyBy('exam_id');
+        // Calculate total max marks from the problems JSONB column
+        $maxMarksPerExam = collect();
+        foreach ($exams as $exam) {
+            // Handle both cases: if problems is already an array or a JSON string
+            $problems = $exam->problems;
+            if (is_string($problems)) {
+                $problems = json_decode($problems, true) ?: [];
+            } elseif (!is_array($problems)) {
+                $problems = [];
+            }
+
+            $totalMaxMark = 0;
+
+            if (is_array($problems)) {
+                foreach ($problems as $problem) {
+                    if (isset($problem['max_mark'])) {
+                        $totalMaxMark += (float) $problem['max_mark'];
+                    }
+                }
+            }
+
+            $maxMarksPerExam->put($exam->id, (object) ['total_max_mark' => $totalMaxMark]);
+        }
 
         $studentMarksPerExam = Mark::query()
             ->whereIn('exam_id', $examIds)->groupBy('exam_id', 'student_id')
@@ -110,7 +131,6 @@ class StatisticsChartWidgetByCHSB extends ChartWidget
             'labels' => $labels,
         ];
     }
-
 
     protected function getType(): string
     {

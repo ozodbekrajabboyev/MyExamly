@@ -13,7 +13,7 @@ class SinfPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->role->name === "superadmin" || $user->role->name === "admin";
+        return $user->role->name === "admin";
     }
 
     /**
@@ -21,7 +21,7 @@ class SinfPolicy
      */
     public function view(User $user, Sinf $sinf): bool
     {
-        return $user->role->name === "superadmin" || $user->role->name === "admin";
+        return $user->role->name === "admin";
     }
 
     /**

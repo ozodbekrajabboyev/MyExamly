@@ -12,7 +12,15 @@ class Maktab extends Model
     /** @use HasFactory<\Database\Factories\MaktabFactory> */
     use HasFactory;
 
+    public function region()
+    {
+        return $this->belongsTo(Region::class);
+    }
 
+    public function district()
+    {
+        return $this->belongsTo(District::class);
+    }
     public function users(): HasMany
     {
         return $this->HasMany(User::class);

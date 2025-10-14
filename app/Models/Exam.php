@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Filament\Forms\Get;  // $get uchun
 use Filament\Forms\Set;  // $set uchun
@@ -51,7 +52,7 @@ class Exam extends Model
         return $this->belongsTo(Subject::class);
     }
 
-    public function teacher():BelongsTo
+    public function teacher(): BelongsTo
     {
         return $this->belongsTo(Teacher::class);
     }
@@ -59,6 +60,11 @@ class Exam extends Model
     public function metod():BelongsTo
     {
         return $this->belongsTo(Teacher::class, 'metod_id');
+    }
+
+    public function teacher2(): BelongsTo
+    {
+        return $this->belongsTo(Teacher::class, 'teacher2_id');
     }
 
     public function addProblem($id, $maxMark)
@@ -138,15 +144,66 @@ class Exam extends Model
                                         $q->where('teachers.id', $user->teacher->id);
                                     });
                                 }
-
                                 return $query;
                             }
                         )
                         ->required(),
 
+
                     Forms\Components\Hidden::make('teacher_id')
                         ->default(fn () => auth()->user()->teacher->id)
                         ->required(),
+
+                    // Modern checkbox for secondary teacher option
+                    Forms\Components\Checkbox::make('has_secondary_teacher')
+                        ->label('Ikkinchi o\'qituvchi kerakmi?')
+                        ->helperText('Agar imtihonda ikkinchi o\'qituvchi ishtirok etsa, belgilang')
+                        ->columnSpanFull()
+                        ->live()
+                        ->dehydrated(false)
+                        ->afterStateUpdated(function ($state, Set $set) {
+                            if (!$state) {
+                                $set('teacher2_id', null);
+                            }
+                        }),
+
+                    // Secondary teacher selection (conditionally visible)
+                    Select::make('teacher2_id')
+                        ->label('Ikkinchi o\'qituvchini tanlang')
+                        ->relationship('teacher2', 'full_name')
+                        ->options(function () {
+                            if(auth()->user()->role_id === 1){
+                                $currentTeacherId = auth()->user()->teacher->id;
+                            }else{
+                                $currentTeacherId = null;
+                            }
+
+
+                            // Get all subject IDs that the current teacher teaches
+                            $currentTeacherSubjects = \DB::table('teacher_subject')
+                                ->where('teacher_id', $currentTeacherId)
+                                ->pluck('subject_id')
+                                ->toArray();
+
+                            if (empty($currentTeacherSubjects)) {
+                                return [];
+                            }
+
+                            return \App\Models\Teacher::where('maktab_id', auth()->user()->maktab_id)
+                                ->where('id', '!=', $currentTeacherId)
+                                ->whereExists(function ($query) use ($currentTeacherSubjects) {
+                                    $query->select(\DB::raw(1))
+                                        ->from('teacher_subject')
+                                        ->whereColumn('teacher_subject.teacher_id', 'teachers.id')
+                                        ->whereIn('teacher_subject.subject_id', $currentTeacherSubjects);
+                                })
+                                ->pluck('full_name', 'id');
+                        })
+                        ->columnSpanFull()
+                        ->visible(fn (Get $get): bool => $get('has_secondary_teacher'))
+                        ->required(fn (Get $get): bool => $get('has_secondary_teacher'))
+                        ->placeholder('Ikkinchi o\'qituvchini tanlang'),
+
 
                     Select::make('type')
                         ->label('Imtihon turini tanlang')
@@ -188,33 +245,43 @@ class Exam extends Model
                                 ->label('Maksimal ball'),
                         ])
                         ->columns(2)
-                        ->default([])
                         ->columnSpanFull()
+                        ->default([])
+                        ->minItems(0)
+                        ->afterStateUpdated(function ($state, Get $get, Set $set) {
+                            // Agar bo'sh bo'lsa hech narsa qilmaymiz
+                            if (empty($state)) {
+                                return;
+                            }
+
+                            // IDlarni qaytadan ketma-ket raqamlaymiz
+                            $problems = collect($state)
+                                ->values()
+                                ->map(function ($problem, $index) {
+                                    $problem['id'] = $index + 1;
+                                    return $problem;
+                                })
+                                ->toArray();
+
+                            $set('problems', $problems);
+                        })
                         ->addAction(
                             fn (\Filament\Forms\Components\Actions\Action $action) => $action
                                 ->action(function (array $data, \Filament\Forms\Components\Repeater $component, Get $get, Set $set) {
                                     $currentProblems = $get('problems') ?? [];
-                                    // Calculate next ID
-                                    if (empty($currentProblems)) {
-                                        $nextId = 1;
-                                    } else {
-                                        $maxId = collect($currentProblems)
-                                            ->filter(fn($problem) => isset($problem['id']) && is_numeric($problem['id']))
-                                            ->max('id') ?? 0;
-                                        $nextId = $maxId + 1;
-                                    }
+
                                     $newProblem = [
-                                        'id' => $nextId,
+                                        'id' => count($currentProblems) + 1,
                                         'max_mark' => null,
                                     ];
+
                                     $currentProblems[] = $newProblem;
                                     $set('problems', $currentProblems);
                                 })
-                                ->label('Topshiriq qo\'shish')
+                                ->label('Topshiriq qo‘shish')
                         ),
-//                        ->reorderableWithButtons()
-//                        ->collapsible()
-//                        ->itemLabel(fn (array $state): ?string => 'Topshiriq ' . ($state['id'] ?? '?') . ' - ' . ($state['max_mark'] ?? '0') . ' ball'),
+
+
 
                     ToggleButtons::make('status')
                         ->label('Imtihon Holati')

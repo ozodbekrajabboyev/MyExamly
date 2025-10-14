@@ -13,7 +13,7 @@ class ExamPolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->role->name === "admin" || $user->role->name === "teacher";
     }
 
     /**
@@ -21,7 +21,7 @@ class ExamPolicy
      */
     public function view(User $user, Exam $exam): bool
     {
-        return true;
+        return $user->role->name === "admin" || $user->role->name === "teacher";
     }
 
     /**

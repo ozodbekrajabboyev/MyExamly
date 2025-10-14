@@ -173,6 +173,13 @@
         <img src="{{ public_path('/storage/'. $exam->teacher->signature_path) }}">
         {{$exam->teacher->full_name ?? "Noma'lum"}}
     </h3>
+
+    @if($exam->teacher2)
+        <h3><strong>Fan o'qituvchisi:</strong>
+            <img src="{{ public_path('/storage/'. $exam->teacher2->signature_path) }}">
+            {{$exam->teacher2->full_name ?? "Noma'lum"}}
+        </h3>
+    @endif
 </div>
 
 </body>

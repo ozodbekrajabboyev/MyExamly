@@ -16,10 +16,14 @@ return new class extends Migration
             $table->string('passport_jshshir')->nullable();
             $table->string('passport_photo_path')->nullable();
             $table->string('diplom_path')->nullable();
+            $table->string('malaka_toifa_daraja')->nullable();
             $table->string('malaka_toifa_path')->nullable();
-            $table->string('milliy_sertifikat_path')->nullable();
+            $table->string('milliy_sertifikat1_path')->nullable();
+            $table->string('milliy_sertifikat2_path')->nullable();
             $table->string('xalqaro_sertifikat_path')->nullable();
             $table->string('malumotnoma_path')->nullable();
+            $table->string('ustama_sertifikat_path')->nullable();
+            $table->string('vazir_buyruq_path')->nullable();
             $table->string('signature_path')->nullable();
             $table->string('telegram_id')->nullable();
         });

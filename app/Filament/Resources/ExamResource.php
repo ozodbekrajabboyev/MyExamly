@@ -48,7 +48,11 @@ class ExamResource extends Resource
         // If teacher, restrict to their own exams or if it is an admin restrict to their own school's exam
         if ($user->role->name === 'teacher') {
             return parent::getEloquentQuery()
-                ->where('teacher_id', $user->teacher->id);
+                ->where(function ($query) use ($user) {
+                    $query->where('teacher_id', $user->teacher->id)
+                        ->orWhere('teacher2_id', $user->teacher->id);
+                });
+
         }else if($user->role->name === 'admin'){
             return parent::getEloquentQuery()
                 ->where('maktab_id', $user->maktab_id);
@@ -70,7 +74,15 @@ class ExamResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('teacher.full_name')
                     ->label("O'qituvchining nomi")
-                    ->numeric()
+                    ->formatStateUsing(function ($record) {
+                        $teachers = [$record->teacher->full_name];
+
+                        if ($record->teacher2) {
+                            $teachers[] = $record->teacher2->full_name;
+                        }
+
+                        return implode(', ', $teachers);
+                    })
                     ->sortable(),
                 Tables\Columns\TextColumn::make('type')
                     ->label('Imtihon nomi')
