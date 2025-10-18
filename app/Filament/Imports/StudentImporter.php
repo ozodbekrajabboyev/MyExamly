@@ -31,7 +31,8 @@ class StudentImporter extends Importer
                 ->requiredMapping()
                 ->rules(['required', 'string', 'max:255']),
 
-            ImportColumn::make('sinf')
+            ImportColumn::make('sinf_id')
+                ->label('Sinf ID')
                 ->requiredMapping()
                 ->rules([
                     'required',
@@ -48,7 +49,7 @@ class StudentImporter extends Importer
 
         // Check for existing student to prevent duplicates
         $existingStudent = Student::where('full_name', $this->data['full_name'])
-            ->where('sinf_id', $this->data['sinf'])
+            ->where('sinf_id', $this->data['sinf_id'])
             ->where('maktab_id', $maktabId)
             ->first();
 
@@ -56,7 +57,9 @@ class StudentImporter extends Importer
             return $existingStudent;
         }
 
-        return new Student();
+        return new Student([
+            'maktab_id' => $maktabId,
+        ]);
     }
 
     public function beforeSave(): void
@@ -64,7 +67,7 @@ class StudentImporter extends Importer
         $maktabId = $this->getMaktabId();
 
         // Verify the sinf belongs to the user's maktab
-        $sinf = Sinf::where('id', $this->data['sinf'])
+        $sinf = Sinf::where('id', $this->data['sinf_id'])
             ->where('maktab_id', $maktabId)
             ->first();
 
@@ -72,8 +75,12 @@ class StudentImporter extends Importer
             throw new \Exception("Sinf sizning maktabingizga tegishli emas!");
         }
 
-        $this->record->maktab_id = $maktabId;
-        $this->record->sinf_id = (int) $this->data['sinf'];
+        // Set the correct attributes
+        $this->record->fill([
+            'maktab_id' => $maktabId,
+            'sinf_id' => (int) $this->data['sinf_id'],
+            'full_name' => $this->data['full_name'],
+        ]);
     }
 
     public static function getCompletedNotificationBody(Import $import): string

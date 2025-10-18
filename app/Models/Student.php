@@ -17,6 +17,12 @@ class Student extends Model
     /** @use HasFactory<\Database\Factories\StudentFactory> */
     use HasFactory, ScopesSchool;
 
+    protected $fillable = [
+        'maktab_id',
+        'sinf_id', 
+        'full_name',
+    ];
+
     public function sinf(): BelongsTo
     {
         return $this->belongsTo(Sinf::class);
@@ -36,7 +42,7 @@ class Student extends Model
                 ->icon('heroicon-o-information-circle')
                 ->schema([
                     Forms\Components\Hidden::make('maktab_id')
-                        ->default(fn () => auth()->user()->maktab_id)
+                        ->default(fn () => auth()->user()?->maktab_id)
                         ->required(),
                     TextInput::make('full_name')
                         ->label("O'quvchining to'liq IFSH")

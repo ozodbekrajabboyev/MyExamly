@@ -12,6 +12,21 @@ class SentToTelegram implements ShouldQueue
     use Queueable;
 
     /**
+     * Number of times the job may be attempted.
+     */
+    public int $tries = 3;
+
+    /**
+     * Number of seconds to wait before retrying.
+     */
+    public int $backoff = 60;
+
+    /**
+     * Timeout for the job.
+     */
+    public int $timeout = 120;
+
+    /**
      * Create a new job instance.
      */
     protected $validated;
@@ -28,6 +43,9 @@ class SentToTelegram implements ShouldQueue
         $token   = env('TELEGRAM_BOT_TOKEN');
         $chatId  = env('TELEGRAM_CHAT_ID');
 
+        if (!$token || !$chatId) {
+            throw new \Exception('Telegram credentials not configured');
+        }
 
         $text = <<<EOT
                 📩 Yangi murojaat:
@@ -38,11 +56,14 @@ class SentToTelegram implements ShouldQueue
                 💬 Xabar: {$this->validated['message']}
                 EOT;
 
-        $response = Http::post("https://api.telegram.org/bot{$token}/sendMessage", [
+        $response = Http::timeout(30)->post("https://api.telegram.org/bot{$token}/sendMessage", [
             'chat_id' => $chatId,
             'text'    => $text,
             'parse_mode' => 'HTML',
         ]);
 
+        if (!$response->successful()) {
+            throw new \Exception('Failed to send Telegram message: ' . $response->body());
+        }
     }
 }
