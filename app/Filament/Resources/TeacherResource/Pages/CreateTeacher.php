@@ -34,20 +34,14 @@ class CreateTeacher extends CreateRecord
         return $password;
     }
 
-//    public function generateEmail(string $fullName, string $domain = 'gmail.com'): string
-//    {
-//        // Remove accents and special characters
-//        $name = iconv('UTF-8', 'ASCII//TRANSLIT', $fullName);
-//
-//        // Convert to lowercase and remove non-alphanumeric characters
-//        $name = preg_replace('/[^a-z0-9]/', '', strtolower($name));
-//
-//        return $name . '@' . $domain;
-//    }
-
     protected function mutateFormDataBeforeCreate(array $data): array
     {
-//        $email = $this->generateEmail($data['full_name']);
+        // Check if email already exists
+        if (User::where('email', $data['email'])->exists()) {
+            $this->addError('data.email', 'Bu elektron pochta manzili allaqachon mavjud.');
+            $this->halt();
+        }
+
         $password = $this->generateSecurePassword(12);
 
         $user = User::create([
@@ -58,27 +52,24 @@ class CreateTeacher extends CreateRecord
             'role_id' => Role::where('name', 'teacher')->value('id'),
         ]);
 
-        // Set this user's ID in the teacher
         $data['user_id'] = $user->id;
 
-        // Optionally: store plain password to show after creation
         $recipient = auth()->user();
 
-        // Sending creadentials via email
         Mail::to($data['email'])->queue(new LoginPasswordSend($data['email'], $password));
 
-
-        // Notify the the admin also
         Notification::make()
-            ->title('Your credentials are ready!')
+            ->title("Kirish ma'lumotlaringiz tayyor!")
             ->color('green')
-            ->body("Email: {$data['email']} \n Password: {$password}")
+            ->body("Elektron pochta manzili: {$data['email']}\nParol: {$password}")
             ->sendToDatabase($recipient);
+
         session()->flash('generated_password', $password);
 
         unset($data['email']);
         return $data;
     }
+
 
     protected function getRedirectUrl(): string
     {

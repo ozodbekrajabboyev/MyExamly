@@ -2,12 +2,14 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Exports\StudentExporter;
 use App\Filament\Imports\StudentImporter;
 use App\Filament\Resources\StudentResource\Pages;
 use App\Filament\Resources\StudentResource\RelationManagers;
 use App\Models\Sinf;
 use App\Models\Student;
 use Filament\Actions\Action;
+use Filament\Actions\ImportAction;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Section;
@@ -57,7 +59,6 @@ class StudentResource extends Resource
             ->schema(Student::getForm());
     }
 
-
     public static function table(Table $table): Table
     {
         return $table
@@ -68,32 +69,82 @@ class StudentResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('full_name')
                     ->label("O'quvchining IFSH")
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable()
+                    ->copyable()
+                    ->icon('heroicon-m-user')
+                    ->weight('medium'),
+
                 Tables\Columns\TextColumn::make('sinf.name')
-                    ->label("Sinf nomi")
-                    ->formatStateUsing(fn (Student $record): string => $record->sinf->name .'-sinf')
-                    ->sortable(),
+                    ->label("Sinf")
+                    ->sortable()
+                    ->badge()
+                    ->color('primary'),
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label("Qo'shilgan sana")
+                    ->dateTime('d.m.Y H:i')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
-                Tables\Filters\SelectFilter::make('sinf_nomi')
+                Tables\Filters\SelectFilter::make('sinf_id')
+                    ->label('Sinf')
                     ->relationship('sinf', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->placeholder('Sinfni tanlang'),
+
+                Tables\Filters\Filter::make('created_at')
+                    ->form([
+                        Forms\Components\DatePicker::make('created_from')
+                            ->label('Dan'),
+                        Forms\Components\DatePicker::make('created_until')
+                            ->label('Gacha'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['created_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '>=', $date),
+                            )
+                            ->when(
+                                $data['created_until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('created_at', '<=', $date),
+                            );
+                    })
+                    ->label("Qo'shilgan sana"),
             ])
             ->actions([
-                Tables\Actions\EditAction::make()->label("Tahrirlash"),
+                Tables\Actions\EditAction::make()
+                    ->label('Tahrirlash')
+                    ->icon('heroicon-m-pencil-square')
+                    ->modal()
+                    ->modalHeading(fn ($record) => "O'quvchini tahrirlash: " . $record->full_name)
+                    ->modalWidth('lg'),
             ])
             ->headerActions([
                 Tables\Actions\ImportAction::make()
                     ->importer(StudentImporter::class)
-                    ->icon('heroicon-o-arrow-down-tray'),
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->label('O\'quvchilarni import qilish'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make()->icon('heroicon-o-trash')->label("O'chirish"),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->icon('heroicon-o-trash')
+                        ->label("O'chirish"),
+                    Tables\Actions\ExportBulkAction::make()
+                        ->exporter(StudentExporter::class)
+                        ->icon('heroicon-o-arrow-up-tray')
+                        ->label('Exportlash'),
                 ])->label("Ko'proq"),
-            ]);
+            ])
+            ->emptyStateHeading("O'quvchilar topilmadi")
+            ->emptyStateDescription("Hozircha hech qanday o'quvchi qo'shilmagan")
+            ->emptyStateIcon('heroicon-o-user-group');
     }
-
 
     public static function getRelations(): array
     {
@@ -107,7 +158,7 @@ class StudentResource extends Resource
         return [
             'index' => Pages\ListStudents::route('/'),
             'create' => Pages\CreateStudent::route('/create'),
-//            'edit' => Pages\EditStudent::route('/{record}/edit'),
+            'edit' => Pages\EditStudent::route('/{record}/edit')
         ];
     }
 }

@@ -352,14 +352,16 @@ class TeacherResource extends Resource
 
                                         TextEntry::make('malaka_toifa_path')
                                             ->label('Malaka toifasi')
-                                            ->formatStateUsing(fn ($state) => $state ? 'Hujjatni ko\'rish' : null)
-                                            ->placeholder('Hujjat yuklanmagan')
-                                            ->url(fn ($record) => $record->malaka_toifa_path ?
+                                            ->formatStateUsing(fn ($state) => $state ? 'Hujjatni ko\'rish' : 'Hujjat yuklanmagan')
+                                            ->url(fn ($record) => $record->malaka_toifa_path &&
+                                            Storage::disk('public')->exists($record->malaka_toifa_path) ?
                                                 Storage::disk('public')->url($record->malaka_toifa_path) : null)
                                             ->openUrlInNewTab()
-                                            ->badge(fn ($state) => !empty($state))
+                                            ->badge()
                                             ->color(fn ($state) => $state ? 'success' : 'gray')
-                                            ->icon(fn ($state) => $state ? 'heroicon-o-eye' : 'heroicon-o-x-circle'),
+                                            ->icon(fn ($state) => $state ? 'heroicon-o-eye' : 'heroicon-o-document-plus')
+                                            ->visible(fn ($record) => $record->malaka_toifa_daraja !== 'mutaxasis')
+
                                     ])
                                     ->compact()
                                     ->columnSpan(1),
@@ -498,75 +500,257 @@ class TeacherResource extends Resource
     {
         return $table
             ->columns([
+                // Profile photo for visual identification
+                Tables\Columns\ImageColumn::make('profile_photo_path')
+                    ->label('Rasm')
+                    ->circular()
+                    ->size(50)
+                    ->defaultImageUrl(function () {
+                        // Create a simple placeholder SVG or use a default image
+                        return 'data:image/svg+xml;base64,' . base64_encode('
+                        <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="40" height="40" fill="#e5e7eb"/>
+                            <path d="M20 12a4 4 0 100 8 4 4 0 000-8zM12 28a8 8 0 0116 0" stroke="#9ca3af" stroke-width="2" fill="none"/>
+                        </svg>
+                    ');
+                    })
+                    ->toggleable(),
+
+                // Enhanced name column
                 Tables\Columns\TextColumn::make('full_name')
-                    ->label('F.I.Sh')
-                    ->searchable(),
+                    ->label('F.I.SH')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('medium')
+                    ->copyable()
+                    ->copyMessage('Ism nusxalandi!')
+                    ->wrap()
+                    ->size('md'),
 
-                Tables\Columns\TextColumn::make('user.name')
-                    ->label('Foydalanuvchi')
-                    ->sortable(),
-
+                // Enhanced subjects with better display
                 Tables\Columns\TextColumn::make('subjects.name')
-                    ->label("Fanlar")
-                    ->formatStateUsing(fn ($state, $record) => $record->subjects->pluck('name')->implode(', ')),
+                    ->label('Fanlar')
+                    ->formatStateUsing(function ($record) {
+                        $subjects = $record->subjects->pluck('name');
+                        if ($subjects->isEmpty()) {
+                            return 'Fan belgilanmagan';
+                        }
+                        if ($subjects->count() > 2) {
+                            return $subjects->take(2)->implode(', ') . ' +' . ($subjects->count() - 2) . ' ta';
+                        }
+                        return $subjects->implode(', ');
+                    })
+                    ->searchable()
+                    ->toggleable(),
 
+                // Enhanced phone with better formatting
                 Tables\Columns\TextColumn::make('phone')
                     ->label('Telefon')
-                    ->searchable(),
+                    ->searchable()
+                    ->copyable()
+                    ->copyMessage('Telefon nusxalandi!')
+                    ->icon('heroicon-o-device-phone-mobile')
+                    ->placeholder('Telefon kiritilmagan')
+                    ->formatStateUsing(function ($state) {
+                        if (empty($state)) {
+                            return 'Kiritilmagan';
+                        }
+                        // Format phone number if needed
+                        return $state;
+                    })
+                    ->color(fn ($state) => $state ? 'success' : 'gray')
+                    ->toggleable(),
 
+                // Enhanced qualification level with better colors
                 Tables\Columns\TextColumn::make('malaka_toifa_daraja')
                     ->label('Malaka daraja')
                     ->badge()
-                    ->color('primary'),
+                    ->color(fn ($state) => match($state) {
+                        'oliy-toifa' => 'success',
+                        '1-toifa' => 'info',
+                        '2-toifa' => 'warning',
+                        'mutaxasis' => 'primary',
+                        default => 'gray'
+                    })
+                    ->formatStateUsing(fn ($state) => match($state) {
+                        'oliy-toifa' => 'Oliy toifa',
+                        '1-toifa' => '1-toifa',
+                        '2-toifa' => '2-toifa',
+                        'mutaxasis' => 'Mutaxasis',
+                        default => $state ?: 'Belgilanmagan'
+                    })
+                    ->placeholder("Ma'lumot kiritilmagan")
+                    ->sortable()
+                    ->searchable(),
+
+                // Telegram status as simple indicator
+                Tables\Columns\TextColumn::make('telegram_id')
+                    ->label('Telegram')
+                    ->formatStateUsing(function ($state, $record) {
+                        if (empty($state)) {
+                            return 'Ulanmagan';
+                        }
+                        return "@{$state}";
+                    })
+                    ->badge()
+                    ->color(function ($state) {
+                        return empty($state) ? 'gray' : 'success';
+                    })
+                    ->icon(function ($state) {
+                        return empty($state) ? 'heroicon-o-x-circle' : 'heroicon-o-chat-bubble-left-ellipsis';
+                    })
+                    ->copyable(fn ($state) => !empty($state))
+                    ->copyMessage('Telegram username nusxalandi!')
+                    ->tooltip(function ($record) {
+                        return $record->telegram_id ?
+                            "Telegram hisobi: @{$record->telegram_id}" :
+                            'Telegram hisobi ulanmagan';
+                    })
+                    ->placeholder('Ma\'lumot kiritilmagan')
+                    ->searchable()
+                    ->toggleable(),
+
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
+                // Enhanced region filter - only for superadmin
                 Tables\Filters\SelectFilter::make('region_id')
                     ->label('Viloyat')
                     ->options(fn () => Region::pluck('name', 'id')->toArray())
                     ->searchable()
                     ->preload()
+                    ->placeholder('Viloyatni tanlang')
                     ->query(function ($query, $data) {
                         if ($data['value']) {
                             $query->whereHas('maktab.district.region', function ($q) use ($data) {
                                 $q->where('id', $data['value']);
                             });
                         }
-                    }),
+                    })
+                    ->visible(fn () => auth()->user()->role_id === 3),
 
+                // Enhanced district filter - only for superadmin
                 Tables\Filters\SelectFilter::make('district_id')
                     ->label('Tuman/Shahar')
                     ->options(fn () => District::pluck('name', 'id')->toArray())
                     ->searchable()
                     ->preload()
+                    ->placeholder('Tumanni tanlang')
                     ->query(function ($query, $data) {
                         if ($data['value']) {
                             $query->whereHas('maktab.district', function ($q) use ($data) {
                                 $q->where('id', $data['value']);
                             });
                         }
-                    }),
+                    })
+                    ->visible(fn () => auth()->user()->role_id === 3),
 
+                // School filter - only for superadmin
                 Tables\Filters\SelectFilter::make('maktab_id')
                     ->label('Maktab')
                     ->options(fn () => Maktab::pluck('name', 'id')->toArray())
                     ->searchable()
                     ->preload()
+                    ->placeholder('Maktabni tanlang')
                     ->query(function ($query, $data) {
                         if ($data['value']) {
                             $query->where('maktab_id', $data['value']);
                         }
-                    }),
+                    })
+                    ->visible(fn () => auth()->user()->role_id === 3),
 
+                // Enhanced qualification filter - visible for all
                 Tables\Filters\SelectFilter::make('malaka_toifa_daraja')
-                    ->label('Malaka Toifa')
+                    ->label('Malaka daraja')
+                    ->placeholder('Malaka darajasini tanlang')
                     ->options([
                         'oliy-toifa' => 'Oliy toifa',
                         'mutaxasis' => 'Mutaxasis',
-                        '1-toifa' => '1-toifa',
-                        '2-toifa' => '2-toifa',
+                        '1-toifa' => 'Birinchi toifa',
+                        '2-toifa' => 'Ikkinchi toifa',
                     ]),
-            ]);
+
+                // Subject filter - visible for all
+                Tables\Filters\SelectFilter::make('subjects')
+                    ->label('Fan')
+                    ->relationship('subjects', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->placeholder('Fanni tanlang'),
+
+                // Telegram status filter - visible for all
+                Tables\Filters\TernaryFilter::make('telegram_id')
+                    ->label('Telegram holati')
+                    ->placeholder('Hammasi')
+                    ->trueLabel('Telegram ulangan')
+                    ->falseLabel('Telegram ulanmagan')
+                    ->queries(
+                        true: fn ($query) => $query->whereNotNull('telegram_id'),
+                        false: fn ($query) => $query->whereNull('telegram_id'),
+                    ),
+            ])
+
+            ->actions([
+                Tables\Actions\ViewAction::make()
+                    ->label('Ko\'rish')
+                    ->icon('heroicon-o-eye'),
+                Tables\Actions\EditAction::make()
+                    ->label('Tahrirlash')
+                    ->icon('heroicon-o-pencil-square'),
+            ])
+            ->bulkActions([
+                Tables\Actions\DeleteBulkAction::make()
+                    ->label('O\'chirish')
+                    ->visible(fn () => auth()->user()->can('delete_teacher')),
+                Tables\Actions\BulkAction::make('export')
+                    ->label('Ma\'lumotlarni eksport qilish')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success')
+                    ->form([
+                        Forms\Components\Select::make('format')
+                            ->label('Fayl formati')
+                            ->options([
+                                'csv' => 'CSV (Excel uchun)',
+                            ])
+                            ->default('csv')
+                            ->required()
+                            ->helperText('Eksport qilinadigan fayl formatini tanlang'),
+
+                        Forms\Components\CheckboxList::make('fields')
+                            ->label('Eksport qilinadigan ma\'lumotlar')
+                            ->options([
+                                'basic' => 'Asosiy ma\'lumotlar (Ism, telefon, maktab)',
+                                'documents' => 'Hujjatlar',
+                                'subjects' => 'Fanlar',
+                                'certificates' => 'Sertifikatlar',
+                                'location' => 'Joylashuv (viloyat, tuman)',
+                                'dates' => 'Sana ma\'lumotlari'
+                            ])
+                            ->default(['basic', 'documents', 'subjects'])
+                            ->required()
+                            ->columns(2)
+                            ->helperText('Qaysi ma\'lumotlarni eksport qilishni tanlang'),
+
+                        Forms\Components\Toggle::make('include_empty')
+                            ->label('Bo\'sh maydonlarni ham ko\'rsatish')
+                            ->default(true)
+                            ->helperText('Bo\'sh maydonlar uchun "Kiritilmagan" yozuvini ko\'rsatish')
+                    ])
+                    ->requiresConfirmation()
+                    ->modalHeading('Eksport parametrlarini belgilang')
+                    ->modalDescription('Tanlangan o\'qituvchilar ma\'lumotlari belgilangan formatda eksport qilinadi.')
+                    ->modalSubmitActionLabel('Eksport qilishni boshlash')
+                    ->action(function ($records, array $data) {
+                        return self::exportTeachersAdvanced($records, $data);
+                    }),
+            ])
+            ->emptyStateHeading('O\'qituvchilar topilmadi')
+            ->emptyStateDescription('Hech qanday o\'qituvchi ma\'lumotlari mavjud emas.')
+            ->emptyStateIcon('heroicon-o-users')
+            ->striped()
+            ->paginated([25, 50, 100])
+            ->extremePaginationLinks()
+            ->poll('30s'); // Auto-refresh every 30 seconds
     }
 
     public static function getRelations(): array
@@ -584,4 +768,207 @@ class TeacherResource extends Resource
             'view' => Pages\ViewTeacher::route('/{record}'),
         ];
     }
+
+
+    // These are all for exporting the teachers data
+
+    private static function formatQualificationLevel(?string $level): string
+    {
+        return match($level) {
+            'oliy-toifa' => 'Oliy toifa',
+            '1-toifa' => 'Birinchi toifa',
+            '2-toifa' => 'Ikkinchi toifa',
+            'mutaxasis' => 'Mutaxasis',
+            default => 'Belgilanmagan'
+        };
+    }
+
+    private static function getDocumentStatus($path): string
+    {
+        return $path ? 'Mavjud' : 'Mavjud emas';
+    }
+
+    public static function exportTeachersAdvanced($records, array $options)
+    {
+        $format = $options['format'];
+        $fields = $options['fields'];
+        $includeEmpty = $options['include_empty'];
+
+        $timestamp = now()->format('Y-m-d_H-i-s');
+        $filename = "oqituvchilar_malumotlari_{$timestamp}.{$format}";
+
+        switch ($format) {
+            case 'csv':
+                return self::exportToCsv($records, $fields, $includeEmpty, $filename);
+            case 'xlsx':
+                return self::exportToExcel($records, $fields, $includeEmpty, $filename);
+            case 'pdf':
+                return self::exportToPdf($records, $fields, $includeEmpty, $filename);
+            default:
+                return self::exportToCsv($records, $fields, $includeEmpty, $filename);
+        }
+    }
+
+    private static function exportToCsv($records, $fields, $includeEmpty, $filename)
+    {
+        return response()->streamDownload(function () use ($records, $fields, $includeEmpty) {
+            $file = fopen('php://output', 'w');
+
+            // UTF-8 BOM qo'shish (Excel uchun)
+            fprintf($file, chr(0xEF).chr(0xBB).chr(0xBF));
+
+            // Sarlavhalarni yaratish
+            $headers = self::getExportHeaders($fields);
+            fputcsv($file, $headers);
+
+            // Ma'lumotlarni yozish
+            foreach ($records as $record) {
+                $row = self::getExportRow($record, $fields, $includeEmpty);
+                fputcsv($file, $row);
+            }
+
+            fclose($file);
+        }, $filename, [
+            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
+    }
+
+    private static function getExportHeaders($fields): array
+    {
+        $headers = [];
+
+        if (in_array('basic', $fields)) {
+            $headers = array_merge($headers, [
+                'To\'liq ismi',
+                'Telefon raqami',
+                'Elektron pochta',
+                'Maktab nomi',
+                'Lavozim'
+            ]);
+        }
+
+        if (in_array('subjects', $fields)) {
+            $headers[] = 'O\'qitiladigan fanlar';
+        }
+
+        if (in_array('documents', $fields)) {
+            $headers = array_merge($headers, [
+                'Malaka daraja',
+                'Pasport hujjati',
+                'Diplom hujjati',
+                'Malaka toifa hujjati '
+            ]);
+        }
+
+        if (in_array('certificates', $fields)) {
+            $headers = array_merge($headers, [
+                'Milliy sertifikat #1',
+                'Milliy sertifikat #2',
+                'Xalqaro sertifikat',
+                'Vazir ustamasi',
+                '70% ustama sertifikat',
+                'Qo\'shimcha ustama'
+            ]);
+        }
+
+        if (in_array('location', $fields)) {
+            $headers = array_merge($headers, ['Viloyat', 'Tuman/Shahar']);
+        }
+
+        if (in_array('dates', $fields)) {
+            $headers[] = 'Ro\'yxatdan o\'tgan sana';
+        }
+
+        return $headers;
+    }
+
+
+    private static function getExportRow($record, $fields, $includeEmpty): array
+    {
+        $row = [];
+
+        if (in_array('basic', $fields)) {
+            $row = array_merge($row, [
+                $record->full_name,
+                $record->phone ?: ($includeEmpty ? 'Kiritilmagan' : ''),
+                $record->user?->email ?: ($includeEmpty ? 'Elektron pochta mavjud emas' : ''),
+                $record->maktab?->name ?: ($includeEmpty ? 'Maktab belgilanmagan' : ''),
+                $record->lavozim ?: ($includeEmpty ? 'Lavozim belgilanmagan' : '')
+            ]);
+        }
+
+        if (in_array('subjects', $fields)) {
+            $subjects = $record->subjects->pluck('name')->implode(', ');
+            $row[] = $subjects ?: ($includeEmpty ? 'Fan belgilanmagan' : '');
+        }
+
+        if (in_array('documents', $fields)) {
+            // Handle malaka_toifa_path specially for mutaxasis
+            $malakaToifaUrl = '';
+            if ($record->malaka_toifa_daraja === 'mutaxasis') {
+                $malakaToifaUrl = $includeEmpty ? 'Mutaxasis uchun talab qilinmaydi' : '';
+            } else {
+                $malakaToifaUrl = self::getDocumentUrl($record->malaka_toifa_path, $includeEmpty);
+            }
+
+            $row = array_merge($row, [
+                self::formatQualificationLevel($record->malaka_toifa_daraja),
+                self::getDocumentUrl($record->passport_photo_path, $includeEmpty),
+                self::getDocumentUrl($record->diplom_path, $includeEmpty),
+                $malakaToifaUrl
+            ]);
+        }
+
+
+        if (in_array('certificates', $fields)) {
+            $row = array_merge($row, [
+                self::getDocumentUrl($record->milliy_sertifikat1_path, $includeEmpty),
+                self::getDocumentUrl($record->milliy_sertifikat2_path, $includeEmpty),
+                self::getDocumentUrl($record->xalqaro_sertifikat_path, $includeEmpty),
+                self::getDocumentUrl($record->vazir_buyruq_path, $includeEmpty),
+                self::getDocumentUrl($record->ustama_sertifikat_path, $includeEmpty),
+                self::getDocumentUrl($record->qoshimcha_ustama_path, $includeEmpty)
+            ]);
+        }
+
+        if (in_array('location', $fields)) {
+            $row = array_merge($row, [
+                $record->maktab?->district?->region?->name ?: ($includeEmpty ? 'Viloyat belgilanmagan' : ''),
+                $record->maktab?->district?->name ?: ($includeEmpty ? 'Tuman belgilanmagan' : '')
+            ]);
+        }
+
+        if (in_array('dates', $fields)) {
+            $row[] = $record->created_at?->format('d.m.Y H:i') ?: ($includeEmpty ? 'Sana noma\'lum' : '');
+        }
+
+        return $row;
+    }
+
+    private static function getDocumentUrl(?string $path, bool $includeEmpty = true): string
+    {
+        if (empty($path)) {
+            return $includeEmpty ? 'Hujjat mavjud emas' : '';
+        }
+
+        // Generate full URL for the document
+        return url(Storage::disk('public')->url($path));
+    }
+
+    private static function exportToExcel($records, $fields, $includeEmpty, $filename)
+    {
+        // Excel eksport uchun Laravel Excel paketini o'rnatish kerak
+        // Hozircha CSV kabi ishlaydi
+        return self::exportToCsv($records, $fields, $includeEmpty, str_replace('.xlsx', '.csv', $filename));
+    }
+
+    private static function exportToPdf($records, $fields, $includeEmpty, $filename)
+    {
+        // PDF eksport uchun DomPDF yoki boshqa PDF kutubxonasi kerak
+        // Hozircha CSV kabi ishlaydi
+        return self::exportToCsv($records, $fields, $includeEmpty, str_replace('.pdf', '.csv', $filename));
+    }
+
+
 }

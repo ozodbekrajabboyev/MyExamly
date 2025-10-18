@@ -94,6 +94,30 @@ class Teacher extends Model
         return "{$maktabName}da o'qituvchi";
     }
 
+
+    public function isDocumentRequired(string $documentField): bool
+    {
+        $documentsNotRequiredForMutaxasis = [
+            'malaka_toifa_path'
+        ];
+
+        return !($this->malaka_toifa_daraja === 'mutaxasis' &&
+            in_array($documentField, $documentsNotRequiredForMutaxasis));
+    }
+
+    public function getDocumentStatusMessage(string $documentField): string
+    {
+        if (!$this->isDocumentRequired($documentField)) {
+            return match($documentField) {
+                'malaka_toifa_path' => 'Mutaxasis uchun malaka toifa hujjati talab qilinmaydi',
+                default => 'Bu hujjat talab qilinmaydi'
+            };
+        }
+
+        return $this->$documentField ? 'Hujjatni ko\'rish' : 'Hujjat yuklanmagan';
+    }
+
+
     public function getSignatureUrlAttribute(): ?string
     {
         if (!$this->signature_path) {
@@ -128,6 +152,7 @@ class Teacher extends Model
                         ->label("O'qituvchining emailini kiriting")
                         ->required()
                         ->placeholder("example@example.com")
+                        ->visible(fn ($livewire) => $livewire instanceof \Filament\Resources\Pages\CreateRecord)
                         ->columnSpanFull(),
                     Select::make('subjects')
                         ->label("Fanni tanlang")

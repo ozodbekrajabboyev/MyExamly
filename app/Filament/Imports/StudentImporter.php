@@ -3,9 +3,11 @@
 namespace App\Filament\Imports;
 
 use App\Models\Student;
+use App\Models\Sinf;
 use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
 use Filament\Actions\Imports\Models\Import;
+use Illuminate\Validation\Rule;
 
 class StudentImporter extends Importer
 {
@@ -16,46 +18,69 @@ class StudentImporter extends Importer
         return [
             ImportColumn::make('full_name')
                 ->requiredMapping()
-                ->rules(['required']),
+                ->rules(['required', 'string', 'max:255']),
+
             ImportColumn::make('sinf')
                 ->requiredMapping()
-                ->relationship()
-                ->rules(['required']),
-            ImportColumn::make('maktab')
-                ->relationship()
-                ->requiredMapping()
-                ->rules(['required']),
+                ->relationship(resolveUsing: 'name')
+                ->rules([
+                    'required',
+                    Rule::exists('sinfs', 'name')
+                ])
+                ->example('10-A'),
         ];
     }
 
-
-//    public function mapRecord(array $record): array
-//    {
-//        return [
-//            'full_name' => $record['full_name'] ?? '',
-//            'sinf_id' => $record['sinf'] ?? null, // resolved automatically by ->relationship()
-//            'maktab_id' => auth()->user()->maktab_id, // inject current user's school
-//        ];
-//    }
-
     public function resolveRecord(): ?Student
     {
-        // return Student::firstOrNew([
-        //     // Update existing records, matching them by `$this->data['column_name']`
-        //     'email' => $this->data['email'],
-        // ]);
+        // Check for existing student to prevent duplicates
+        $existingStudent = Student::where('full_name', $this->data['full_name'])
+            ->whereHas('sinf', function ($query) {
+                $query->where('name', $this->data['sinf']);
+            })
+            ->where('maktab_id', auth()->user()->maktab_id)
+            ->first();
 
-        return new Student();
+        if ($existingStudent) {
+            return $existingStudent; // Update existing
+        }
+
+        return new Student(); // Create new
+    }
+
+    public function beforeSave(): void
+    {
+        // Ensure maktab_id is set from authenticated user
+        $this->record->maktab_id = auth()->user()->maktab_id;
+
+        // Resolve sinf relationship
+        $sinf = Sinf::where('name', $this->data['sinf'])
+            ->where('maktab_id', auth()->user()->maktab_id)
+            ->first();
+
+        if ($sinf) {
+            $this->record->sinf_id = $sinf->id;
+        }
     }
 
     public static function getCompletedNotificationBody(Import $import): string
     {
-        $body = 'Your student import has completed and ' . number_format($import->successful_rows) . ' ' . str('row')->plural($import->successful_rows) . ' imported.';
+        $successful = number_format($import->successful_rows);
+        $body = "O'quvchilarni import qilish yakunlandi: {$successful} " .
+            'qator'. ' muvaffaqiyatli import qilindi.';
 
-        if ($failedRowsCount = $import->getFailedRowsCount()) {
-            $body .= ' ' . number_format($failedRowsCount) . ' ' . str('row')->plural($failedRowsCount) . ' failed to import.';
+        if ($failed = $import->getFailedRowsCount()) {
+            $failedCount = number_format($failed);
+            $body .= " {$failedCount} " . 'qator' . ' import qilinmadi.';
         }
 
         return $body;
+    }
+
+    public static function getOptionsFormComponents(): array
+    {
+        return [
+            // Add options for batch size, validation mode, etc.
+        ];
     }
 }

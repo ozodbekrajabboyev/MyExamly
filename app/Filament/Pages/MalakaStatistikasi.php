@@ -53,7 +53,6 @@ class MalakaStatistikasi extends Page implements HasForms, HasTable
     }
 
 
-
     public function form(Form $form): Form
     {
         return $form
@@ -153,6 +152,12 @@ class MalakaStatistikasi extends Page implements HasForms, HasTable
                     ->circular()
                     ->size(40)
                     ->getStateUsing(function ($record) {
+                        // Check if teacher has uploaded a photo
+                        if ($record->profile_photo_path && Storage::disk('public')->exists($record->profile_photo_path)) {
+                            return Storage::disk('public')->url($record->profile_photo_path);
+                        }
+
+                        // Fallback to generated avatar
                         $name = $record->full_name ?? 'Teacher';
                         $encodedName = urlencode($name);
 
@@ -176,6 +181,7 @@ class MalakaStatistikasi extends Page implements HasForms, HasTable
                     ->extraAttributes([
                         'class' => 'shadow-sm border border-gray-200 dark:border-gray-700'
                     ]),
+
 
                 TextColumn::make('full_name')
                     ->label('F.I.Sh')
@@ -208,6 +214,7 @@ class MalakaStatistikasi extends Page implements HasForms, HasTable
                         'info' => '2-toifa',
                         'gray' => 'mutaxasis',
                     ])
+                    ->placeholder('Belgilanmagan')
                     ->formatStateUsing(function (?string $state): string {
                         return match ($state) {
                             'oliy-toifa' => 'Oliy toifa',
