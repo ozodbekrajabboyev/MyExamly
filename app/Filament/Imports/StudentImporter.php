@@ -13,6 +13,17 @@ class StudentImporter extends Importer
 {
     protected static ?string $model = Student::class;
 
+    protected ?int $maktabId = null;
+
+    protected function getMaktabId(): int
+    {
+        if ($this->maktabId === null) {
+            $this->maktabId = auth()->user()->maktab_id ??
+                throw new \Exception('User not authenticated');
+        }
+        return $this->maktabId;
+    }
+
     public static function getColumns(): array
     {
         return [
@@ -22,45 +33,47 @@ class StudentImporter extends Importer
 
             ImportColumn::make('sinf')
                 ->requiredMapping()
-                ->relationship(resolveUsing: 'name')
                 ->rules([
                     'required',
-                    Rule::exists('sinfs', 'name')
+                    'integer',
+                    'exists:sinfs,id',
                 ])
-                ->example('10-A'),
+                ->example('1'),
         ];
     }
 
     public function resolveRecord(): ?Student
     {
+        $maktabId = $this->getMaktabId();
+
         // Check for existing student to prevent duplicates
         $existingStudent = Student::where('full_name', $this->data['full_name'])
-            ->whereHas('sinf', function ($query) {
-                $query->where('name', $this->data['sinf']);
-            })
-            ->where('maktab_id', auth()->user()->maktab_id)
+            ->where('sinf_id', $this->data['sinf'])
+            ->where('maktab_id', $maktabId)
             ->first();
 
         if ($existingStudent) {
-            return $existingStudent; // Update existing
+            return $existingStudent;
         }
 
-        return new Student(); // Create new
+        return new Student();
     }
 
     public function beforeSave(): void
     {
-        // Ensure maktab_id is set from authenticated user
-        $this->record->maktab_id = auth()->user()->maktab_id;
+        $maktabId = $this->getMaktabId();
 
-        // Resolve sinf relationship
-        $sinf = Sinf::where('name', $this->data['sinf'])
-            ->where('maktab_id', auth()->user()->maktab_id)
+        // Verify the sinf belongs to the user's maktab
+        $sinf = Sinf::where('id', $this->data['sinf'])
+            ->where('maktab_id', $maktabId)
             ->first();
 
-        if ($sinf) {
-            $this->record->sinf_id = $sinf->id;
+        if (!$sinf) {
+            throw new \Exception("Sinf sizning maktabingizga tegishli emas!");
         }
+
+        $this->record->maktab_id = $maktabId;
+        $this->record->sinf_id = (int) $this->data['sinf'];
     }
 
     public static function getCompletedNotificationBody(Import $import): string

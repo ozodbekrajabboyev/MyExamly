@@ -766,6 +766,7 @@ class TeacherResource extends Resource
             'index' => Pages\ListTeachers::route('/'),
             'create' => Pages\CreateTeacher::route('/create'),
             'view' => Pages\ViewTeacher::route('/{record}'),
+            'edit' => Pages\EditTeacher::route('/{record}/edit'),
         ];
     }
 
