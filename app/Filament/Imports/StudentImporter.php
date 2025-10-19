@@ -7,6 +7,8 @@ use App\Models\Sinf;
 use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
 use Filament\Actions\Imports\Models\Import;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 
 class StudentImporter extends Importer
@@ -15,12 +17,25 @@ class StudentImporter extends Importer
 
     protected ?int $maktabId = null;
 
+    // Add chunk size for better memory management
+    protected int $chunkSize = 100;
+
     protected function getMaktabId(): int
     {
         if ($this->maktabId === null) {
-            $this->maktabId = auth()->user()->maktab_id ??
-                throw new \Exception('User not authenticated');
+            $user = auth()->user();
+            
+            if (!$user || !$user->maktab_id) {
+                Log::error('StudentImporter: User not authenticated or missing maktab_id', [
+                    'user_id' => $user?->id,
+                    'import_id' => $this->import?->id
+                ]);
+                throw new \Exception('Foydalanuvchi autentifikatsiya qilinmagan yoki maktab ID mavjud emas');
+            }
+            
+            $this->maktabId = $user->maktab_id;
         }
+        
         return $this->maktabId;
     }
 
@@ -28,8 +43,16 @@ class StudentImporter extends Importer
     {
         return [
             ImportColumn::make('full_name')
+                ->label('To\'liq ismi')
                 ->requiredMapping()
-                ->rules(['required', 'string', 'max:255']),
+                ->rules([
+                    'required',
+                    'string',
+                    'max:255',
+                    'min:2',
+                    'regex:/^[a-zA-ZÀ-ÿ\s\'\-\.]+$/u' // Only letters, spaces, apostrophes, hyphens, dots
+                ])
+                ->example('Abdullayev Sardor Akmalovich'),
 
             ImportColumn::make('sinf_id')
                 ->label('Sinf ID')
@@ -37,6 +60,7 @@ class StudentImporter extends Importer
                 ->rules([
                     'required',
                     'integer',
+                    'min:1',
                     'exists:sinfs,id',
                 ])
                 ->example('1'),
@@ -45,54 +69,115 @@ class StudentImporter extends Importer
 
     public function resolveRecord(): ?Student
     {
-        $maktabId = $this->getMaktabId();
+        try {
+            $maktabId = $this->getMaktabId();
 
-        // Check for existing student to prevent duplicates
-        $existingStudent = Student::where('full_name', $this->data['full_name'])
-            ->where('sinf_id', $this->data['sinf_id'])
-            ->where('maktab_id', $maktabId)
-            ->first();
+            // Sanitize input data
+            $fullName = trim($this->data['full_name']);
+            $sinfId = (int) $this->data['sinf_id'];
 
-        if ($existingStudent) {
-            return $existingStudent;
+            // Check for existing student to prevent duplicates
+            $existingStudent = Student::where('full_name', $fullName)
+                ->where('sinf_id', $sinfId)
+                ->where('maktab_id', $maktabId)
+                ->first();
+
+            if ($existingStudent) {
+                Log::info('StudentImporter: Found existing student', [
+                    'student_id' => $existingStudent->id,
+                    'full_name' => $fullName,
+                    'sinf_id' => $sinfId
+                ]);
+                return $existingStudent;
+            }
+
+            return new Student([
+                'maktab_id' => $maktabId,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('StudentImporter: Error in resolveRecord', [
+                'error' => $e->getMessage(),
+                'data' => $this->data,
+                'import_id' => $this->import?->id
+            ]);
+            throw $e;
         }
-
-        return new Student([
-            'maktab_id' => $maktabId,
-        ]);
     }
 
     public function beforeSave(): void
     {
-        $maktabId = $this->getMaktabId();
+        try {
+            $maktabId = $this->getMaktabId();
 
-        // Verify the sinf belongs to the user's maktab
-        $sinf = Sinf::where('id', $this->data['sinf_id'])
-            ->where('maktab_id', $maktabId)
-            ->first();
+            // Sanitize and validate input
+            $fullName = trim($this->data['full_name']);
+            $sinfId = (int) $this->data['sinf_id'];
 
-        if (!$sinf) {
-            throw new \Exception("Sinf sizning maktabingizga tegishli emas!");
+            // Additional validation
+            if (empty($fullName)) {
+                throw new \Exception('To\'liq ism bo\'sh bo\'lishi mumkin emas');
+            }
+
+            if ($sinfId <= 0) {
+                throw new \Exception('Sinf ID musbat son bo\'lishi kerak');
+            }
+
+            // Verify the sinf belongs to the user's maktab with caching
+            $sinf = Sinf::where('id', $sinfId)
+                ->where('maktab_id', $maktabId)
+                ->first();
+
+            if (!$sinf) {
+                Log::warning('StudentImporter: Sinf not found or not belongs to maktab', [
+                    'sinf_id' => $sinfId,
+                    'maktab_id' => $maktabId,
+                    'import_id' => $this->import?->id
+                ]);
+                throw new \Exception("Sinf (ID: {$sinfId}) sizning maktabingizga tegishli emas!");
+            }
+
+            // Set the correct attributes
+            $this->record->fill([
+                'maktab_id' => $maktabId,
+                'sinf_id' => $sinfId,
+                'full_name' => $fullName,
+            ]);
+
+            Log::info('StudentImporter: Successfully prepared student record', [
+                'full_name' => $fullName,
+                'sinf_id' => $sinfId,
+                'maktab_id' => $maktabId
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('StudentImporter: Error in beforeSave', [
+                'error' => $e->getMessage(),
+                'data' => $this->data,
+                'import_id' => $this->import?->id
+            ]);
+            throw $e;
         }
-
-        // Set the correct attributes
-        $this->record->fill([
-            'maktab_id' => $maktabId,
-            'sinf_id' => (int) $this->data['sinf_id'],
-            'full_name' => $this->data['full_name'],
-        ]);
     }
 
     public static function getCompletedNotificationBody(Import $import): string
     {
         $successful = number_format($import->successful_rows);
         $body = "O'quvchilarni import qilish yakunlandi: {$successful} " .
-            'qator'. ' muvaffaqiyatli import qilindi.';
+            'ta o\'quvchi' . ' muvaffaqiyatli import qilindi.';
 
         if ($failed = $import->getFailedRowsCount()) {
             $failedCount = number_format($failed);
-            $body .= " {$failedCount} " . 'qator' . ' import qilinmadi.';
+            $body .= " {$failedCount} " . 'ta o\'quvchi' . ' import qilinmadi.';
         }
+
+        // Log completion for monitoring
+        Log::info('StudentImporter: Import completed', [
+            'import_id' => $import->id,
+            'successful_rows' => $import->successful_rows,
+            'failed_rows' => $failed,
+            'total_rows' => $import->total_rows
+        ]);
 
         return $body;
     }
@@ -100,7 +185,20 @@ class StudentImporter extends Importer
     public static function getOptionsFormComponents(): array
     {
         return [
-            // Add options for batch size, validation mode, etc.
+            // You can add batch size options, validation modes, etc.
         ];
+    }
+
+    // Add method to handle cleanup on failure
+    public function onFailure(\Throwable $e): void
+    {
+        Log::error('StudentImporter: Import failed', [
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString(),
+            'import_id' => $this->import?->id,
+            'data' => $this->data ?? 'No data available'
+        ]);
+        
+        parent::onFailure($e);
     }
 }
