@@ -4013,16 +4013,16 @@
         },
         {
             "name": "norbek/aivent",
-            "version": "v1.0.5",
+            "version": "v1.0.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/hamidovnorbek/aivent.git",
-                "reference": "a16b9a9ca5f53c789572bb393655630fe01d5866"
+                "reference": "7c9ca75f29415bcc5f59ce2459668c70efb58783"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/hamidovnorbek/aivent/zipball/a16b9a9ca5f53c789572bb393655630fe01d5866",
-                "reference": "a16b9a9ca5f53c789572bb393655630fe01d5866",
+                "url": "https://api.github.com/repos/hamidovnorbek/aivent/zipball/7c9ca75f29415bcc5f59ce2459668c70efb58783",
+                "reference": "7c9ca75f29415bcc5f59ce2459668c70efb58783",
                 "shasum": ""
             },
             "require": {
@@ -4057,9 +4057,9 @@
             "description": "Universal AI Suite for Laravel — connect OpenAI, DeepSeek, Gemini, and Ollama with one clean API.",
             "support": {
                 "issues": "https://github.com/hamidovnorbek/aivent/issues",
-                "source": "https://github.com/hamidovnorbek/aivent/tree/v1.0.5"
+                "source": "https://github.com/hamidovnorbek/aivent/tree/v1.0.6"
             },
-            "time": "2025-10-22T09:47:43+00:00"
+            "time": "2025-10-22T14:47:28+00:00"
         },
         {
             "name": "nunomaduro/termwind",
@@ -10814,13 +10814,13 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.3",
         "ext-iconv": "*"
     },
-    "platform-dev": [],
+    "platform-dev": {},
     "plugin-api-version": "2.6.0"
 }

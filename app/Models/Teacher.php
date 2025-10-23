@@ -12,13 +12,36 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Filament\Forms;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class Teacher extends Model
 {
     /** @use HasFactory<\Database\Factories\TeacherFactory> */
-    use HasFactory, ScopesSchool;
+    use HasFactory, ScopesSchool, Notifiable;
 
+
+
+    protected static function booted()
+    {
+        static::updated(function (self $teacher) {
+            $certFields = [
+                'malaka_toifa_path',
+                'milliy_sertifikat1_path',
+                'milliy_sertifikat2_path',
+                'xalqaro_sertifikat_path',
+                'ustama_sertifikat_path',
+            ];
+
+            foreach ($certFields as $field) {
+                if ($teacher->wasChanged($field)) {
+                    $cacheKey = "teacher:{$teacher->id}:cert:{$field}:expires_at";
+                    Cache::forget($cacheKey);
+                }
+            }
+        });
+    }
 
     public function exams():BelongsToMany
     {
@@ -71,6 +94,31 @@ class Teacher extends Model
         }
         return Storage::disk('public')->url($this->malumotnoma_path);
     }
+    public function getMilliySertifikat1UrlAttribute(): ?string
+    {
+        return $this->milliy_sertifikat1_path ? Storage::disk('public')->url($this->milliy_sertifikat1_path) : null;
+    }
+
+    public function getMilliySertifikat2UrlAttribute(): ?string
+    {
+        return $this->milliy_sertifikat2_path ? Storage::disk('public')->url($this->milliy_sertifikat2_path) : null;
+    }
+
+    public function getUstamaSertifikatUrlAttribute(): ?string
+    {
+        return $this->ustama_sertifikat_path ? Storage::disk('public')->url($this->ustama_sertifikat_path) : null;
+    }
+
+    public function getVazirBuyruqUrlAttribute(): ?string
+    {
+        return $this->vazir_buyruq_path ? Storage::disk('public')->url($this->vazir_buyruq_path) : null;
+    }
+
+    public function getQoshimchaUstamaUrlAttribute(): ?string
+    {
+        return $this->qoshimcha_ustama_path ? Storage::disk('public')->url($this->qoshimcha_ustama_path) : null;
+    }
+
 
     // In App/Models/Teacher.php
     public function getLavozimAttribute(): string

@@ -13,6 +13,7 @@ use App\Filament\Widgets\StatisticsChartWidgetByCHSB;
 use App\Filament\Widgets\StatisticsChartWidgetByBSB;
 use App\Filament\Widgets\StatisticsCHSBbyViloyatlar;
 use App\Filament\Widgets\StatsOverview;
+use App\Filament\Widgets\TeacherNotificationsWidget;
 use App\Filament\Widgets\TeacherQualificationChartWidget;
 use App\Filament\Widgets\MalakaStatisticsChart;
 use Filament\Facades\Filament;
@@ -86,7 +87,7 @@ class AppPanelProvider extends PanelProvider
                 StatisticsChartWidgetByBSB::class,
                 StatisticsChartWidgetByCHSB::class,
                 TeacherQualificationChartWidget::class,
-                MalakaStatisticsChart::class
+                MalakaStatisticsChart::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->navigationGroups([
