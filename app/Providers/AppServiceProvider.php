@@ -27,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
+
     public function register(): void
     {
         //
@@ -43,6 +44,5 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Teacher::class, TeacherPolicy::class);
         Gate::policy(User::class, UserPolicy::class);
         Model::unguard();
-
     }
 }

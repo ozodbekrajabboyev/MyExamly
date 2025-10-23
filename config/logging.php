@@ -123,6 +123,13 @@ return [
             'handler' => NullHandler::class,
         ],
 
+        'certificate' => [
+            'driver' => 'single',
+            'path' => storage_path('logs/certificate-checks.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'replace_placeholders' => true,
+        ],
+
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
         ],
