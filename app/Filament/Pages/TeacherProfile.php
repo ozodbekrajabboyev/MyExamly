@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Jobs\FetchCertificateExpiry;
 use App\Models\Teacher;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
@@ -15,6 +16,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
 use Filament\Forms\Components\Select;
+use Illuminate\Support\Facades\Cache;
 
 
 class TeacherProfile extends Page implements HasForms
@@ -57,6 +59,8 @@ class TeacherProfile extends Page implements HasForms
             'telegram_id' => $this->teacher->telegram_id,
             'profile_photo_path' => $this->teacher->profile_photo_path,
         ]);
+
+        $this->checkExistingDocuments();
     }
 
     public function form(Form $form): Form
@@ -304,19 +308,66 @@ class TeacherProfile extends Page implements HasForms
             ->columns(1);
     }
 
+    private function checkExistingDocuments()
+    {
+        $certificateFields = [
+            'malaka_toifa_path',
+            'milliy_sertifikat1_path',
+            'milliy_sertifikat2_path',
+            'xalqaro_sertifikat_path',
+            'ustama_sertifikat_path'
+        ];
 
-    public function save(): void
+        foreach ($certificateFields as $field) {
+            if ($this->teacher->{$field}) {
+                $cacheKey = "teacher:{$this->teacher->id}:cert:{$field}:expires_at";
+                $cachedValue = Cache::get($cacheKey);
+
+                // Only dispatch job if:
+                // - No cache exists (null)
+                // - Previous attempt failed ('error')
+                if (is_null($cachedValue) || $cachedValue === 'error') {
+                    FetchCertificateExpiry::dispatch($this->teacher->id, $field, $cacheKey);
+                }
+                // Skip if: 'no_expiry', 'no_document', or actual date
+            }
+        }
+    }
+
+    public function save()
     {
         $data = $this->form->getState();
-
         $this->teacher->update($data);
 
+        $certificateFields = [
+            'malaka_toifa_path',
+            'milliy_sertifikat1_path',
+            'milliy_sertifikat2_path',
+            'xalqaro_sertifikat_path',
+            'ustama_sertifikat_path'
+        ];
+
+        foreach ($certificateFields as $field) {
+            if ($this->teacher->{$field}) {
+                $cacheKey = "teacher:{$this->teacher->id}:cert:{$field}:expires_at";
+                $expire_date = Cache::get($cacheKey);
+
+                // Only dispatch job if no cache exists OR if document was just updated
+                // Skip if cache exists with 'no_expiry' value
+                if (is_null($expire_date) || (isset($data[$field]) && $expire_date !== 'no_expiry')) {
+                    Cache::forget($cacheKey);
+                    FetchCertificateExpiry::dispatch($this->teacher->id, $field, $cacheKey);
+                }
+            }
+        }
+
         Notification::make()
-            ->title('Profil yangilandi')
-            ->body('Profil maʼlumotlaringiz muvaffaqiyatli yangilandi.')
+            ->title('Profil muvaffaqiyatli yangilandi')
             ->success()
             ->send();
     }
+
+
 
     protected function getFormActions(): array
     {

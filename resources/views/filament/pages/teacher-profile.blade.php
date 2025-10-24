@@ -154,15 +154,11 @@
                         @endif
 
                         <!-- Malaka toifasi -->
-                        @if($teacher->malaka_toifa_path)
+                        @if($teacher->malaka_toifa_path && $teacher->isDocumentRequired('malaka_toifa_path'))
                             @php
                                 $field = 'malaka_toifa_path';
                                 $cacheKey = "teacher:{$teacher->id}:cert:{$field}:expires_at";
                                 $expire_date = Cache::get($cacheKey);
-
-                                if ($teacher->{$field} && is_null($expire_date)) {
-                                    FetchCertificateExpiry::dispatch($teacher->id, $field, $cacheKey);
-                                }
                             @endphp
                             <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
                                 <h4 class="text-xl font-bold text-gray-900 dark:text-white">Malaka toifasi ({{ $teacher->malaka_toifa_daraja ?? 'Daraja kiritilmagan' }})</h4>
@@ -176,16 +172,12 @@
                         @endif
 
                         <!-- 1-Milliy sertifikat -->
+                        @php
+                            $field = 'milliy_sertifikat1_path';
+                            $cacheKey = "teacher:{$teacher->id}:cert:{$field}:expires_at";
+                            $expire_date = Cache::get($cacheKey);
+                        @endphp
                         @if($teacher->milliy_sertifikat1_path)
-                            @php
-                                $field = 'milliy_sertifikat1_path';
-                                $cacheKey = "teacher:{$teacher->id}:cert:{$field}:expires_at";
-                                $expire_date = Cache::get($cacheKey);
-
-                                if ($teacher->{$field} && is_null($expire_date)) {
-                                    FetchCertificateExpiry::dispatch($teacher->id, $field, $cacheKey);
-                                }
-                            @endphp
                             <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
                                 <h4 class="text-xl font-bold text-gray-900 dark:text-white">1-milliy sertifikat</h4>
                                 @if($expire_date)
@@ -198,16 +190,12 @@
                         @endif
 
                         <!-- 2-Milliy sertifikat -->
+                        @php
+                            $field = 'milliy_sertifikat2_path';
+                            $cacheKey = "teacher:{$teacher->id}:cert:{$field}:expires_at";
+                            $expire_date = Cache::get($cacheKey);
+                        @endphp
                         @if($teacher->milliy_sertifikat2_path)
-                            @php
-                                $field = 'milliy_sertifikat2_path';
-                                $cacheKey = "teacher:{$teacher->id}:cert:{$field}:expires_at";
-                                $expire_date = Cache::get($cacheKey);
-
-                                if ($teacher->{$field} && is_null($expire_date)) {
-                                    FetchCertificateExpiry::dispatch($teacher->id, $field, $cacheKey);
-                                }
-                            @endphp
                             <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
                                 <h4 class="text-xl font-bold text-gray-900 dark:text-white">2-milliy sertifikat</h4>
                                 @if($expire_date)
@@ -225,10 +213,6 @@
                                 $field = 'xalqaro_sertifikat_path';
                                 $cacheKey = "teacher:{$teacher->id}:cert:{$field}:expires_at";
                                 $expire_date = Cache::get($cacheKey);
-
-                                if ($teacher->{$field} && is_null($expire_date)) {
-                                    FetchCertificateExpiry::dispatch($teacher->id, $field, $cacheKey);
-                                }
                             @endphp
                             <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
                                 <h4 class="text-xl font-bold text-gray-900 dark:text-white">Xalqaro sertifikat</h4>
@@ -242,16 +226,12 @@
                         @endif
 
                         <!-- Ustama sertifikat -->
+                        @php
+                            $field = 'ustama_sertifikat_path';
+                            $cacheKey = "teacher:{$teacher->id}:cert:{$field}:expires_at";
+                            $expire_date = Cache::get($cacheKey);
+                        @endphp
                         @if($teacher->ustama_sertifikat_path)
-                            @php
-                                $field = 'ustama_sertifikat_path';
-                                $cacheKey = "teacher:{$teacher->id}:cert:{$field}:expires_at";
-                                $expire_date = Cache::get($cacheKey);
-
-                                if ($teacher->{$field} && is_null($expire_date)) {
-                                    FetchCertificateExpiry::dispatch($teacher->id, $field, $cacheKey);
-                                }
-                            @endphp
                             <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
                                 <h4 class="text-xl font-bold text-gray-900 dark:text-white">Ustama sertifikat</h4>
                                 @if($expire_date)

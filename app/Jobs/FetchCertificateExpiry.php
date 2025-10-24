@@ -38,17 +38,26 @@ class FetchCertificateExpiry implements ShouldQueue
 
         $path = $teacher->{$this->field} ?? null;
         if (! $path) {
-            // cache null to avoid repeated calls for empty paths (shorter TTL)
-            Cache::put($this->cacheKey, null, now()->addMinutes(10));
+            // Cache 'no_document' to avoid repeated calls for empty paths
+            Cache::put($this->cacheKey, 'no_document', now()->addHours(24));
             return;
         }
 
         try {
             $result = Aivent::validateCertificate($path);
             $expiresAt = $result->expires_at ?? null;
-            Cache::put($this->cacheKey, $expiresAt, $this->ttlSeconds);
+
+            if ($expiresAt) {
+                // Certificate has expiry date - cache it
+                Cache::put($this->cacheKey, $expiresAt, $this->ttlSeconds);
+            } else {
+                // Certificate has no expiry date - mark as 'no_expiry' to skip future processing
+                Cache::put($this->cacheKey, 'no_expiry', now()->addDays(30));
+            }
         } catch (Throwable $e) {
-            Cache::put($this->cacheKey, null, now()->addMinutes(5));
+            // API error - cache 'error' with short TTL for retry
+            Cache::put($this->cacheKey, 'error', now()->addMinutes(5));
         }
     }
+
 }
