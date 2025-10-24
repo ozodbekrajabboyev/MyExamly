@@ -14,17 +14,20 @@ class Kernel extends ConsoleKernel
         $schedule->command('certificates:check-expiry')
             ->dailyAt('09:00')
             ->timezone('Asia/Tashkent')
-            ->appendOutputTo($log);
+            ->appendOutputTo($log)
+            ->emailOutputOnFailure('your-email@domain.com'); // Optional
 
-        $schedule->command('certificates:check-expiry')
+        // For testing - you can change this time to a few minutes from now
+        $schedule->command('certificates:check-expiry --debug')
             ->dailyAt('18:00')
             ->timezone('Asia/Tashkent')
             ->appendOutputTo($log);
     }
 
+
     protected function commands(): void
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
         require base_path('routes/console.php');
     }
 }
