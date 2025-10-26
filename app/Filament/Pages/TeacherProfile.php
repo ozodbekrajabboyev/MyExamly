@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Jobs\FetchCertificateExpiry;
 use App\Models\Teacher;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
@@ -15,6 +16,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
 use Filament\Forms\Components\Select;
+use Illuminate\Support\Facades\Cache;
 
 
 class TeacherProfile extends Page implements HasForms
@@ -32,6 +34,7 @@ class TeacherProfile extends Page implements HasForms
     {
         return auth()->user()->role_id == 1;
     }
+
 
     public function mount(): void
     {
@@ -56,211 +59,315 @@ class TeacherProfile extends Page implements HasForms
             'telegram_id' => $this->teacher->telegram_id,
             'profile_photo_path' => $this->teacher->profile_photo_path,
         ]);
+
+        $this->checkExistingDocuments();
     }
 
     public function form(Form $form): Form
     {
         return $form
             ->schema([
-                Section::make('Pasport maʼlumotlari')
-                    ->description('Iltimos, pasport maʼlumotlaringizni kiriting')
+                Section::make('👤 Pasport maʼlumotlari')
+                    ->description('Iltimos, pasport maʼlumotlaringizni to\'liq va to\'g\'ri kiriting')
+                    ->icon('heroicon-o-identification')
                     ->schema([
                         TextInput::make('passport_serial_number')
                             ->label('Pasport seriya raqami')
                             ->placeholder('Masalan: AB1234567')
-                            ->maxLength(50),
+                            ->prefixIcon('heroicon-o-document-text')
+                            ->maxLength(50)
+                            ->rules(['regex:/^[A-Z]{2}\d{7}$/'])
+                            ->validationMessages([
+                                'regex' => 'Pasport seriya raqami noto\'g\'ri formatda (Masalan: AB1234567)'
+                            ]),
 
                         TextInput::make('passport_jshshir')
-                            ->label('Pasport JSHSHIR')
-                            ->placeholder('JSHSHIR raqamini kiriting')
-                            ->maxLength(50),
-
+                            ->label('JSHSHIR')
+                            ->placeholder('14 xonali JSHSHIR raqamini kiriting')
+                            ->prefixIcon('heroicon-o-finger-print')
+                            ->mask('99999999999999')
+                            ->length(14)
+                            ->numeric()
+                            ->rules(['digits:14'])
+                            ->validationMessages([
+                                'digits' => 'JSHSHIR 14 ta raqamdan iborat bo\'lishi kerak'
+                            ]),
 
                         FileUpload::make('profile_photo_path')
-                            ->label('Rasmingizni yuklang (3x4)')
+                            ->label('📸 Shaxsiy rasm (3x4)')
                             ->disk('public')
                             ->directory('teacher-documents/profile-photos')
                             ->image()
-//                            ->imageEditor()
-                            ->imageEditorAspectRatios([
-                                '3:4',
-                            ])
-                            ->maxSize(5120) // 5MB
-                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'])
-                            ->maxFiles(1),
+                            ->imageEditor()
+                            ->imageEditorAspectRatios(['3:4'])
+                            ->maxSize(5120)
+                            ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/jpg'])
+                            ->maxFiles(1)
+                            ->helperText('Rasmingiz aniq va sifatli bo\'lishi kerak (maksimal 5MB)')
+                            ->imagePreviewHeight('150')
+                            ->uploadingMessage('Rasm yuklanmoqda...'),
 
                         FileUpload::make('signature_path')
-                            ->label("Shaxsiy imzoni yuklang")
+                            ->label('✍️ Elektron imzo')
                             ->image()
                             ->acceptedFileTypes(['image/png', 'image/svg+xml'])
                             ->maxSize(5096)
                             ->directory('signatures')
                             ->visibility('public')
                             ->imageEditor()
-                            ->imageEditorAspectRatios([
-                                '16:9',
-                                '4:3',
-                                '1:1',
-                            ])
-                            ->helperText("PNG yoki SVG formatda imzo rasmini yuklang"),
+                            ->imageEditorAspectRatios(['16:9', '4:3', '1:1'])
+                            ->helperText('PNG yoki SVG formatda shaffof fonli imzo yuklab oling')
+                            ->imagePreviewHeight('100')
+                            ->uploadingMessage('Imzo yuklanmoqda...'),
 
                         FileUpload::make('passport_photo_path')
-                            ->label('Pasportingizni yuklang')
+                            ->label('🗂️ Pasport nusxasi')
                             ->disk('public')
                             ->directory('teacher-documents/passport-photos')
                             ->image()
                             ->imageEditor()
-                            ->imageEditorAspectRatios([
-                                '3:4',
-                                '4:3',
-                                '1:1',
-                            ])
-                            ->maxSize(5120) // 5MB
+                            ->imageEditorAspectRatios(['3:4', '4:3', '1:1'])
+                            ->maxSize(5120)
                             ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'])
-                            ->maxFiles(1),
+                            ->maxFiles(1)
+                            ->helperText('Pasportning barcha ma\'lumotlari aniq ko\'rinishi kerak')
+                            ->uploadingMessage('Pasport yuklanmoqda...'),
                     ])
                     ->columns(2)
-                    ->collapsible(),
+                    ->collapsible()
+                    ->collapsed(false),
 
-                Section::make('Taʼlimga oid hujjatlar')
-                    ->description('Xodimning shaxsiy hujjatlari')
+                Section::make('🎓 Ta\'lim hujjatlari')
+                    ->description('Ta\'lim va malaka oshirish hujjatlaringizni yuklang')
+                    ->icon('heroicon-o-academic-cap')
                     ->schema([
                         FileUpload::make('malumotnoma_path')
-                            ->label("Maʼlumotnoma (obyektivka)")
+                            ->label('📋 Ma\'lumotnoma (obyektivka)')
                             ->disk('public')
                             ->directory('teacher-documents/malumotnoma')
-                            ->maxSize(10240) // 10MB
+                            ->maxSize(10240)
                             ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'])
                             ->columnSpanFull()
-                            ->maxFiles(1),
+                            ->maxFiles(1)
+                            ->helperText('Ishlab chiqarish va pedagogik faoliyat haqidagi ma\'lumotnoma')
+                            ->uploadingMessage('Ma\'lumotnoma yuklanmoqda...')
+                            ->downloadable(),
 
                         FileUpload::make('diplom_path')
-                            ->label('Diplom')
+                            ->label('🏆 Diplom')
                             ->disk('public')
                             ->directory('teacher-documents/diplomas')
-                            ->maxSize(10240) // 10MB
+                            ->maxSize(10240)
                             ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'])
                             ->columnSpanFull()
-                            ->maxFiles(1),
+                            ->maxFiles(1)
+                            ->helperText('Oliy ta\'lim diplomining nusxasi')
+                            ->uploadingMessage('Diplom yuklanmoqda...')
+                            ->downloadable(),
 
                         Select::make('malaka_toifa_daraja')
-                            ->label('Malaka toifa daraja')
+                            ->label('🏅 Malaka toifa daraja')
                             ->options([
-                                'mutaxasis' => 'Mutaxasis',
-                                '2-toifa' => 'Ikkinchi toifa',
-                                '1-toifa' => 'Birinchi toifa',
-                                'oliy-toifa' => 'Oliy toifa',
+                                'mutaxasis' => '👨‍🎓 Mutaxasis',
+                                '2-toifa' => '🥉 Ikkinchi toifa',
+                                '1-toifa' => '🥈 Birinchi toifa',
+                                'oliy-toifa' => '🥇 Oliy toifa',
                             ])
                             ->columnSpanFull()
-                            ->reactive(),
+                            ->reactive()
+                            ->placeholder('Malaka toifa darajasini tanlang')
+                            ->helperText('Joriy malaka toifa darajangizni tanlang'),
 
                         FileUpload::make('malaka_toifa_path')
-                            ->label('Malaka toifa hujjati')
+                            ->label('📜 Malaka toifa hujjati')
                             ->disk('public')
                             ->directory('teacher-documents/malaka-toifa')
-                            ->maxSize(10240) // 10MB
+                            ->maxSize(10240)
                             ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'])
                             ->columnSpanFull()
                             ->maxFiles(1)
                             ->visible(fn (Get $get) => $get('malaka_toifa_daraja') && $get('malaka_toifa_daraja') !== 'mutaxasis')
-                            ->required(fn (Get $get) => $get('malaka_toifa_daraja') && $get('malaka_toifa_daraja') !== 'mutaxasis'),
+                            ->required(fn (Get $get) => $get('malaka_toifa_daraja') && $get('malaka_toifa_daraja') !== 'mutaxasis')
+                            ->helperText('Malaka toifa haqidagi hujjat nusxasi')
+                            ->uploadingMessage('Hujjat yuklanmoqda...')
+                            ->downloadable(),
                     ])
                     ->columns(2)
-                    ->collapsible(),
+                    ->collapsible()
+                    ->collapsed(true),
 
-                Section::make('Sertifikatlar')
+                Section::make('🏅 Sertifikatlar')
                     ->description('Milliy va xalqaro sertifikatlaringizni yuklang')
+                    ->icon('heroicon-o-trophy')
                     ->schema([
                         FileUpload::make('milliy_sertifikat1_path')
-                            ->label('Milliy sertifikat #1')
+                            ->label('🇺🇿 Birinchi milliy sertifikat')
                             ->disk('public')
                             ->directory('teacher-documents/milliy-sertifikat1')
-                            ->maxSize(10240) // 10MB
+                            ->maxSize(10240)
                             ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'])
                             ->columnSpanFull()
-                            ->maxFiles(1),
+                            ->maxFiles(1)
+                            ->helperText('Birinchi milliy sertifikat nusxasi')
+                            ->uploadingMessage('Sertifikat yuklanmoqda...')
+                            ->downloadable(),
 
                         FileUpload::make('milliy_sertifikat2_path')
-                            ->label('Milliy sertifikat #2')
+                            ->label('🇺🇿 Ikkinchi milliy sertifikat')
                             ->disk('public')
                             ->directory('teacher-documents/milliy-sertifikat2')
-                            ->maxSize(10240) // 10MB
+                            ->maxSize(10240)
                             ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'])
                             ->columnSpanFull()
-                            ->maxFiles(1),
+                            ->maxFiles(1)
+                            ->helperText('Ikkinchi milliy sertifikat nusxasi')
+                            ->uploadingMessage('Sertifikat yuklanmoqda...')
+                            ->downloadable(),
 
                         FileUpload::make('xalqaro_sertifikat_path')
-                            ->label('Xalqaro sertifikat')
+                            ->label('🌍 Xalqaro sertifikat')
                             ->disk('public')
                             ->directory('teacher-documents/xalqaro-sertifikat')
-                            ->maxSize(10240) // 10MB
+                            ->maxSize(10240)
                             ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'])
                             ->columnSpanFull()
-                            ->maxFiles(1),
+                            ->maxFiles(1)
+                            ->helperText('Xalqaro sertifikat nusxasi (CEFR, IELTS, TOEFL va boshqalar)')
+                            ->uploadingMessage('Sertifikat yuklanmoqda...')
+                            ->downloadable(),
                     ])
                     ->columns(2)
-                    ->collapsible(),
+                    ->collapsible()
+                    ->collapsed(true),
 
-                Section::make('Ustama hujjatlar')
-                    ->description('Ustama buyruq va sertifikatlar')
+                Section::make('💰 Ustama hujjatlari')
+                    ->description('Ustama to\'lov buyruqlari va sertifikatlari')
+                    ->icon('heroicon-o-currency-dollar')
                     ->schema([
                         FileUpload::make('vazir_buyruq_path')
-                            ->label('Vazir jamg\'armasi to\'lovi buyicha buyruq')
+                            ->label('📋 Vazir jamg\'armasi buyrug\'i')
                             ->disk('public')
                             ->directory('teacher-documents/vazir-buyruq')
-                            ->maxSize(10240) // 10MB
+                            ->maxSize(10240)
                             ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'])
                             ->columnSpanFull()
-                            ->maxFiles(1),
+                            ->maxFiles(1)
+                            ->helperText('Vazir jamg\'armasi to\'lovi buyicha buyruq nusxasi')
+                            ->uploadingMessage('Buyruq yuklanmoqda...')
+                            ->downloadable(),
 
                         FileUpload::make('ustama_sertifikat_path')
-                            ->label('70% ustama sertifikati')
+                            ->label('📊 70% ustama sertifikati')
                             ->disk('public')
                             ->directory('teacher-documents/ustama-sertifikat')
-                            ->maxSize(10240) // 10MB
+                            ->maxSize(10240)
                             ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'])
                             ->columnSpanFull()
-                            ->maxFiles(1),
+                            ->maxFiles(1)
+                            ->helperText('70% ustama to\'lov sertifikati')
+                            ->uploadingMessage('Sertifikat yuklanmoqda...')
+                            ->downloadable(),
 
                         FileUpload::make('qoshimcha_ustama_path')
-                            ->label("Qo'shimcha ustama hujjati")
+                            ->label('📄 Qo\'shimcha ustama hujjati')
                             ->disk('public')
                             ->directory('teacher-documents/qoshimcha-ustama')
-                            ->maxSize(10240) // 10MB
+                            ->maxSize(10240)
                             ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'])
                             ->columnSpanFull()
-                            ->maxFiles(1),
+                            ->maxFiles(1)
+                            ->helperText('Qo\'shimcha ustama to\'lovga oid boshqa hujjatlar')
+                            ->uploadingMessage('Hujjat yuklanmoqda...')
+                            ->downloadable(),
                     ])
                     ->columns(2)
-                    ->collapsible(),
+                    ->collapsible()
+                    ->collapsed(true),
 
-                Section::make('Aloqa maʼlumotlari')
-                    ->description('Qoʻshimcha aloqaga oid maʼlumotlar')
+                Section::make('📱 Aloqa ma\'lumotlari')
+                    ->description('Qo\'shimcha aloqa ma\'lumotlaringizni kiriting')
+                    ->icon('heroicon-o-phone')
                     ->schema([
                         TextInput::make('telegram_id')
-                            ->label('Telegram ID')
-                            ->placeholder('@foydalanuvchi yoki raqamli ID')
+                            ->label('Telegram')
+                            ->placeholder('@username yoki raqamli ID')
+                            ->prefixIcon('heroicon-o-chat-bubble-left-right')
                             ->maxLength(100)
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->helperText('Telegram username (@bilan) yoki raqamli ID ni kiriting')
+                            ->rules(['regex:/^@?[a-zA-Z0-9_]+$/'])
+                            ->validationMessages([
+                                'regex' => 'Telegram ID formati noto\'g\'ri (@username yoki raqam)'
+                            ]),
                     ])
                     ->columns(2)
-                    ->collapsible(),
+                    ->collapsible()
+                    ->collapsed(true),
             ])
-            ->statePath('data');
+            ->statePath('data')
+            ->columns(1);
     }
 
-    public function save(): void
+    private function checkExistingDocuments()
+    {
+        $certificateFields = [
+            'malaka_toifa_path',
+            'milliy_sertifikat1_path',
+            'milliy_sertifikat2_path',
+            'xalqaro_sertifikat_path',
+            'ustama_sertifikat_path'
+        ];
+
+        foreach ($certificateFields as $field) {
+            if ($this->teacher->{$field}) {
+                $cacheKey = "teacher:{$this->teacher->id}:cert:{$field}:expires_at";
+                $cachedValue = Cache::get($cacheKey);
+
+                // Only dispatch job if:
+                // - No cache exists (null)
+                // - Previous attempt failed ('error')
+                if (is_null($cachedValue) || $cachedValue === 'error') {
+                    FetchCertificateExpiry::dispatch($this->teacher->id, $field, $cacheKey);
+                }
+                // Skip if: 'no_expiry', 'no_document', or actual date
+            }
+        }
+    }
+
+    public function save()
     {
         $data = $this->form->getState();
-
         $this->teacher->update($data);
 
+        $certificateFields = [
+            'malaka_toifa_path',
+            'milliy_sertifikat1_path',
+            'milliy_sertifikat2_path',
+            'xalqaro_sertifikat_path',
+            'ustama_sertifikat_path'
+        ];
+
+        foreach ($certificateFields as $field) {
+            if ($this->teacher->{$field}) {
+                $cacheKey = "teacher:{$this->teacher->id}:cert:{$field}:expires_at";
+                $expire_date = Cache::get($cacheKey);
+
+                // Only dispatch job if no cache exists OR if document was just updated
+                // Skip if cache exists with 'no_expiry' value
+                if (is_null($expire_date) || (isset($data[$field]) && $expire_date !== 'no_expiry')) {
+                    Cache::forget($cacheKey);
+                    FetchCertificateExpiry::dispatch($this->teacher->id, $field, $cacheKey);
+                }
+            }
+        }
+
         Notification::make()
-            ->title('Profil yangilandi')
-            ->body('Profil maʼlumotlaringiz muvaffaqiyatli yangilandi.')
+            ->title('Profil muvaffaqiyatli yangilandi')
             ->success()
             ->send();
     }
+
+
 
     protected function getFormActions(): array
     {
