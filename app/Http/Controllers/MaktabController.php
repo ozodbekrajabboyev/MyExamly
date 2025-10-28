@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreMaktabRequest;
 use App\Http\Requests\UpdateMaktabRequest;
+use App\Models\District;
 use App\Models\Maktab;
 
 class MaktabController extends Controller
@@ -16,6 +17,13 @@ class MaktabController extends Controller
         //
     }
 
+    public function byDistrict($districtId)
+    {
+        return Maktab::where('district_id', $districtId)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+    }
     /**
      * Show the form for creating a new resource.
      */
