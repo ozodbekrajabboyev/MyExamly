@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Sinf;
+use App\Models\District;
 use Illuminate\Http\Request;
 
-class SinfController extends Controller
+class DistrictController extends Controller
 {
-    public function bySchool($schoolId)
+    public function byRegion($regionId)
     {
-        return Sinf::where('maktab_id', $schoolId)
+        return District::where('region_id', $regionId)
             ->select('id', 'name')
             ->orderBy('name')
             ->get();
