@@ -14,7 +14,7 @@ class MaktabController extends Controller
      */
     public function index()
     {
-        //
+        return Maktab::all(['id', 'region_id', 'district_id', 'name']);
     }
 
     public function byDistrict($districtId)
