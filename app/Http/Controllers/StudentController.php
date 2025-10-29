@@ -88,13 +88,15 @@ class StudentController extends Controller
         $formatted = [];
         $formatted[] = "📋 O‘quvchi: " . $student->full_name;
         $formatted[] = "🏫 Maktab: " . ($student->sinf->maktab->name ?? 'Noma’lum maktab');
-        $formatted[] = "";
         $formatted[] = "📘 Fan: {$subjectName}";
+        $formatted[] = "";
 
         foreach ($examResults as $exam) {
-            $formatted[] = "   🧾 Imtihon turi: {$exam['serial_number']}-{$exam['exam_type']}";
+            $formatted[] = "🧾 Imtihon turi: {$exam['serial_number']}-{$exam['exam_type']}";
             $formatted = array_merge($formatted, $exam['tasks']);
+            $formatted[] = "";
             $formatted[] = "📈 Umumiy natija: {$exam['overall']}%";
+            $formatted[] = "";
             $formatted[] = "------------------------------------------------------------";
         }
 
