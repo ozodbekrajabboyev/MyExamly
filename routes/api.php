@@ -15,7 +15,11 @@ Route::middleware('telegram.api-key')->group(function () {
     Route::get('districts/{district}/schools', [MaktabController::class, 'byDistrict']);
     Route::get('schools/{school}/classes', [SinfController::class, 'bySchool']);
     Route::get('classes/{class}/students', [StudentController::class, 'byClass']);
-    Route::get('/students/{student}/result', [StudentController::class, 'result']);
+//    Route::get('/students/{student}/result', [StudentController::class, 'result']);
     Route::get('/schools', [MaktabController::class, 'index']);
+    Route::get('/students/{id}/subjects/{subjectId}/result', [StudentController::class, 'result']);
+    Route::get('/students/{id}/subjects', [StudentController::class, 'subjects']);
+
+
 });
 

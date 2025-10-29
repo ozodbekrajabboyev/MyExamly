@@ -16,96 +16,96 @@ class StudentController extends Controller
             ->get();
     }
 
+    public function subjects($studentId)
+    {
+        $subjects = Mark::with('exam.subject')
+            ->where('student_id', $studentId)
+            ->get()
+            ->pluck('exam.subject')
+            ->unique('id')
+            ->map(fn($subject) => [
+                'id' => $subject->id,
+                'name' => $subject->name,
+            ])
+            ->values();
 
-    public function result($studentId)
+        return response()->json([
+            'student_id' => (int)$studentId,
+            'subjects' => $subjects,
+        ]);
+    }
+
+
+
+    public function result($studentId, $subjectId)
     {
         $student = Student::with(['sinf.maktab'])->findOrFail($studentId);
 
         $marks = Mark::with(['exam.subject'])
             ->where('student_id', $studentId)
+            ->whereHas('exam', fn($q) => $q->where('subject_id', $subjectId))
             ->get()
-            ->groupBy(fn($mark) => $mark->exam->subject->name ?? 'Noma’lum fan')
-            ->map(function ($subjectMarks, $subjectName) {
-                $exams = $subjectMarks->groupBy(fn($m) => $m->exam->type . '-' . $m->exam->serial_number);
-                $subjectResults = [];
+            ->groupBy(fn($m) => $m->exam->type . '-' . $m->exam->serial_number);
 
-                foreach ($exams as $examKey => $examMarks) {
-                    $examType = $examMarks->first()->exam->type;
-                    $serial = $examMarks->first()->exam->serial_number;
-                    $problems = collect($examMarks->first()->exam->problems ?? []);
+        $subjectName = $marks->first()?->first()?->exam->subject->name ?? 'Noma’lum fan';
+        $examResults = [];
 
-                    $taskResults = [];
-                    $totalScore = 0;
-                    $totalMax = 0;
+        foreach ($marks as $examKey => $examMarks) {
+            $exam = $examMarks->first()->exam;
+            $problems = collect($exam->problems ?? []);
 
-                    foreach ($examMarks as $i => $mark) {
-                        $problem = $problems->firstWhere('id', $mark->problem_id);
-                        $maxMark = $problem['max_mark'] ?? 0;
-                        $percent = $maxMark > 0 ? round(($mark->mark / $maxMark) * 100, 0) : 0;
+            $taskResults = [];
+            $totalScore = 0;
+            $totalMax = 0;
 
-                        $taskResults[] = [
-                            'number' => $i + 1,
-                            'score' => $mark->mark,
-                            'max' => $maxMark,
-                            'percent' => $percent
-                        ];
+            foreach ($examMarks as $i => $mark) {
+                $problem = $problems->firstWhere('id', $mark->problem_id);
+                $maxMark = $problem['max_mark'] ?? 0;
+                $percent = $maxMark > 0 ? round(($mark->mark / $maxMark) * 100) : 0;
 
-                        $totalScore += $mark->mark;
-                        $totalMax += $maxMark;
-                    }
+                $taskResults[] = sprintf(
+                    "%d-topshiriq: %d ball / %d balldan (%d%%)",
+                    $i + 1,
+                    $mark->mark,
+                    $maxMark,
+                    $percent
+                );
 
-                    $overall = $totalMax > 0 ? round(($totalScore / $totalMax) * 100, 0) : 0;
-
-                    $subjectResults[] = [
-                        'exam_type' => $examType,
-                        'serial_number' => $serial,
-                        'tasks' => $taskResults,
-                        'overall' => $overall
-                    ];
-                }
-
-                return [
-                    'subject' => $subjectName,
-                    'exams' => $subjectResults
-                ];
-            })
-            ->values();
-
-        // 🧩 Telegram yoki Postman formatida chiroyli text tayyorlash
-        $output = [];
-        $output[] = "📋 O‘quvchi: " . $student->full_name;
-        $output[] = "🏫 Maktab: " . ($student->sinf->maktab->name ?? 'Noma’lum maktab');
-        $output[] = "";
-
-        foreach ($marks as $subject) {
-            foreach ($subject['exams'] as $exam) {
-                $output[] = "📘 Fan: " . $subject['subject'];
-                $output[] = "   🧾 Imtihon turi: " . $exam['serial_number'] . "-" . strtoupper($exam['exam_type']);
-                $output[] = "";
-
-                foreach ($exam['tasks'] as $task) {
-                    $output[] = sprintf(
-                        "%d-topshiriq: %d ball / %d balldan (%d%%)",
-                        $task['number'],
-                        $task['score'],
-                        $task['max'],
-                        $task['percent']
-                    );
-                }
-
-                $output[] = "";
-                $output[] = "📈 Umumiy natija: {$exam['overall']}%";
-                $output[] = "\n------------------------------------------------------------\n";
+                $totalScore += $mark->mark;
+                $totalMax += $maxMark;
             }
+
+            $overall = $totalMax > 0 ? round(($totalScore / $totalMax) * 100) : 0;
+
+            $examResults[] = [
+                'exam_type' => $exam->type,
+                'serial_number' => $exam->serial_number,
+                'tasks' => $taskResults,
+                'overall' => $overall,
+            ];
+        }
+
+        $formatted = [];
+        $formatted[] = "📋 O‘quvchi: " . $student->full_name;
+        $formatted[] = "🏫 Maktab: " . ($student->sinf->maktab->name ?? 'Noma’lum maktab');
+        $formatted[] = "";
+        $formatted[] = "📘 Fan: {$subjectName}";
+
+        foreach ($examResults as $exam) {
+            $formatted[] = "   🧾 Imtihon turi: {$exam['serial_number']}-{$exam['exam_type']}";
+            $formatted = array_merge($formatted, $exam['tasks']);
+            $formatted[] = "📈 Umumiy natija: {$exam['overall']}%";
+            $formatted[] = "------------------------------------------------------------";
         }
 
         return response()->json([
-//            'student' => [
-//                'full_name' => $student->full_name,
-//                'school' => $student->sinf->maktab->name ?? null,
-//            ],
-//            'subjects' => $marks,
-            'formatted' => implode("\n", $output)
+            'student' => [
+                'full_name' => $student->full_name,
+                'school' => $student->sinf->maktab->name ?? null,
+            ],
+            'subject' => $subjectName,
+            'exams' => $examResults,
+            'formatted' => implode("\n", $formatted),
         ]);
     }
 
