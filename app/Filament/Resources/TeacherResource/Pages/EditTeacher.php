@@ -33,8 +33,6 @@ class EditTeacher extends EditRecord
             unset($data['email']);
         }
 
-        dd($data);
-
         return $data;
     }
 
