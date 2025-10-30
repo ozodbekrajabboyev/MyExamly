@@ -156,7 +156,6 @@ class EditMark extends EditRecord
 
     protected function handleRecordUpdate(Mark|\Illuminate\Database\Eloquent\Model $record, array $data): Mark
     {
-//        dd($data);
         $exam = Exam::findOrFail($record['exam_id']);
 
         $savedMarksCount = 0;
@@ -165,40 +164,58 @@ class EditMark extends EditRecord
         foreach ($data['marks'] as $key => $markValue) {
             [$studentId, $problemId] = explode('_', $key);
 
-            // Validate that the problem exists in exam's JSON
             $problems = collect(is_string($exam->problems) ? json_decode($exam->problems, true) : $exam->problems);
-            $problem = $problems->firstWhere('id', (int)$problemId);
+            $problem = $problems->firstWhere('id', (int) $problemId);
 
             if (!$problem) {
-                continue; // Skip invalid problems
+                continue;
             }
 
-            // Validate mark value
+            // 🛡️ Null yoki bo‘sh qiymatni oldini olish
+            if ($markValue === null || $markValue === '' || $markValue === false) {
+                $markValue = 0;
+            }
+
+            $markValue = (float) $markValue;
+
+            // ⚙️ Bahoni tekshirish
             if ($markValue < 0 || $markValue > $problem['max_mark']) {
-                continue; // Skip invalid marks
+                continue;
             }
 
-            $mark = Mark::updateOrCreate(
-                [
-                    'student_id' => $studentId,
-                    'problem_id' => $problemId,
-                    'exam_id' => $exam->id,
-                ],
-                [
-                    'mark' => $markValue,
-                    'sinf_id' => $exam->sinf_id,
-                    'maktab_id' => $exam->maktab_id,
-                ]
-            );
+            try {
+                $mark = Mark::updateOrCreate(
+                    [
+                        'student_id' => $studentId,
+                        'problem_id' => $problemId,
+                        'exam_id' => $exam->id,
+                    ],
+                    [
+                        'mark' => $markValue,
+                        'sinf_id' => $exam->sinf_id,
+                        'maktab_id' => $exam->maktab_id,
+                    ]
+                );
 
-            if ($mark->wasRecentlyCreated) {
-                $savedMarksCount++;
-            } else {
-                $updatedMarksCount++;
+                if ($mark->wasRecentlyCreated) {
+                    $savedMarksCount++;
+                } else {
+                    $updatedMarksCount++;
+                }
+            } catch (\Exception $e) {
+                \Log::error("Error updating mark for student {$studentId}, problem {$problemId}: " . $e->getMessage());
+
+                Notification::make()
+                    ->title("Xatolik yuz berdi")
+                    ->body("Talaba ID {$studentId} uchun baho yangilanmadi: " . $e->getMessage())
+                    ->warning()
+                    ->send();
+
+                continue;
             }
         }
 
-        // Send appropriate notification
+        // ✅ Xabar
         if ($savedMarksCount > 0 && $updatedMarksCount > 0) {
             $message = "{$savedMarksCount} ta yangi baho saqlandi va {$updatedMarksCount} ta baho yangilandi!";
             $exam->update(['status' => 'pending']);
