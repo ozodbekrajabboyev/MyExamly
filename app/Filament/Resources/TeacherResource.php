@@ -185,7 +185,7 @@ class TeacherResource extends Resource
                                             ->badge(fn ($state) => !empty($state))
                                             ->color(fn ($state) => $state ? 'cyan' : 'gray')
                                             ->placeholder('Telegram ID kiritilmagan')
-                                            ->formatStateUsing(fn ($state) => $state ? "@{$state}" : 'ID kiritilmagan'),
+                                            ->formatStateUsing(fn ($state) => $state ? "{$state}" : 'ID kiritilmagan'),
 
                                         TextEntry::make('phone')
                                             ->label('Telefon raqami')

@@ -205,10 +205,10 @@
         $totalScores = [];
     @endphp
     @foreach($students as $index => $student)
-        @php $overall = 0; @endphp
+        @php $overall = 0; $name = $student->extractFirstAndLastName($student->full_name); @endphp
         <tr>
             <td class="col-number">{{ $index + 1 }}</td>
-            <td class="col-name student-name">{{ $student->full_name }}</td>
+            <td class="col-name student-name"> {{ $name['first'] }} {{ $name['last'] }} </td>
             @foreach($problems as $problem)
                 @php
                     $mark = $marks->first(function ($m) use ($student, $problem) {

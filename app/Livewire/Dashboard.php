@@ -7,18 +7,56 @@ use App\Models\Mark;
 use App\Models\Student;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Filament\Forms\Components\Actions;
+use Filament\Forms\Components\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Form;
 
-class Dashboard extends Component
+class Dashboard extends Component implements HasForms
 {
+
+    use InteractsWithForms;
     public $selectedExamId = null;
     public $marks = [];
     public $problems = [];
     public $students = [];
     public $totalMaxScore = 0;
+
+
+    public function form(Form $form): Form
+    {
+        return $form
+            ->schema([
+                Select::make('selectedExamId')
+                    ->label('Imtihon tanlang')
+                    ->placeholder('-- Imtihonni tanlang --')
+                    ->options(function () {
+                        $user = Auth::user();
+                        return \App\Models\Exam::query()
+                            ->whereHas('marks')
+                            ->when($user->role->name === 'teacher', function ($query) use ($user) {
+                                $query->where(function ($q) use ($user) {
+                                    $q->where('teacher_id', $user->teacher->id)
+                                        ->orWhere('teacher2_id', $user->teacher->id);
+                                });
+                            })
+                            ->with(['sinf', 'subject'])
+                            ->get()
+                            ->mapWithKeys(function ($exam) {
+                                $subject = $exam->subject->name ?? 'No Subject';
+                                $class = $exam->sinf->name ?? 'NO SINF';
+                                return [$exam->id => "{$class} sinf | {$subject} | {$exam->serial_number}-{$exam->type}"];
+                            });
+                    })
+                    ->searchable(),
+            ]);
+    }
 
     public function generateTable()
     {

@@ -199,10 +199,7 @@ class Mark extends Model
                                                 </svg>
                                             </div>
                                             <p class="text-xl font-bold text-gray-800 mb-2">Ushbu imtihon uchun topshiriqlar mavjud emas.</p>
-                                            <p class="text-md text-gray-600 max-w-xs">Baholash jarayonini amalga oshirish uchun, iltimos, avvalo imtihoningizga topshiriqlar qo‘shing. ✨</p>
-                                            <button class="mt-6 px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors">
-                                                Yaratish
-                                            </button>
+                                            <p class="text-md text-gray-600 max-w-xs">Baholash jarayonini amalga oshirish uchun, iltimos, avvalo imtihoningizga topshiriqlar qo‘shing. ✨</p><br>
                                         </div>
                                     ')),
                                 ];
@@ -236,7 +233,12 @@ class Mark extends Model
                             foreach ($students as $student) {
                                 $row = [
                                     Placeholder::make('')
-                                        ->content(new HtmlString("<span class='font-medium font-bold text-l'>{$student['full_name']}</span>"))
+                                        ->content(new HtmlString(
+                                            "<span class='font-medium font-bold text-l'>" .
+                                            $student->extractFirstAndLastName()['first'] . ' ' .
+                                            $student->extractFirstAndLastName()['last'] .
+                                            "</span>"
+                                        ))
                                 ];
 
                                 foreach ($problems as $problem) {

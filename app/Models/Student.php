@@ -19,7 +19,7 @@ class Student extends Model
 
     protected $fillable = [
         'maktab_id',
-        'sinf_id', 
+        'sinf_id',
         'full_name',
     ];
 
@@ -31,6 +31,16 @@ class Student extends Model
     public function maktab(): BelongsTo
     {
         return $this->belongsTo(Maktab::class);
+    }
+
+    public function extractFirstAndLastName()
+    {
+        $cleaned = trim(preg_replace('/\s+/', ' ', $this->full_name));
+        $parts = explode(' ', $cleaned);
+        return [
+            'first' => $parts[0] ?? '',
+            'last' => $parts[1] ?? ''
+        ];
     }
 
     public static function getForm():array
