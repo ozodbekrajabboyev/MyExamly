@@ -85,6 +85,16 @@ class StudentController extends Controller
             ];
         }
 
+        // ✅ Sort all BSB first, then CHSB, both ascending by serial number
+        usort($examResults, function ($a, $b) {
+            // BSB first
+            if ($a['exam_type'] === $b['exam_type']) {
+                return $a['serial_number'] <=> $b['serial_number'];
+            }
+            return $a['exam_type'] === 'BSB' ? -1 : 1;
+        });
+
+        // ✅ Format output
         $formatted = [];
         $formatted[] = "📋 O‘quvchi: " . $student->full_name;
         $formatted[] = "🏫 Maktab: " . ($student->sinf->maktab->name ?? 'Noma’lum maktab');
@@ -92,6 +102,8 @@ class StudentController extends Controller
         $formatted[] = "";
 
         foreach ($examResults as $exam) {
+            if( $exam['exam_type'] == 'CHSB') {$formatted[] = ""; }
+
             $formatted[] = "🧾 Imtihon turi: {$exam['serial_number']}-{$exam['exam_type']}";
             $formatted = array_merge($formatted, $exam['tasks']);
             $formatted[] = "";
