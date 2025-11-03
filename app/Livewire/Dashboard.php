@@ -167,8 +167,6 @@ class Dashboard extends Component
             })
             ->with(['sinf', 'subject'])
             ->get();
-
-
         return view('livewire.dashboard', [
             'exams' => $exams,
         ]);
