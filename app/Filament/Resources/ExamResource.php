@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ExamResource\Pages;
-use App\Filament\Resources\ExamResource\RelationManagers;
 use App\Models\Exam;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -11,7 +10,6 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ExamResource extends Resource
 {
@@ -116,7 +114,13 @@ class ExamResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make()->label("Tahrirlash"),
+                Tables\Actions\EditAction::make()->label(""),
+                Tables\Actions\Action::make('manage_marks')
+                    ->label('')
+                    ->icon('heroicon-o-table-cells')
+                    ->url(fn (Exam $record): string => "/exams/manage-marks?exam_id={$record->id}")
+                    ->visible(fn (Exam $record): bool => $record->sinf->students()->count() > 0)
+                    ->color('success'),
             ]);
     }
 
@@ -133,6 +137,7 @@ class ExamResource extends Resource
             'index' => Pages\ListExams::route('/'),
             'create' => Pages\CreateExam::route('/create'),
             'edit' => Pages\EditExam::route('/{record}/edit'),
+            'manage-marks' => Pages\ManageMarks::route('/manage-marks'),
         ];
     }
 }

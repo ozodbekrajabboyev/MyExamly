@@ -23,6 +23,9 @@ class MarkResource extends Resource
     protected static ?string $model = Mark::class;
     protected static ?string $navigationLabel = "Baholar";
 
+    // Hide from navigation menu
+    protected static bool $shouldRegisterNavigation = false;
+
     public static function getModelLabel(): string
     {
         return "Baho";
