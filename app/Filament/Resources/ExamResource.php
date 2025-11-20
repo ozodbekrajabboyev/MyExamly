@@ -111,7 +111,14 @@ class ExamResource extends Resource
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('sinf_id')
+                    ->label('Sinf')
+                    ->relationship('sinf', 'name'),
+
+                Tables\Filters\SelectFilter::make('subject_id')
+                    ->label('Fan')
+                    ->relationship('subject', 'name')
+                    ->searchable(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make()->label(""),

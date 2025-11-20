@@ -78,7 +78,6 @@ class Exam extends Model
         $this->save();
     }
 
-    // Method to get a specific problem by its ID
     public function getProblem($problemId)
     {
         $problems = $this->problems ?? [];
@@ -91,7 +90,6 @@ class Exam extends Model
         return $this->problems ?? [];
     }
 
-    // Method to update a problem
     public function updateProblem($problemId, $maxMark)
     {
         $problems = $this->problems ?? [];
@@ -108,6 +106,19 @@ class Exam extends Model
     public function getProblemsCountAttribute()
     {
         return count($this->problems ?? []);
+    }
+
+    // Add helper method to get total max marks
+    public function getTotalMaxMarks()
+    {
+        if (empty($this->problems)) {
+            return 0;
+        }
+
+        return collect($this->problems)
+            ->sum(function ($problem) {
+                return (float) $problem['max_mark'];
+            });
     }
 
     public static function getForm(): array

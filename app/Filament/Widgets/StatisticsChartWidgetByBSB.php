@@ -106,7 +106,7 @@ class StatisticsChartWidgetByBSB extends ChartWidget
         $maxMarksPerExam = DB::table('exams')
             ->whereIn('id', $examIds)
             ->select('id as exam_id',
-                DB::raw("(SELECT SUM((value->>'max_mark')::integer)
+                DB::raw("(SELECT SUM((value->>'max_mark')::numeric)
                   FROM jsonb_array_elements(problems) AS value) as total_max_mark")
             )
             ->get()
@@ -171,6 +171,6 @@ class StatisticsChartWidgetByBSB extends ChartWidget
      */
     protected function getType(): string
     {
-        return 'bar';
+        return 'line';
     }
 }
