@@ -13,7 +13,7 @@ class StatisticsBySinfCHSB extends ChartWidget
 
     public static function canView(): bool
     {
-        return auth()->check() && auth()->user()->role_id !== 3;
+        return false; // Hide CHSB statistics from dashboard
     }
     protected function getData(): array
     {

@@ -11,6 +11,7 @@ class StatisticsBySinfBSB extends ChartWidget
 {
     protected static ?string $heading = "Sinflar kesimida BSB imtihon natijalari";
 
+    protected int | string | array $columnSpan = 'full';
     public static function canView(): bool
     {
         return auth()->check() && auth()->user()->role_id !== 3;
