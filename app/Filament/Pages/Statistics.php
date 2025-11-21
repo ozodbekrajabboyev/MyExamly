@@ -2,7 +2,6 @@
 
 namespace App\Filament\Pages;
 
-use App\Filament\Widgets\ChsbBsbWidget;
 use App\Filament\Widgets\StatisticsChartWidgetByCHSB;
 use App\Filament\Widgets\StatisticsChartWidgetByBSB;
 use Filament\Pages\Page;

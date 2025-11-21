@@ -21,7 +21,7 @@ use Filament\Forms;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
-// Forms namespace uchun (agar kerak bo'lsa)
+
 class Exam extends Model
 {
     /** @use HasFactory<\Database\Factories\ExamFactory> */
@@ -30,6 +30,13 @@ class Exam extends Model
     protected $casts = [
         'problems' => 'array', // Cast JSONB to array
     ];
+
+    public function students()
+    {
+        return $this->belongsToMany(Student::class, 'student_exams')
+            ->withPivot(['total', 'percentage'])
+            ->withTimestamps();
+    }
 
 
     public function sinf():BelongsTo
@@ -119,6 +126,35 @@ class Exam extends Model
             ->sum(function ($problem) {
                 return (float) $problem['max_mark'];
             });
+    }
+
+    /**
+     * Calculate and store totals for all students in this exam
+     */
+    public function calculateStudentTotals()
+    {
+        $students = Student::where('sinf_id', $this->sinf_id)->get();
+        $problems = $this->problems ?? [];
+        $totalMaxScore = collect($problems)->sum('max_mark');
+
+        foreach ($students as $student) {
+            // Calculate total score for this student in this exam
+            $totalScore = Mark::where('exam_id', $this->id)
+                ->where('student_id', $student->id)
+                ->sum('mark');
+
+            // Calculate percentage
+            $percentage = $totalMaxScore > 0 ? round(($totalScore / $totalMaxScore) * 100, 2) : 0;
+
+            // Update or create the pivot record
+            $this->students()->syncWithoutDetaching([
+                $student->id => [
+                    'total' => $totalScore,
+                    'percentage' => $percentage,
+                    'updated_at' => now(),
+                ]
+            ]);
+        }
     }
 
     public static function getForm(): array

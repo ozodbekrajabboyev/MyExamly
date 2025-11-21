@@ -158,7 +158,27 @@
                 @endphp
 
                 @foreach($students as $index => $student)
-                    @php $overall = 0; @endphp
+                    @php
+                        // Get pre-calculated values from pivot table if available
+                        $pivotData = $student->exams->first()?->pivot ?? null;
+                        $overall = $pivotData ? $pivotData->total : 0;
+                        $percentage = $pivotData ? $pivotData->percentage : 0;
+
+                        // If no pivot data, fall back to calculation (for backwards compatibility)
+                        if (!$pivotData) {
+                            $overall = 0;
+                            foreach($problems as $problem) {
+                                $mark = \App\Models\Mark::where('student_id', $student->id)
+                                    ->where('problem_id', $problem['id'])
+                                    ->where('exam_id', $selectedExamId)
+                                    ->first();
+                                $overall += $mark ? $mark->mark : 0;
+                            }
+                            $percentage = $totalMaxScore > 0 ? round(($overall / $totalMaxScore) * 100, 1) : 0;
+                        }
+
+                        $totalScores[] = $overall;
+                    @endphp
                     <tr class="">
                         <td class="border border-gray-300 dark:border-gray-600 py-2 px-3 text-center text-gray-800 dark:text-gray-200">{{ $index + 1 }}</td>
                         <td class="border border-gray-300 dark:border-gray-600 py-2 px-3 text-left text-gray-800 dark:text-gray-200">{{ $student->full_name }}</td>
@@ -170,7 +190,6 @@
                                     ->where('exam_id', $selectedExamId)
                                     ->first();
                                 $score = $mark ? $mark->mark : 0;
-                                $overall += $score;
 
                                 if (!isset($problemTotals[$problem['id']])) {
                                     $problemTotals[$problem['id']] = 0;
@@ -186,10 +205,6 @@
 
                         <td class="border border-gray-300 dark:border-gray-600 py-2 px-3 text-center font-bold text-gray-800 dark:text-gray-200">{{ $overall }}</td>
 
-                        @php
-                            $percentage = $totalMaxScore > 0 ? round(($overall / $totalMaxScore) * 100, 1) : 0;
-                            $totalScores[] = $overall;
-                        @endphp
                         <td class="border border-gray-300 dark:border-gray-600 py-2 px-3 text-center bg-yellow-100 dark:bg-yellow-900/30 text-gray-800 dark:text-yellow-200">
                             {{ $percentage }}%
                         </td>

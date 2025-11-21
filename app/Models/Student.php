@@ -11,6 +11,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Select;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Filament\Forms;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Queue\Connectors\BeanstalkdConnector;
 
 class Student extends Model
 {
@@ -22,6 +24,13 @@ class Student extends Model
         'sinf_id',
         'full_name',
     ];
+
+    public function exams()
+    {
+        return $this->belongsToMany(Exam::class, 'student_exams')
+            ->withPivot(['total', 'percentage'])
+            ->withTimestamps();
+    }
 
     public function sinf(): BelongsTo
     {

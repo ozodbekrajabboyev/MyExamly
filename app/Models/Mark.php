@@ -273,4 +273,53 @@ class Mark extends Model
                 ]),
         ];
     }
+
+    /**
+     * Update the student_exams pivot table with calculated totals and percentages
+     * when marks are saved or updated
+     */
+    protected static function booted()
+    {
+        static::saved(function ($mark) {
+            $mark->updateStudentExamTotals();
+        });
+
+        static::deleted(function ($mark) {
+            $mark->updateStudentExamTotals();
+        });
+    }
+
+    /**
+     * Update the student_exams pivot table for this mark's student and exam
+     */
+    public function updateStudentExamTotals()
+    {
+        $exam = Exam::find($this->exam_id);
+        $student = Student::find($this->student_id);
+
+        if (!$exam || !$student) {
+            return;
+        }
+
+        // Calculate total score for this student in this exam
+        $totalScore = Mark::where('exam_id', $this->exam_id)
+            ->where('student_id', $this->student_id)
+            ->sum('mark');
+
+        // Get exam problems and calculate total max score
+        $problems = $exam->problems ?? [];
+        $totalMaxScore = collect($problems)->sum('max_mark');
+
+        // Calculate percentage
+        $percentage = $totalMaxScore > 0 ? round(($totalScore / $totalMaxScore) * 100, 2) : 0;
+
+        // Update or create the pivot record
+        $exam->students()->syncWithoutDetaching([
+            $this->student_id => [
+                'total' => $totalScore,
+                'percentage' => $percentage,
+                'updated_at' => now(),
+            ]
+        ]);
+    }
 }

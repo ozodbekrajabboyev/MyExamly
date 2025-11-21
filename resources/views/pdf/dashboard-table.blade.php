@@ -205,7 +205,29 @@
         $totalScores = [];
     @endphp
     @foreach($students as $index => $student)
-        @php $overall = 0; $name = $student->extractFirstAndLastName($student->full_name); @endphp
+        @php
+            $name = $student->extractFirstAndLastName($student->full_name);
+
+            // Get pre-calculated values from pivot table if available
+            $pivotData = $student->exams->first()?->pivot ?? null;
+
+            $overall = $pivotData ? $pivotData->total : 0;
+            $percentage = $pivotData ? $pivotData->percentage : 0;
+
+            // If no pivot data, fall back to manual calculation (for backwards compatibility)
+            if (!$pivotData) {
+                $overall = 0;
+                foreach($problems as $problem) {
+                    $mark = $marks->first(function ($m) use ($student, $problem) {
+                        return $m->student_id == $student->id && $m->problem_id == $problem['id'];
+                    });
+                    $overall += $mark->mark ?? 0;
+                }
+                $percentage = $totalMaxScore > 0 ? round(($overall / $totalMaxScore) * 100, 1) : 0;
+            }
+
+            $totalScores[] = $overall;
+        @endphp
         <tr>
             <td class="col-number">{{ $index + 1 }}</td>
             <td class="col-name student-name"> {{ $name['first'] }} {{ $name['last'] }} </td>
@@ -215,7 +237,6 @@
                         return $m->student_id == $student->id && $m->problem_id == $problem['id'];
                     });
                     $score = $mark->mark ?? 0;
-                    $overall += $score;
                     $problemTotals[$problem['id']] = ($problemTotals[$problem['id']] ?? 0) + $score;
                     $problemCounts[$problem['id']] = ($problemCounts[$problem['id']] ?? 0) + 1;
                 @endphp
@@ -223,10 +244,6 @@
             @endforeach
 
             <td class="col-total score">{{ $overall }}</td>
-            @php
-                $percentage = $totalMaxScore > 0 ? round(($overall / $totalMaxScore) * 100, 1) : 0;
-                $totalScores[] = $overall;
-            @endphp
             <td class="col-percentage score">{{ $percentage }}%</td>
         </tr>
     @endforeach

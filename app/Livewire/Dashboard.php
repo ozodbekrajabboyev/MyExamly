@@ -79,9 +79,40 @@ class Dashboard extends Component implements HasForms
                 ->sortBy('id') // Sort by id instead of problem_number
                 ->values();
 
+            // Load students with their pre-calculated pivot data
             $this->students = Student::where('sinf_id', $exam->sinf_id)
+                ->whereHas('exams', function ($query) use ($exam) {
+                    $query->where('exam_id', $exam->id);
+                })
+                ->with(['exams' => function ($query) use ($exam) {
+                    $query->where('exam_id', $exam->id);
+                }])
                 ->orderBy('full_name')
                 ->get();
+
+            // If no students have pivot data, fall back to all students in the class
+            // This handles cases where the pivot table hasn't been populated yet
+            if ($this->students->isEmpty()) {
+                $this->students = Student::where('sinf_id', $exam->sinf_id)
+                    ->orderBy('full_name')
+                    ->get();
+
+                // Calculate and store totals for this exam if there are marks but no pivot data
+                if ($this->marks->isNotEmpty()) {
+                    $exam->calculateStudentTotals();
+
+                    // Reload students with the newly calculated pivot data
+                    $this->students = Student::where('sinf_id', $exam->sinf_id)
+                        ->whereHas('exams', function ($query) use ($exam) {
+                            $query->where('exam_id', $exam->id);
+                        })
+                        ->with(['exams' => function ($query) use ($exam) {
+                            $query->where('exam_id', $exam->id);
+                        }])
+                        ->orderBy('full_name')
+                        ->get();
+                }
+            }
 
             $this->totalMaxScore = collect($this->problems)->sum('max_mark');
         }
@@ -95,33 +126,33 @@ class Dashboard extends Component implements HasForms
         $exam = Exam::with(['sinf', 'subject'])->find($this->selectedExamId);
 
         // Check if exam is approved
-        if (!$exam || $exam->status !== 'approved') {
-            Notification::make()
-                ->title('Tasdiqlash jarayoni!')
-                ->body("Natijalarni PDF shaklida yuklab olish imkoniyati faqat imtihon tasdiqlangandan so'ng beriladi.")
-                ->warning()
-                ->persistent()
-                ->actions([
-                    \Filament\Notifications\Actions\Action::make('requestApproval')
-                        ->label("Tasdiqlashni so'rash")
-                        ->button()
-                ->color('warning')
-                ->dispatch('requestApproval', [$exam->id])
-                ->close()
-                ])
-                ->send();
-
-            return;
-        }
-        if (!optional(auth()->user()->teacher)->signature_path) {
-            Notification::make()
-                ->title('Profil ma\'lumotlaringizni to\'ldiring.')
-                ->danger()
-                ->persistent()
-                ->send();
-
-            return;
-        }
+//        if (!$exam || $exam->status !== 'approved') {
+//            Notification::make()
+//                ->title('Tasdiqlash jarayoni!')
+//                ->body("Natijalarni PDF shaklida yuklab olish imkoniyati faqat imtihon tasdiqlangandan so'ng beriladi.")
+//                ->warning()
+//                ->persistent()
+//                ->actions([
+//                    \Filament\Notifications\Actions\Action::make('requestApproval')
+//                        ->label("Tasdiqlashni so'rash")
+//                        ->button()
+//                ->color('warning')
+//                ->dispatch('requestApproval', [$exam->id])
+//                ->close()
+//                ])
+//                ->send();
+//
+//            return;
+//        }
+//        if (!optional(auth()->user()->teacher)->signature_path) {
+//            Notification::make()
+//                ->title('Profil ma\'lumotlaringizni to\'ldiring.')
+//                ->danger()
+//                ->persistent()
+//                ->send();
+//
+//            return;
+//        }
 
         // Fetch the necessary data for the PDF
         $marks = Mark::where('exam_id', $exam->id)->get();
@@ -129,9 +160,15 @@ class Dashboard extends Component implements HasForms
         // Fix: Handle problems as JSON array
         $problemsData = is_string($exam->problems) ? json_decode($exam->problems, true) : ($exam->problems ?? []);
         $problems = collect($problemsData)->sortBy('id')->values();
-//        dd($problems->count());
 
-        $students = Student::where('sinf_id', $exam->sinf_id)->orderBy('full_name')->get();
+        // Load students with their pre-calculated pivot data
+        $students = Student::where('sinf_id', $exam->sinf_id)
+            ->with(['exams' => function ($query) use ($exam) {
+                $query->where('exam_id', $exam->id);
+            }])
+            ->orderBy('full_name')
+            ->get();
+
         $totalMaxScore = $problems->sum('max_mark');
 
         // Prepare the PDF
