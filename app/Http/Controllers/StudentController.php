@@ -56,14 +56,12 @@ class StudentController extends Controller
             ->get();
 
         if ($results->isEmpty()) {
-            return response()->json([
-                "message" => "Natija topilmadi"
-            ], 404);
+            return response()->json(["message" => "Natija topilmadi"], 404);
         }
 
         $subjectName = $results->first()->subject_name;
 
-        // Build exams data
+        // 1) collection sifatida exam results
         $examResults = $results->map(function ($item) {
             return [
                 'exam_type'    => $item->type,
@@ -71,17 +69,30 @@ class StudentController extends Controller
                 'total'        => (float) $item->total,
                 'percentage'   => round($item->percentage, 0),
             ];
-        })->toArray();
-
-        // Sort: BSB first, then CHSB, serial_number ASC
-        usort($examResults, function ($a, $b) {
-            if ($a['exam_type'] === $b['exam_type']) {
-                return $a['serial_number'] <=> $b['serial_number'];
-            }
-            return $a['exam_type'] === 'BSB' ? -1 : 1;
         });
 
-        // Telegram output
+        // 2) Sort — BSB oldin, CHSB keyin
+        $examResults = $examResults
+            ->sortBy([
+                ['exam_type', fn($a, $b) => $a === $b ? 0 : ($a === 'BSB' ? -1 : 1)],
+                ['serial_number', 'asc']
+            ])
+            ->values();
+
+        // 3) Group by exam type (BSB, CHSB)
+        $grouped = $examResults
+            ->groupBy('exam_type')
+            ->map(function($items) {
+                return $items->map(function($item) {
+                    return [
+                        'serial_number' => $item['serial_number'],
+                        'percentage' => $item['percentage'],
+                        'total' => $item['total']
+                    ];
+                })->values();
+            });
+
+        // 4) Telegram uchun formatted text
         $formatted = [];
         $formatted[] = "📋 O‘quvchi: " . $student->full_name;
         $formatted[] = "🏫 Maktab: " . ($student->sinf->maktab->name ?? 'Noma’lum maktab');
@@ -94,13 +105,12 @@ class StudentController extends Controller
             $formatted[] = "------------------------------------------------------------";
         }
 
-        // 👉 Correct final JSON
         return response()->json([
-            'student' => $student->full_name,
-            'school'  => $student->sinf->maktab->name ?? null,
-            'subject' => $subjectName,
-            'exams'   => $examResults,
-            'formatted' => implode("\n", $formatted),
+            "student" => $student->full_name,
+            "school" => $student->sinf->maktab->name,
+            "subject" => $subjectName,
+            "groups" => $grouped,   // chart uchun muhim!
+            "formatted" => implode("\n", $formatted)
         ]);
     }
 
