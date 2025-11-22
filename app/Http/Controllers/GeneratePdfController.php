@@ -59,10 +59,17 @@ class GeneratePdfController extends Controller
         $type1 = $exam->serial_number . "-" . $exam->type;
         $filename = "$className -sinf | $subject | $type1 | results.pdf";
 
-        // Return the response to download the file in the browser
-        return response()->streamDownload(function () use ($pdf) {
-            echo $pdf->output();
-        }, $filename);
+        // Generate the PDF content
+        $pdfContent = $pdf->output();
+
+        // Return proper PDF response with correct headers
+        return response($pdfContent)
+            ->header('Content-Type', 'application/pdf')
+            ->header('Content-Disposition', 'attachment; filename="' . $filename . '"')
+            ->header('Content-Length', strlen($pdfContent))
+            ->header('Cache-Control', 'private, max-age=0, must-revalidate')
+            ->header('Pragma', 'public')
+            ->header('Accept-Ranges', 'bytes');
     }
 
     public function validateExamCode($code)
