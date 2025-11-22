@@ -166,7 +166,7 @@ class ManageMarks extends Page implements HasForms, HasTable
                 ->alignment('center')
                 ->width('100px')
                 ->type('number')
-                ->step(1);
+                ->step(0.1);
         }
 
 
