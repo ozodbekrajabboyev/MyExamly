@@ -31,6 +31,19 @@ class Exam extends Model
         'problems' => 'array', // Cast JSONB to array
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($exam) {
+            do {
+                $code = str_pad(rand(0, 99999), 5, '0', STR_PAD_LEFT);
+            } while (self::where('code', $code)->exists());
+
+            $exam->code = $code;
+        });
+    }
+
     public function students()
     {
         return $this->belongsToMany(Student::class, 'student_exams')

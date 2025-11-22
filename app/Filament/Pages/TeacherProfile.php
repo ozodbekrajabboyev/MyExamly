@@ -55,7 +55,6 @@ class TeacherProfile extends Page implements HasForms
             'vazir_buyruq_path' => $this->teacher->vazir_buyruq_path,
             'qoshimcha_ustama_path' => $this->teacher->qoshimcha_ustama_path,
             'malumotnoma_path' => $this->teacher->malumotnoma_path,
-            'signature_path' => $this->teacher->signature_path,
             'telegram_id' => $this->teacher->telegram_id,
             'profile_photo_path' => $this->teacher->profile_photo_path,
         ]);
@@ -107,18 +106,6 @@ class TeacherProfile extends Page implements HasForms
                             ->imagePreviewHeight('150')
                             ->uploadingMessage('Rasm yuklanmoqda...'),
 
-                        FileUpload::make('signature_path')
-                            ->label('✍️ Elektron imzo')
-                            ->image()
-                            ->acceptedFileTypes(['image/png', 'image/svg+xml'])
-                            ->maxSize(5096)
-                            ->directory('signatures')
-                            ->visibility('public')
-                            ->imageEditor()
-                            ->imageEditorAspectRatios(['16:9', '4:3', '1:1'])
-                            ->helperText('PNG yoki SVG formatda shaffof fonli imzo yuklab oling')
-                            ->imagePreviewHeight('100')
-                            ->uploadingMessage('Imzo yuklanmoqda...'),
 
                         FileUpload::make('passport_photo_path')
                             ->label('🗂️ Pasport nusxasi')

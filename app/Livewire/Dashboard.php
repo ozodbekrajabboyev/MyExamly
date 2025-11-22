@@ -126,33 +126,24 @@ class Dashboard extends Component implements HasForms
         $exam = Exam::with(['sinf', 'subject'])->find($this->selectedExamId);
 
         // Check if exam is approved
-//        if (!$exam || $exam->status !== 'approved') {
-//            Notification::make()
-//                ->title('Tasdiqlash jarayoni!')
-//                ->body("Natijalarni PDF shaklida yuklab olish imkoniyati faqat imtihon tasdiqlangandan so'ng beriladi.")
-//                ->warning()
-//                ->persistent()
-//                ->actions([
-//                    \Filament\Notifications\Actions\Action::make('requestApproval')
-//                        ->label("Tasdiqlashni so'rash")
-//                        ->button()
-//                ->color('warning')
-//                ->dispatch('requestApproval', [$exam->id])
-//                ->close()
-//                ])
-//                ->send();
-//
-//            return;
-//        }
-//        if (!optional(auth()->user()->teacher)->signature_path) {
-//            Notification::make()
-//                ->title('Profil ma\'lumotlaringizni to\'ldiring.')
-//                ->danger()
-//                ->persistent()
-//                ->send();
-//
-//            return;
-//        }
+        if (!$exam || $exam->status !== 'approved') {
+            Notification::make()
+                ->title('Tasdiqlash jarayoni!')
+                ->body("Natijalarni PDF shaklida yuklab olish imkoniyati faqat imtihon tasdiqlangandan so'ng beriladi.")
+                ->warning()
+                ->persistent()
+                ->actions([
+                    \Filament\Notifications\Actions\Action::make('requestApproval')
+                        ->label("Tasdiqlashni so'rash")
+                        ->button()
+                ->color('warning')
+                ->dispatch('requestApproval', [$exam->id])
+                ->close()
+                ])
+                ->send();
+
+            return;
+        }
 
         // Fetch the necessary data for the PDF
         $marks = Mark::where('exam_id', $exam->id)->get();

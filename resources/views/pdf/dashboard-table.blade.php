@@ -5,39 +5,43 @@
     <title>Imtihon Natijalari</title>
     <style>
         /* Add this CSS to your stylesheet */
-        .signatures {
-            margin-top: 20px;
+            /* QR Code and exam info section - Bottom Right */
+        .exam-footer {
+            position: fixed;
+            bottom: 15px;
+            right: 15px;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 15px;
+            font-size: 16px;
+            z-index: 1000;
+            background-color: rgba(255, 255, 255, 0.95);
+            padding: 10px;
         }
 
-        .signature-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
+        .exam-code {
+            white-space: nowrap;
             line-height: 1;
         }
 
-        .signature-item strong {
-            width: 200px;
-            margin-right: 10px;
-            flex-shrink: 0;
+        .exam-code strong {
+            display: inline;
+            margin-right: 8px;
+            font-size: 16px;
+            font-weight: bold;
         }
 
-        .signature-item img {
-            margin-right: 10px;
-            max-height: 30px;
+        .exam-code span {
+            font-size: 16px;
+            font-weight: normal;
         }
 
-        .signature-item .signature-line {
-            width: 100px;
-            margin-right: 10px;
-            border-bottom: 1px solid #000;
-            height: 1px;
-            display: inline-block;
-        }
-
-        .signature-item span {
-            flex: 1;
-            margin-left: 10px;
+        .qr-code img {
+            width: 120px;
+            height: 120px;
+            display: block;
         }
         @page {
             size: A4 landscape;
@@ -124,25 +128,6 @@
             font-size: 6px;
         }
 
-        .signatures {
-            margin-top: 10px;
-            font-size: 9px;
-            page-break-inside: avoid;
-        }
-
-        .signatures h3 {
-            margin: 5px 0;
-            font-size: 9px;
-            display: flex;
-            align-items: center;
-        }
-
-        .signatures img {
-            width: 40px;
-            height: auto;
-            margin: 0 8px;
-            vertical-align: middle;
-        }
 
         .problem-header {
             font-size: 6px;
@@ -284,54 +269,15 @@
     </tfoot>
 </table>
 
-<div class="signatures">
-    <?php
-    $user = $exam->teacher;
-    $admin = App\Models\User::where('maktab_id', $user->maktab_id)->where('role_id', 2)->first();
-    ?>
-
-    <div class="signature-item">
-        <strong>Maktab-internatining O'IBDO':</strong>
-        @if($admin && $admin->signature_path)
-            <img src="{{ public_path('/storage/' . $admin->signature_path) }}" alt="Signature" style="position: relative; top: 5px;">
-        @else
-            <span class="signature-line"></span>
-        @endif
-        <span>{{ App\Models\User::where('maktab_id', auth()->user()->maktab_id)->where('role_id', 2)->pluck('name')[0] }}</span>
+<div class="exam-footer">
+    <div class="exam-code">
+        <strong>Kod:</strong>
+        {{ $exam->code ?? $exam->id }}
     </div>
-
-{{--    This section is temporarily removed as per the client's need --}}
-{{--    <div class="signature-item">--}}
-{{--        <strong>Metodbirlashma rahbari:</strong>--}}
-{{--        @if($exam->metod && $exam->metod->signature_path)--}}
-{{--            <img src="{{ public_path('/storage/' . $exam->metod->signature_path) }}" alt="Signature" style="position: relative; top: 5px;">--}}
-{{--        @else--}}
-{{--            <span class="signature-line"></span>--}}
-{{--        @endif--}}
-{{--        <span>{{$exam->metod->full_name}}</span>--}}
-{{--    </div>--}}
-
-    <div class="signature-item">
-        <strong>Fan o'qituvchisi:</strong>
-        @if($exam->teacher && $exam->teacher->signature_path)
-            <img src="{{ public_path('/storage/' . $exam->teacher->signature_path) }}" alt="Signature" style="position: relative; top: 5px;">
-        @else
-            <span class="signature-line"></span>
-        @endif
-        <span>{{$exam->teacher->full_name}}</span>
+    <div class="qr-code">
+        <img src="{{ public_path('qrcode.png') }}" alt="QR Code">
     </div>
-
-    @if($exam->teacher2)
-        <div class="signature-item">
-            <strong>Fan o'qituvchisi:</strong>
-            @if($exam->teacher2->signature_path)
-                <img src="{{ public_path('/storage/' . $exam->teacher2->signature_path) }}" alt="Signature" style="position: relative; top: 5px;">
-            @else
-                <span class="signature-line"></span>
-            @endif
-            <span>{{$exam->teacher2->full_name}}</span>
-        </div>
-    @endif
 </div>
+
 </body>
 </html>

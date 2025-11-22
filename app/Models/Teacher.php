@@ -259,19 +259,6 @@ class Teacher extends Model
     }
 
 
-    public function getSignatureUrlAttribute(): ?string
-    {
-        if (!$this->signature_path) {
-            return null;
-        }
-        return Storage::disk('public')->url($this->signature_path);
-    }
-
-    public function hasSignature(): bool
-    {
-        return !empty($this->signature_path);
-    }
-
     public static function getForm(): array
     {
         return [

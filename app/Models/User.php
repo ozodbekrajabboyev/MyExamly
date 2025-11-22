@@ -3,20 +3,17 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Facades\Storage;
 
 class User extends Authenticatable implements FilamentUser
 {
@@ -34,7 +31,6 @@ class User extends Authenticatable implements FilamentUser
         'email',
         'role_id',
         'password',
-        'signature_path'
     ];
 
     /**
@@ -80,34 +76,9 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsTo(Maktab::class);
     }
 
-    public function getSignature(): ?string
-    {
-        return $this->signature_path ? Storage::disk('public')->url($this->signature_path) : null;
-    }
-
-
-    public function setSignaturePathAttribute($value)
-    {
-        if ($value) {
-            $this->attributes['signature_path'] = $value;
-        }
-    }
-
     protected static function boot()
     {
         parent::boot();
-
-        static::updating(function ($user) {
-            if ($user->isDirty('signature_path') && $user->getOriginal('signature_path')) {
-                Storage::disk('public')->delete($user->getOriginal('signature_path'));
-            }
-        });
-
-        static::deleting(function ($user) {
-            if ($user->signature_path) {
-                Storage::disk('public')->delete($user->signature_path);
-            }
-        });
     }
 
 
@@ -140,21 +111,6 @@ class User extends Authenticatable implements FilamentUser
                         ->label("Foydalanuvchining roli")
                         ->relationship('role', 'name')
                         ->required(),
-                    FileUpload::make('signature_path')
-                        ->label("Foydalanuvchining imzosini yuklang")
-                        ->image()
-                        ->acceptedFileTypes(['image/png', 'image/svg+xml'])
-                        ->maxSize(5096)
-                        ->directory('signatures')
-                        ->visibility('public')
-                        ->imageEditor()
-                        ->imageEditorAspectRatios([
-                            '16:9',
-                            '4:3',
-                            '1:1',
-                        ])
-                        ->columnSpanFull()
-                        ->helperText("PNG yoki SVG formatda imzo rasmini yuklang")
                 ])
         ];
     }

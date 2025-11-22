@@ -9,7 +9,6 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
-use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -72,11 +71,6 @@ class UserResource extends Resource
                         'admin' => 'warning',
                         'superadmin' => 'success'
                     }),
-                ImageColumn::make('signature_path')
-                    ->label('Imzo')
-                    ->circular()
-                    ->size(40)
-                    ->defaultImageUrl(url('/images/placeholder-signature.png')),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([])

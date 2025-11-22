@@ -292,36 +292,6 @@ class TeacherResource extends Resource
                                     ])
                                     ->compact()
                                     ->columnSpan(1),
-
-                                // Digital Signature Section
-                                Section::make('Shaxsiy imzo')
-                                    ->icon('heroicon-o-pencil-square')
-                                    ->description('Shaxsiy imzo va tasdiqlash')
-                                    ->schema([
-                                        TextEntry::make('signature_status')
-                                            ->default("Shaxsiy imzo mavjud emas")
-                                            ->label('Imzo holati')
-                                            ->formatStateUsing(fn ($state, $record) =>
-                                            $record->signature_path ? 'Imzo mavjud' : 'Imzo yuklanmagan')
-                                            ->badge()
-                                            ->color(fn ($state, $record) => $record->signature_path ? 'success' : 'warning')
-                                            ->icon(fn ($state, $record) =>
-                                            $record->signature_path ? 'heroicon-o-check-circle' : 'heroicon-o-exclamation-triangle'),
-
-                                        TextEntry::make('signature_path')
-                                            ->label('Imzoni ko\'rish')
-                                            ->formatStateUsing(fn ($state) => $state ? 'Imzoni ochish' : null)
-                                            ->placeholder('Imzo mavjud emas')
-                                            ->url(fn ($record) => $record->signature_path ?
-                                                Storage::disk('public')->url($record->signature_path) : null)
-                                            ->openUrlInNewTab()
-                                            ->badge(fn ($state) => !empty($state))
-                                            ->color(fn ($state) => $state ? 'info' : 'gray')
-                                            ->icon(fn ($state) => $state ? 'heroicon-o-eye' : 'heroicon-o-x-circle')
-                                            ->visible(fn ($record) => $record->signature_path),
-                                    ])
-                                    ->compact()
-                                    ->columnSpan(1),
                             ]),
                     ])
                     ->collapsible()
