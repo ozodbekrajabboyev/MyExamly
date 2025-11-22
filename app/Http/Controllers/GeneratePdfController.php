@@ -64,4 +64,18 @@ class GeneratePdfController extends Controller
             echo $pdf->output();
         }, $filename);
     }
+
+    public function validateExamCode($code)
+    {
+        // Check if exam exists in the database by searching the 'code' column
+        $exam = Exam::where('code', $code)
+                   ->orWhere('id', $code)
+                   ->orWhere('serial_number', $code)
+                   ->first();
+
+        return response()->json([
+            'valid' => $exam !== null,
+            'exam_id' => $exam ? $exam->id : null
+        ]);
+    }
 }

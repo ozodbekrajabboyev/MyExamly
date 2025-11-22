@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DistrictController;
+use App\Http\Controllers\GeneratePdfController;
 use App\Http\Controllers\MaktabController;
 use App\Http\Controllers\RegionController;
 use App\Http\Controllers\SinfController;
@@ -8,6 +9,7 @@ use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ContactController;
 
+Route::get('/exam/{code}/validate', [GeneratePdfController::class, 'validateExamCode']);
 
 Route::middleware('telegram.api-key')->group(function () {
     Route::get('/regions', [RegionController::class, 'index']);
@@ -19,7 +21,4 @@ Route::middleware('telegram.api-key')->group(function () {
     Route::get('/schools', [MaktabController::class, 'index']);
     Route::get('/students/{id}/subjects/{subjectId}/result', [StudentController::class, 'result']);
     Route::get('/students/{id}/subjects', [StudentController::class, 'subjects']);
-
-
 });
-

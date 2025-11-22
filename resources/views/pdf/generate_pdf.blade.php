@@ -267,7 +267,7 @@
                     type="text"
                     id="examCode"
                     class="input-field"
-                    placeholder="Imtihon kodini kiriting (masalan: EX123456)"
+                    placeholder="Imtihon kodini kiriting (masalan: 123456)"
                     maxlength="20"
                     autocomplete="off"
                 >
@@ -336,35 +336,58 @@
             });
 
             function validateAndDownload(examCode) {
-                // Simulate validation logic
-                // In real implementation, this would be an AJAX call to your Laravel backend
+                // Make actual AJAX call to validate exam code against database
+                fetch(`/api/exam/${examCode}/validate`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.valid) {
+                        // Valid code - trigger download
+                        showMessage('✅ Imtihon topildi! PDF yuklanmoqda...', 'success');
 
-                // Mock validation - replace with actual API call
-                const validCodes = ['EX123456', 'TEST001', 'EXAM2024', '59284']; // Example valid codes
+                        // Trigger actual PDF download
+                        setTimeout(() => {
+                            downloadPDF(examCode);
+                            setLoadingState(false);
+                            btnText.textContent = 'Yana Yuklab Olish';
+                        }, 1000);
 
-                if (validCodes.includes(examCode)) {
-                    // Valid code - trigger download
-                    showMessage('✅ Imtihon topildi! PDF yuklanmoqda...', 'success');
-
-                    // Show download info
-                    downloadInfo.innerHTML = `
-                        <i class="fas fa-file-pdf"></i>
-                        <strong>Yuklanmoqda:</strong> ${examCode}_natijalar.pdf
-                    `;
-                    downloadInfo.classList.add('show');
-
-                    // Simulate PDF download
-                    setTimeout(() => {
-                        downloadPDF(examCode);
+                    } else {
+                        // Invalid code - Reset loading state and show error
                         setLoadingState(false);
-                        btnText.textContent = 'Yana Yuklab Olish';
-                    }, 1000);
-
-                } else {
-                    // Invalid code
-                    showMessage('❌ Noto\'g\'ri imtihon kodi. Iltimos, tekshirib qayta urinib ko\'ring.', 'error');
+                        showMessage('❌ Noto\'g\'ri imtihon kodi. Iltimos, tekshirib qayta urinib ko\'ring.', 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Validation error:', error);
+                    // Always reset loading state on error
                     setLoadingState(false);
-                }
+
+                    // Show appropriate error message based on error type
+                    if (error.message.includes('Failed to fetch')) {
+                        showMessage('❌ Internet aloqasi bilan muammo. Qayta urinib ko\'ring.', 'error');
+                    } else if (error.message.includes('HTTP error')) {
+                        showMessage('❌ Server bilan aloqa qilishda xatolik. Qayta urinib ko\'ring.', 'error');
+                    } else {
+                        showMessage('❌ Imtihon kodi tekshirishda xatolik yuz berdi. Qayta urinib ko\'ring.', 'error');
+                    }
+                })
+                .finally(() => {
+                    // Ensure loading state is always reset after a delay
+                    setTimeout(() => {
+                        setLoadingState(false);
+                    }, 100);
+                });
             }
 
             function downloadPDF(examCode) {
@@ -392,16 +415,30 @@
             }
 
             function setLoadingState(loading) {
-                if (loading) {
-                    submitBtn.classList.add('loading');
-                    spinner.style.display = 'block';
-                    downloadIcon.style.display = 'none';
-                    btnText.textContent = 'Tekshirilmoqda...';
-                    examCodeInput.disabled = true;
-                } else {
+                try {
+                    if (loading) {
+                        submitBtn.classList.add('loading');
+                        submitBtn.disabled = true;
+                        spinner.style.display = 'block';
+                        downloadIcon.style.display = 'none';
+                        btnText.textContent = 'Tekshirilmoqda...';
+                        examCodeInput.disabled = true;
+                    } else {
+                        submitBtn.classList.remove('loading');
+                        submitBtn.disabled = false;
+                        spinner.style.display = 'none';
+                        downloadIcon.style.display = 'block';
+                        btnText.textContent = 'Natijalarni Yuklab Olish';
+                        examCodeInput.disabled = false;
+                    }
+                } catch (error) {
+                    console.error('Error setting loading state:', error);
+                    // Force reset to safe state
                     submitBtn.classList.remove('loading');
+                    submitBtn.disabled = false;
                     spinner.style.display = 'none';
                     downloadIcon.style.display = 'block';
+                    btnText.textContent = 'Natijalarni Yuklab Olish';
                     examCodeInput.disabled = false;
                 }
             }

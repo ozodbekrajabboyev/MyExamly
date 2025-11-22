@@ -54,6 +54,6 @@ class Statistics extends Page
 
     public static function canAccess(): bool
     {
-        return auth()->user()->role_id === 2;
+        return auth()->user()->role_id === 2 || auth()->user()->role_id === 1;
     }
 }

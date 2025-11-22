@@ -208,6 +208,13 @@ class Dashboard extends Component implements HasForms
             ->body("{$exam->sinf->name}-sinf | {$exam->subject->name} | {$exam->serial_number}-{$exam->type} imtihonini tasdiqlash uchun so‘rov yuborildi.")
             ->icon('heroicon-o-document-check')
             ->iconColor('warning')
+            ->actions([
+                \Filament\Notifications\Actions\Action::make('edit_exam')
+                    ->label('👉 Imtihonni tasdiqlash')
+                    ->url(route('filament.app.resources.exams.edit', ['record' => $exam->id]))
+                    ->button()
+                    ->color('primary')
+            ])
             ->sendToDatabase($admins);
 
         // Show success notification to the current user
