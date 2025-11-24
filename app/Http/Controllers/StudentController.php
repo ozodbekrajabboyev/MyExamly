@@ -107,6 +107,7 @@ class StudentController extends Controller
 
         return response()->json([
             "student" => $student->full_name,
+            'class' => $student->sinf->name,
             "school" => $student->sinf->maktab->name,
             "subject" => $subjectName,
             "groups" => $grouped,   // chart uchun muhim!
