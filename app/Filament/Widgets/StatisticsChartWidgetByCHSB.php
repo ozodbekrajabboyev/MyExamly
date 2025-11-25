@@ -56,7 +56,7 @@ class StatisticsChartWidgetByCHSB extends ChartWidget
                 Carbon::parse($this->startDate)->startOfDay(),
                 Carbon::parse($this->endDate)->endOfDay()
             ])
-            ->orderBy('created_at')
+            ->orderBy('serial_number')
             ->get();
 
         if ($exams->isEmpty()) {

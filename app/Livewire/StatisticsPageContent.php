@@ -93,19 +93,10 @@ class StatisticsPageContent extends Component
             $bsbExams = $this->getExamResults($student->id, 'BSB');
             $chsbExams = $this->getExamResults($student->id, 'CHSB');
 
-            // Calculate averages
-            $bsbAvg = $this->calculateAverage($bsbExams);
-            $chsbAvg = $this->calculateAverage($chsbExams);
+            $bsbAvg = $bsbExams["total_sum"];
+            $chsbAvg = $chsbExams["total_sum"];
 
-            // Calculate overall total (BSB + CHSB) / 2
-            $overallTotal = 0;
-            if ($bsbAvg['total'] > 0 && $chsbAvg['total'] > 0) {
-                $overallTotal = ($bsbAvg['percentage'] + $chsbAvg['percentage']) / 2;
-            } elseif ($bsbAvg['total'] > 0) {
-                $overallTotal = $bsbAvg['percentage'];
-            } elseif ($chsbAvg['total'] > 0) {
-                $overallTotal = $chsbAvg['percentage'];
-            }
+            $overallTotal = ($bsbAvg + $chsbAvg);
 
             return [
                 'id' => $student->id,
@@ -144,16 +135,32 @@ class StatisticsPageContent extends Component
             ->where('exams.sinf_id', $this->sinfId)
             ->where('exams.type', $examType);
 
-        // Apply date filters if they are set
+        // Apply date filters
         if ($this->startDate) {
-            $query->where('exams.created_at', '>=', $this->startDate . ' 00:00:00');
+            $query->whereDate('exams.created_at', '>=', $this->startDate);
         }
         if ($this->endDate) {
-            $query->where('exams.created_at', '<=', $this->endDate . ' 23:59:59');
+            $query->whereDate('exams.created_at', '<=', $this->endDate);
         }
 
-        return $query->select('student_exams.total', 'student_exams.percentage')->get();
+        // Get results
+        $results = $query->select('student_exams.total', 'student_exams.percentage')->get();
+
+        // Calculate total sum
+        $totalSum = $results->sum('total');
+
+        // If you need percentage sum (optional)
+        $percentageSum = $results->sum('percentage');
+
+        return [
+            'results' => $results,
+            'total_sum' => $totalSum,
+            'percentage_sum' => $percentageSum, // remove if not needed
+        ];
     }
+
+
+
 
     /**
      * Calculate average total and percentage from exam results

@@ -175,7 +175,6 @@ class TeacherProfile extends Page implements HasForms
                             ->maxFiles(1)
                             ->visible(fn (Get $get) => $get('malaka_toifa_daraja') && $get('malaka_toifa_daraja') !== 'mutaxasis')
                             ->required(fn (Get $get) => $get('malaka_toifa_daraja') && $get('malaka_toifa_daraja') !== 'mutaxasis')
-                            ->helperText('Malaka toifa haqidagi hujjat nusxasi')
                             ->uploadingMessage('Hujjat yuklanmoqda...')
                             ->downloadable(),
                     ])
@@ -310,13 +309,12 @@ class TeacherProfile extends Page implements HasForms
                 $cacheKey = "teacher:{$this->teacher->id}:cert:{$field}:expires_at";
                 $cachedValue = Cache::get($cacheKey);
 
-                // Only dispatch job if:
-                // - No cache exists (null)
-                // - Previous attempt failed ('error')
-                if (is_null($cachedValue) || $cachedValue === 'error') {
+                // Only dispatch job if NO cache exists at all (first time processing)
+                // Skip if any cache exists: 'no_expiry', 'no_document', 'error', or actual date
+                // This prevents re-dispatching jobs on every page refresh for failed certificates
+                if (is_null($cachedValue)) {
                     FetchCertificateExpiry::dispatch($this->teacher->id, $field, $cacheKey);
                 }
-                // Skip if: 'no_expiry', 'no_document', or actual date
             }
         }
     }

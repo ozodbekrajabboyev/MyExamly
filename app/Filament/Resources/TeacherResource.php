@@ -322,16 +322,44 @@ class TeacherResource extends Resource
 
                                         TextEntry::make('malaka_toifa_path')
                                             ->label('Malaka toifasi')
+                                            ->helperText(function ($record) {
+                                                if (!$record) {
+                                                    return 'Hujjat yuklanmagan';
+                                                }
+
+                                                $status = $record->getCertificateExpiryStatus('malaka_toifa_path');
+                                                if (!$status) {
+                                                    return 'Amal qilish muddati belgilanmagan';
+                                                }
+
+                                                $expiryDate = $status['expires_at']->format('d.m.Y');
+
+                                                if ($status['is_expired']) {
+                                                    return "⚠️ Muddati " . abs($status['days_left']) . " kun oldin tugagan ({$expiryDate}da tugagan)";
+                                                } elseif ($status['is_expiring_soon']) {
+                                                    return "⚡ {$status['days_left']} kunda tugaydi ({$expiryDate}da tugadi)";
+                                                } else {
+                                                    return "Amal qilish muddati: {$expiryDate}";
+                                                }
+                                            })
                                             ->formatStateUsing(fn ($state) => $state ? 'Hujjatni ko\'rish' : 'Hujjat yuklanmagan')
                                             ->url(fn ($record) => $record->malaka_toifa_path &&
                                             Storage::disk('public')->exists($record->malaka_toifa_path) ?
                                                 Storage::disk('public')->url($record->malaka_toifa_path) : null)
                                             ->openUrlInNewTab()
                                             ->badge()
-                                            ->color(fn ($state) => $state ? 'success' : 'gray')
+                                            ->color(function ($record) {
+                                                if (!$record->malaka_toifa_path) return 'gray';
+
+                                                $status = $record->getCertificateExpiryStatus('malaka_toifa_path');
+                                                if (!$status) return 'success';
+
+                                                if ($status['is_expired']) return 'danger';
+                                                if ($status['is_expiring_soon']) return 'warning';
+                                                return 'success';
+                                            })
                                             ->icon(fn ($state) => $state ? 'heroicon-o-eye' : 'heroicon-o-document-plus')
                                             ->visible(fn ($record) => $record->malaka_toifa_daraja !== 'mutaxasis')
-
                                     ])
                                     ->compact()
                                     ->columnSpan(1),
@@ -343,35 +371,122 @@ class TeacherResource extends Resource
                                     ->schema([
                                         TextEntry::make('milliy_sertifikat1_path')
                                             ->label('Milliy sertifikat #1')
+                                            ->helperText(function ($record) {
+                                                if (!$record || !$record->milliy_sertifikat1_path) {
+                                                    return 'Sertifikat yuklanmagan';
+                                                }
+
+                                                $status = $record->getCertificateExpiryStatus('milliy_sertifikat1_path');
+                                                if (!$status) {
+                                                    return 'Amal qilish muddati belgilanmagan';
+                                                }
+
+                                                $expiryDate = $status['expires_at']->format('d.m.Y');
+
+                                                if ($status['is_expired']) {
+                                                    return "⚠️ Muddati " . abs($status['days_left']) . " kun oldin tugagan ({$expiryDate}da tugagan)";
+                                                } elseif ($status['is_expiring_soon']) {
+                                                    return "⚡ {$status['days_left']} kunda tugaydi ({$expiryDate}da tugadi)";
+                                                } else {
+                                                    return "Amal qilish muddati: {$expiryDate}";
+                                                }
+                                            })
                                             ->formatStateUsing(fn ($state) => $state ? 'Sertifikatni ko\'rish' : null)
                                             ->placeholder('Sertifikat yuklanmagan')
                                             ->url(fn ($record) => $record->milliy_sertifikat1_path ?
                                                 Storage::disk('public')->url($record->milliy_sertifikat1_path) : null)
                                             ->openUrlInNewTab()
                                             ->badge(fn ($state) => !empty($state))
-                                            ->color(fn ($state) => $state ? 'primary' : 'gray')
+                                            ->color(function ($record) {
+                                                if (!$record->milliy_sertifikat1_path) return 'gray';
+
+                                                $status = $record->getCertificateExpiryStatus('milliy_sertifikat1_path');
+                                                if (!$status) return 'primary';
+
+                                                if ($status['is_expired']) return 'danger';
+                                                if ($status['is_expiring_soon']) return 'warning';
+                                                return 'primary';
+                                            })
                                             ->icon(fn ($state) => $state ? 'heroicon-o-eye' : 'heroicon-o-x-circle'),
 
                                         TextEntry::make('milliy_sertifikat2_path')
                                             ->label('Milliy sertifikat #2')
+                                            ->helperText(function ($record) {
+                                                if (!$record || !$record->milliy_sertifikat2_path) {
+                                                    return 'Sertifikat yuklanmagan';
+                                                }
+
+                                                $status = $record->getCertificateExpiryStatus('milliy_sertifikat2_path');
+                                                if (!$status) {
+                                                    return 'Amal qilish muddati belgilanmagan';
+                                                }
+
+                                                $expiryDate = $status['expires_at']->format('d.m.Y');
+
+                                                if ($status['is_expired']) {
+                                                    return "⚠️ Muddati " . abs($status['days_left']) . " kun oldin tugagan ({$expiryDate}da tugagan)";
+                                                } elseif ($status['is_expiring_soon']) {
+                                                    return "⚡ {$status['days_left']} kunda tugaydi ({$expiryDate}da tugadi)";
+                                                } else {
+                                                    return "Amal qilish muddati: {$expiryDate}";
+                                                }
+                                            })
                                             ->formatStateUsing(fn ($state) => $state ? 'Sertifikatni ko\'rish' : null)
                                             ->placeholder('Sertifikat yuklanmagan')
                                             ->url(fn ($record) => $record->milliy_sertifikat2_path ?
                                                 Storage::disk('public')->url($record->milliy_sertifikat2_path) : null)
                                             ->openUrlInNewTab()
                                             ->badge(fn ($state) => !empty($state))
-                                            ->color(fn ($state) => $state ? 'primary' : 'gray')
+                                            ->color(function ($record) {
+                                                if (!$record->milliy_sertifikat2_path) return 'gray';
+
+                                                $status = $record->getCertificateExpiryStatus('milliy_sertifikat2_path');
+                                                if (!$status) return 'primary';
+
+                                                if ($status['is_expired']) return 'danger';
+                                                if ($status['is_expiring_soon']) return 'warning';
+                                                return 'primary';
+                                            })
                                             ->icon(fn ($state) => $state ? 'heroicon-o-eye' : 'heroicon-o-x-circle'),
 
                                         TextEntry::make('xalqaro_sertifikat_path')
                                             ->label('Xalqaro sertifikat')
+                                            ->helperText(function ($record) {
+                                                if (!$record || !$record->xalqaro_sertifikat_path) {
+                                                    return 'Sertifikat yuklanmagan';
+                                                }
+
+                                                $status = $record->getCertificateExpiryStatus('xalqaro_sertifikat_path');
+                                                if (!$status) {
+                                                    return 'Amal qilish muddati belgilanmagan';
+                                                }
+
+                                                $expiryDate = $status['expires_at']->format('d.m.Y');
+
+                                                if ($status['is_expired']) {
+                                                    return "⚠️ Muddati " . abs($status['days_left']) . " kun oldin tugagan ({$expiryDate}da tugagan)";
+                                                } elseif ($status['is_expiring_soon']) {
+                                                    return "⚡ {$status['days_left']} kunda tugaydi ({$expiryDate}da tugadi)";
+                                                } else {
+                                                    return "Amal qilish muddati: {$expiryDate}";
+                                                }
+                                            })
                                             ->formatStateUsing(fn ($state) => $state ? 'Sertifikatni ko\'rish' : null)
                                             ->placeholder('Sertifikat yuklanmagan')
                                             ->url(fn ($record) => $record->xalqaro_sertifikat_path ?
                                                 Storage::disk('public')->url($record->xalqaro_sertifikat_path) : null)
                                             ->openUrlInNewTab()
                                             ->badge(fn ($state) => !empty($state))
-                                            ->color(fn ($state) => $state ? 'warning' : 'gray')
+                                            ->color(function ($record) {
+                                                if (!$record->xalqaro_sertifikat_path) return 'gray';
+
+                                                $status = $record->getCertificateExpiryStatus('xalqaro_sertifikat_path');
+                                                if (!$status) return 'warning';
+
+                                                if ($status['is_expired']) return 'danger';
+                                                if ($status['is_expiring_soon']) return 'warning';
+                                                return 'warning';
+                                            })
                                             ->icon(fn ($state) => $state ? 'heroicon-o-eye' : 'heroicon-o-x-circle'),
 
 
@@ -398,13 +513,42 @@ class TeacherResource extends Resource
 
                                         TextEntry::make('ustama_sertifikat_path')
                                             ->label('70% ustama sertifikat')
+                                            ->helperText(function ($record) {
+                                                if (!$record || !$record->ustama_sertifikat_path) {
+                                                    return 'Sertifikat yuklanmagan';
+                                                }
+
+                                                $status = $record->getCertificateExpiryStatus('ustama_sertifikat_path');
+                                                if (!$status) {
+                                                    return 'Amal qilish muddati belgilanmagan';
+                                                }
+
+                                                $expiryDate = $status['expires_at']->format('d.m.Y');
+
+                                                if ($status['is_expired']) {
+                                                    return "⚠️ Muddati " . abs($status['days_left']) . " kun oldin tugagan ({$expiryDate}da tugagan)";
+                                                } elseif ($status['is_expiring_soon']) {
+                                                    return "⚡ {$status['days_left']} kunda tugaydi ({$expiryDate}da tugadi)";
+                                                } else {
+                                                    return "Amal qilish muddati: {$expiryDate}";
+                                                }
+                                            })
                                             ->formatStateUsing(fn ($state) => $state ? 'Sertifikatni ko\'rish' : null)
                                             ->placeholder('Sertifikat yuklanmagan')
                                             ->url(fn ($record) => $record->ustama_sertifikat_path ?
                                                 Storage::disk('public')->url($record->ustama_sertifikat_path) : null)
                                             ->openUrlInNewTab()
                                             ->badge(fn ($state) => !empty($state))
-                                            ->color(fn ($state) => $state ? 'info' : 'gray')
+                                            ->color(function ($record) {
+                                                if (!$record->ustama_sertifikat_path) return 'gray';
+
+                                                $status = $record->getCertificateExpiryStatus('ustama_sertifikat_path');
+                                                if (!$status) return 'info';
+
+                                                if ($status['is_expired']) return 'danger';
+                                                if ($status['is_expiring_soon']) return 'warning';
+                                                return 'info';
+                                            })
                                             ->icon(fn ($state) => $state ? 'heroicon-o-eye' : 'heroicon-o-x-circle'),
                                         // Add a placeholder for better balance if needed
 
@@ -828,7 +972,7 @@ class TeacherResource extends Resource
                 'Malaka daraja',
                 'Pasport hujjati',
                 'Diplom hujjati',
-                'Malaka toifa hujjati '
+                'Malaka toifa hujjatlari'
             ]);
         }
 

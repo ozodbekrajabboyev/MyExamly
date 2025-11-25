@@ -138,23 +138,15 @@
                                     {{ $student['full_name'] }}
                                 </td>
                                 <td class="border border-gray-300 dark:border-gray-600 px-4 py-3 text-center text-sm text-gray-900 dark:text-gray-100">
-                                    @if($student['bsb']['total'] > 0)
-                                        <span class="inline-flex items-center gap-1">
-                                            <span class="font-semibold">{{ $student['bsb']['total'] }}</span>
-                                            <span class="text-gray-500">/</span>
-                                            <span class="text-blue-600 dark:text-blue-400 font-semibold">{{ $student['bsb']['percentage'] }}%</span>
-                                        </span>
+                                    @if($student['bsb'] > 0)
+                                        <span class="font-semibold">{{ $student['bsb'] }}</span>
                                     @else
                                         <span class="text-gray-400 dark:text-gray-500">-</span>
                                     @endif
                                 </td>
                                 <td class="border border-gray-300 dark:border-gray-600 px-4 py-3 text-center text-sm text-gray-900 dark:text-gray-100">
-                                    @if($student['chsb']['total'] > 0)
-                                        <span class="inline-flex items-center gap-1">
-                                            <span class="font-semibold">{{ $student['chsb']['total'] }}</span>
-                                            <span class="text-gray-500">/</span>
-                                            <span class="text-green-600 dark:text-green-400 font-semibold">{{ $student['chsb']['percentage'] }}%</span>
-                                        </span>
+                                    @if($student['chsb'] > 0)
+                                        <span class="font-semibold">{{ $student['chsb'] }}</span>
                                     @else
                                         <span class="text-gray-400 dark:text-gray-500">-</span>
                                     @endif
@@ -169,7 +161,7 @@
                                             @else
                                                 bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100
                                             @endif">
-                                            {{ $student['overall_total'] }}%
+                                            {{ $student['overall_total'] }}
                                         </span>
                                     @else
                                         <span class="text-gray-400 dark:text-gray-500">-</span>

@@ -8,6 +8,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Norbek\Aivent\Facades\Aivent;
 use App\Models\Teacher;
 use Throwable;
@@ -55,8 +56,12 @@ class FetchCertificateExpiry implements ShouldQueue
                 Cache::put($this->cacheKey, 'no_expiry', now()->addDays(30));
             }
         } catch (Throwable $e) {
-            // API error - cache 'error' with short TTL for retry
-            Cache::put($this->cacheKey, 'error', now()->addMinutes(5));
+            // API error - cache 'error' with longer TTL to prevent frequent retries
+            // Only retry after 1 hour instead of 5 minutes to reduce server load
+            Cache::put($this->cacheKey, 'error', now()->addHour());
+
+            // Log the error for debugging
+            Log::warning("Certificate validation failed for teacher {$this->teacherId}, field {$this->field}: " . $e->getMessage());
         }
     }
 
