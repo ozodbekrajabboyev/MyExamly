@@ -6,16 +6,16 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('student_exams', function (Blueprint $table) {
-            // Drop the existing foreign key constraint only
+            // Make column nullable
+            $table->unsignedBigInteger('student_id')->nullable()->change();
+
+            // Drop existing foreign key
             $table->dropForeign(['student_id']);
 
-            // Re-add the foreign key with nullOnDelete
+            // Add foreign key with nullOnDelete
             $table->foreign('student_id')
                 ->references('id')
                 ->on('students')
@@ -23,15 +23,16 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('student_exams', function (Blueprint $table) {
+            // Drop foreign key
             $table->dropForeign(['student_id']);
 
-            // Restore previous foreign key (without nullOnDelete)
+            // Make column not nullable again
+            $table->unsignedBigInteger('student_id')->nullable(false)->change();
+
+            // Restore previous foreign key
             $table->foreign('student_id')
                 ->references('id')
                 ->on('students');
