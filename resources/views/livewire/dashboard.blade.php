@@ -172,7 +172,12 @@
                                     ->where('problem_id', $problem['id'])
                                     ->where('exam_id', $selectedExamId)
                                     ->first();
-                                $overall += $mark ? $mark->mark : 0;
+
+                                if ($mark) {
+                                    // Ensure mark doesn't exceed problem's maximum
+                                    $actualMark = min($mark->mark, $problem['max_mark']);
+                                    $overall += $actualMark;
+                                }
                             }
                             $percentage = $totalMaxScore > 0 ? round(($overall / $totalMaxScore) * 100, 1) : 0;
                         }

@@ -151,10 +151,20 @@ class Exam extends Model
         $totalMaxScore = collect($problems)->sum('max_mark');
 
         foreach ($students as $student) {
-            // Calculate total score for this student in this exam
-            $totalScore = Mark::where('exam_id', $this->id)
-                ->where('student_id', $student->id)
-                ->sum('mark');
+            // Calculate total score for this student by summing one mark per problem
+            $totalScore = 0;
+            foreach ($problems as $problem) {
+                $mark = Mark::where('exam_id', $this->id)
+                    ->where('student_id', $student->id)
+                    ->where('problem_id', $problem['id'])
+                    ->first();
+
+                if ($mark) {
+                    // Ensure the mark doesn't exceed the maximum for this problem
+                    $actualMark = min($mark->mark, $problem['max_mark']);
+                    $totalScore += $actualMark;
+                }
+            }
 
             // Calculate percentage
             $percentage = $totalMaxScore > 0 ? round(($totalScore / $totalMaxScore) * 100, 2) : 0;
