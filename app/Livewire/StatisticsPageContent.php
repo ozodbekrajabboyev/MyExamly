@@ -119,6 +119,10 @@ class StatisticsPageContent extends Component
             ->get();
 
         foreach ($exams as $exam) {
+            // Clear existing potentially wrong pivot data
+            \DB::table('student_exams')->where('exam_id', $exam->id)->delete();
+
+            // Recalculate with the fixed logic
             $exam->calculateStudentTotals();
         }
     }

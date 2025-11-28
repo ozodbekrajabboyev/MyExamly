@@ -11,6 +11,7 @@ use Filament\Forms\Components\Actions;
 use Filament\Forms\Components\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\On;
 use Livewire\Component;
 use Filament\Forms\Components\Select;
@@ -79,7 +80,16 @@ class Dashboard extends Component implements HasForms
                 ->sortBy('id') // Sort by id instead of problem_number
                 ->values();
 
-            // Load students with their pre-calculated pivot data
+            // FORCE RECALCULATION: Always recalculate to fix wrong pivot data
+            if ($this->marks->isNotEmpty()) {
+                // First, clear existing pivot data to force fresh calculation
+                \DB::table('student_exams')->where('exam_id', $exam->id)->delete();
+
+                // Then recalculate with the fixed logic
+                $exam->calculateStudentTotals();
+            }
+
+            // Load students with their newly calculated pivot data
             $this->students = Student::where('sinf_id', $exam->sinf_id)
                 ->whereHas('exams', function ($query) use ($exam) {
                     $query->where('exam_id', $exam->id);
@@ -91,30 +101,35 @@ class Dashboard extends Component implements HasForms
                 ->get();
 
             // If no students have pivot data, fall back to all students in the class
-            // This handles cases where the pivot table hasn't been populated yet
             if ($this->students->isEmpty()) {
                 $this->students = Student::where('sinf_id', $exam->sinf_id)
                     ->orderBy('full_name')
                     ->get();
-
-                // Calculate and store totals for this exam if there are marks but no pivot data
-                if ($this->marks->isNotEmpty()) {
-                    $exam->calculateStudentTotals();
-
-                    // Reload students with the newly calculated pivot data
-                    $this->students = Student::where('sinf_id', $exam->sinf_id)
-                        ->whereHas('exams', function ($query) use ($exam) {
-                            $query->where('exam_id', $exam->id);
-                        })
-                        ->with(['exams' => function ($query) use ($exam) {
-                            $query->where('exam_id', $exam->id);
-                        }])
-                        ->orderBy('full_name')
-                        ->get();
-                }
             }
 
             $this->totalMaxScore = collect($this->problems)->sum('max_mark');
+        }
+    }
+
+    /**
+     * Force recalculation of all pivot data for debugging
+     */
+    public function forceRecalculateAll()
+    {
+        if (!$this->selectedExamId) {
+            return;
+        }
+
+        $exam = Exam::find($this->selectedExamId);
+        if ($exam) {
+            // Clear existing pivot data
+            \DB::table('student_exams')->where('exam_id', $exam->id)->delete();
+
+            // Recalculate with fixed logic
+            $exam->calculateStudentTotals();
+
+            // Refresh the table
+            $this->generateTable();
         }
     }
 
