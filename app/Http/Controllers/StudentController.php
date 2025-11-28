@@ -46,6 +46,13 @@ class StudentController extends Controller
             ->join('subjects', 'exams.subject_id', '=', 'subjects.id')
             ->where('student_exams.student_id', $studentId)
             ->where('exams.subject_id', $subjectId)
+            ->where('student_exams.total', '>', 0) // Only include exams with actual scores
+            ->whereExists(function ($query) {
+                $query->select(DB::raw(1))
+                      ->from('marks')
+                      ->whereColumn('marks.exam_id', 'exams.id')
+                      ->whereColumn('marks.student_id', 'student_exams.student_id');
+            }) // Only include exams where the student actually has marks
             ->select(
                 'student_exams.total',
                 'student_exams.percentage',
@@ -53,6 +60,8 @@ class StudentController extends Controller
                 'exams.serial_number',
                 'subjects.name as subject_name'
             )
+            ->orderBy('exams.type') // BSB first, then CHSB
+            ->orderBy('exams.serial_number')
             ->get();
 
         if ($results->isEmpty()) {

@@ -52,6 +52,7 @@ class StatisticsChartWidgetByCHSB extends ChartWidget
             ->where('sinf_id', $this->sinfId)
             ->where('subject_id', $this->subjectId)
             ->where('type', 'CHSB')
+            ->whereHas('marks') // Only include exams that have marks
             ->whereBetween('created_at', [
                 Carbon::parse($this->startDate)->startOfDay(),
                 Carbon::parse($this->endDate)->endOfDay()
