@@ -35,10 +35,10 @@ class ResolveDuplicateSerialNumbers extends Command
             $this->warn('DRY RUN MODE - No changes will be made');
         }
 
-        // Get all duplicates
+        // Get all duplicates - now considering type as well
         $duplicateGroups = DB::table('exams')
-            ->select('sinf_id', 'subject_id', 'serial_number', DB::raw('array_agg(id) as exam_ids'))
-            ->groupBy('sinf_id', 'subject_id', 'serial_number')
+            ->select('sinf_id', 'subject_id', 'type', 'serial_number', DB::raw('array_agg(id) as exam_ids'))
+            ->groupBy('sinf_id', 'subject_id', 'type', 'serial_number')
             ->havingRaw('count(*) > 1')
             ->get();
 
@@ -54,13 +54,14 @@ class ResolveDuplicateSerialNumbers extends Command
         foreach ($duplicateGroups as $group) {
             $examIds = str_getcsv(trim($group->exam_ids, '{}'));
 
-            $this->line("Processing Sinf ID: {$group->sinf_id}, Subject ID: {$group->subject_id}, Serial: {$group->serial_number}");
+            $this->line("Processing Sinf ID: {$group->sinf_id}, Subject ID: {$group->subject_id}, Type: {$group->type}, Serial: {$group->serial_number}");
             $this->line("  Found " . count($examIds) . " duplicates with IDs: " . implode(', ', $examIds));
 
-            // Get the maximum serial number for this sinf/subject combination
+            // Get the maximum serial number for this sinf/subject/type combination
             $maxSerial = DB::table('exams')
                 ->where('sinf_id', $group->sinf_id)
                 ->where('subject_id', $group->subject_id)
+                ->where('type', $group->type)
                 ->max('serial_number');
 
             // Skip the first exam (keep its original serial number)

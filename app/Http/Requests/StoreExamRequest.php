@@ -34,6 +34,7 @@ class StoreExamRequest extends FormRequest
                 Rule::unique('exams')
                     ->where('sinf_id', $this->sinf_id)
                     ->where('subject_id', $this->subject_id)
+                    ->where('type', $this->type)
                     ->ignore($this->route('exam'))
             ],
             'quarter' => ['nullable', 'in:I,II,III,IV'],
@@ -51,7 +52,7 @@ class StoreExamRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'serial_number.unique' => 'Bu sinf va fan uchun bunday tartib raqamli imtihon allaqachon mavjud.',
+            'serial_number.unique' => 'Bu sinf, fan va imtihon turi uchun bunday tartib raqamli imtihon allaqachon mavjud.',
             'quarter.in' => 'Chorak qiymati I, II, III yoki IV bo\'lishi kerak.',
         ];
     }

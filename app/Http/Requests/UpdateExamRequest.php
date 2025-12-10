@@ -36,6 +36,7 @@ class UpdateExamRequest extends FormRequest
                 Rule::unique('exams')
                     ->where('sinf_id', $this->sinf_id ?? $exam->sinf_id)
                     ->where('subject_id', $this->subject_id ?? $exam->subject_id)
+                    ->where('type', $this->type ?? $exam->type)
                     ->ignore($exam->id)
             ],
             'quarter' => ['nullable', 'in:I,II,III,IV'],
@@ -53,7 +54,7 @@ class UpdateExamRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'serial_number.unique' => 'Bu sinf va fan uchun bunday tartib raqamli imtihon allaqachon mavjud.',
+            'serial_number.unique' => 'Bu sinf, fan va imtihon turi uchun bunday tartib raqamli imtihon allaqachon mavjud.',
             'quarter.in' => 'Chorak qiymati I, II, III yoki IV bo\'lishi kerak.',
         ];
     }

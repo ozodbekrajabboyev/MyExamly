@@ -286,11 +286,13 @@ class Exam extends Model
                                 return function (string $attribute, $value, \Closure $fail) use ($get) {
                                     $sinfId = $get('sinf_id');
                                     $subjectId = $get('subject_id');
+                                    $type = $get('type');
                                     $recordId = $get('id'); // For edit mode
 
-                                    if ($sinfId && $subjectId && $value) {
+                                    if ($sinfId && $subjectId && $type && $value) {
                                         $query = \App\Models\Exam::where('sinf_id', $sinfId)
                                             ->where('subject_id', $subjectId)
+                                            ->where('type', $type)
                                             ->where('serial_number', $value);
 
                                         // Exclude current record when editing
@@ -299,7 +301,7 @@ class Exam extends Model
                                         }
 
                                         if ($query->exists()) {
-                                            $fail('Bu sinf va fan uchun bunday tartib raqamli imtihon allaqachon mavjud.');
+                                            $fail('Bu sinf, fan va imtihon turi uchun bunday tartib raqamli imtihon allaqachon mavjud.');
                                         }
                                     }
                                 };

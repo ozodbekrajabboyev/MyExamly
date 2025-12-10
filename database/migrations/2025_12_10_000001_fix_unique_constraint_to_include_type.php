@@ -12,11 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('exams', function (Blueprint $table) {
-            // Add quarter field
-            $table->enum('quarter', ['I', 'II', 'III', 'IV'])->nullable()->after('serial_number');
+            // Drop the old unique constraint that doesn't include type
+            try {
+                $table->dropUnique('exams_sinf_subject_serial_unique');
+            } catch (\Exception $e) {
+                // Constraint might not exist or have different name
+            }
 
-            // Add unique constraint for serial_number within the same sinf, subject, and type
-            // Quarter is intentionally excluded from this constraint as requested
+            // Add new unique constraint that includes type
             $table->unique(['sinf_id', 'subject_id', 'type', 'serial_number'], 'exams_sinf_subject_type_serial_unique');
         });
     }
@@ -27,11 +30,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('exams', function (Blueprint $table) {
-            // Drop the unique constraint first
+            // Drop the new constraint
             $table->dropUnique('exams_sinf_subject_type_serial_unique');
 
-            // Drop the quarter column
-            $table->dropColumn('quarter');
+            // Restore old constraint (if needed for rollback)
+            $table->unique(['sinf_id', 'subject_id', 'serial_number'], 'exams_sinf_subject_serial_unique');
         });
     }
 };
