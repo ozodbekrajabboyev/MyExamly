@@ -6,6 +6,7 @@ use App\Models\Exam;
 use App\Models\Mark;
 use App\Models\Student;
 use App\Models\User;
+use App\Services\ExamCalculationService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Forms\Components\Actions;
 use Filament\Forms\Components\Actions\Action;
@@ -23,6 +24,9 @@ class Dashboard extends Component implements HasForms
 {
 
     use InteractsWithForms;
+
+    protected $listeners = ['refreshTable' => 'refreshTableData'];
+
     public $selectedExamId = null;
     public $marks = [];
     public $problems = [];
@@ -80,32 +84,35 @@ class Dashboard extends Component implements HasForms
                 ->sortBy('id') // Sort by id instead of problem_number
                 ->values();
 
-            // FORCE RECALCULATION: Always recalculate to fix wrong pivot data
-            if ($this->marks->isNotEmpty()) {
-                // First, clear existing pivot data to force fresh calculation
-                \DB::table('student_exams')->where('exam_id', $exam->id)->delete();
-
-                // Then recalculate with the fixed logic
-                $exam->calculateStudentTotals();
-            }
-
-            // Load students with their newly calculated pivot data
-            $this->students = Student::where('sinf_id', $exam->sinf_id)
+            // SAFE APPROACH: Only recalculate if pivot data is missing or inconsistent
+            $studentsWithPivot = Student::where('sinf_id', $exam->sinf_id)
                 ->whereHas('exams', function ($query) use ($exam) {
                     $query->where('exam_id', $exam->id);
                 })
                 ->with(['exams' => function ($query) use ($exam) {
                     $query->where('exam_id', $exam->id);
                 }])
-                ->orderBy('full_name')
                 ->get();
 
-            // If no students have pivot data, fall back to all students in the class
-            if ($this->students->isEmpty()) {
-                $this->students = Student::where('sinf_id', $exam->sinf_id)
+            // If no students have pivot data, calculate it for the first time
+            if ($studentsWithPivot->isEmpty() && $this->marks->isNotEmpty()) {
+                // This is a one-time calculation for exams that haven't been processed yet
+                $exam->calculateStudentTotals();
+
+                // Reload students with fresh pivot data
+                $studentsWithPivot = Student::where('sinf_id', $exam->sinf_id)
+                    ->whereHas('exams', function ($query) use ($exam) {
+                        $query->where('exam_id', $exam->id);
+                    })
+                    ->with(['exams' => function ($query) use ($exam) {
+                        $query->where('exam_id', $exam->id);
+                    }])
                     ->orderBy('full_name')
                     ->get();
             }
+
+            $this->students = $studentsWithPivot->isNotEmpty() ? $studentsWithPivot :
+                             Student::where('sinf_id', $exam->sinf_id)->orderBy('full_name')->get();
 
             $this->totalMaxScore = collect($this->problems)->sum('max_mark');
         }
@@ -113,6 +120,7 @@ class Dashboard extends Component implements HasForms
 
     /**
      * Force recalculation of all pivot data for debugging
+     * Now uses centralized calculation service
      */
     public function forceRecalculateAll()
     {
@@ -122,11 +130,18 @@ class Dashboard extends Component implements HasForms
 
         $exam = Exam::find($this->selectedExamId);
         if ($exam) {
-            // Clear existing pivot data
-            \DB::table('student_exams')->where('exam_id', $exam->id)->delete();
+            $students = Student::where('sinf_id', $exam->sinf_id)->get();
 
-            // Recalculate with fixed logic
-            $exam->calculateStudentTotals();
+            foreach ($students as $student) {
+                $calculation = ExamCalculationService::calculateStudentScore($student, $exam);
+                $exam->students()->syncWithoutDetaching([
+                    $student->id => [
+                        'total' => $calculation['total'],
+                        'percentage' => $calculation['percentage'],
+                        'updated_at' => now(),
+                    ]
+                ]);
+            }
 
             // Refresh the table
             $this->generateTable();
@@ -135,9 +150,11 @@ class Dashboard extends Component implements HasForms
 
     /**
      * Generates and downloads a PDF of the exam results.
+     * Uses cached calculations to prevent value changes during PDF generation.
      */
     public function downloadPdf()
     {
+        $this->refreshTableData();
         $exam = Exam::with(['sinf', 'subject'])->find($this->selectedExamId);
 
         // Check if exam is approved
@@ -167,13 +184,15 @@ class Dashboard extends Component implements HasForms
         $problemsData = is_string($exam->problems) ? json_decode($exam->problems, true) : ($exam->problems ?? []);
         $problems = collect($problemsData)->sortBy('id')->values();
 
-        // Load students with their pre-calculated pivot data
+        // CRITICAL FIX: Load students with their EXISTING pivot data - DO NOT RECALCULATE OR UPDATE
         $students = Student::where('sinf_id', $exam->sinf_id)
             ->with(['exams' => function ($query) use ($exam) {
                 $query->where('exam_id', $exam->id);
             }])
             ->orderBy('full_name')
             ->get();
+
+        // DO NOT update pivot data during PDF generation - use existing data only
 
         $totalMaxScore = $problems->sum('max_mark');
 
@@ -193,9 +212,43 @@ class Dashboard extends Component implements HasForms
         $filename = "$className -sinf | $subject | $type1 | results.pdf";
 
         // Return the response to download the file in the browser
-        return response()->streamDownload(function () use ($pdf) {
+        $response = response()->streamDownload(function () use ($pdf) {
             echo $pdf->output();
         }, $filename);
+
+        // Refresh the dashboard table to ensure consistent display
+        $this->dispatch('refreshTable');
+
+        return $response;
+    }
+
+    /**
+     * Refresh table data without triggering recalculation
+     */
+    public function refreshTableData()
+    {
+        if (!$this->selectedExamId) {
+            return;
+        }
+
+        $exam = Exam::find($this->selectedExamId);
+        if ($exam) {
+            // Simply reload the display data without any calculation changes
+            $this->marks = Mark::where('exam_id', $exam->id)->get();
+
+            $problemsData = is_string($exam->problems) ? json_decode($exam->problems, true) : ($exam->problems ?? []);
+            $this->problems = collect($problemsData)->sortBy('id')->values();
+
+            // Load students with their existing pivot data - DO NOT MODIFY
+            $this->students = Student::where('sinf_id', $exam->sinf_id)
+                ->with(['exams' => function ($query) use ($exam) {
+                    $query->where('exam_id', $exam->id);
+                }])
+                ->orderBy('full_name')
+                ->get();
+
+            $this->totalMaxScore = collect($this->problems)->sum('max_mark');
+        }
     }
 
     #[On('requestApproval')]
@@ -228,6 +281,7 @@ class Dashboard extends Component implements HasForms
                     ->label('👉 Imtihonni tasdiqlash')
                     ->url(route('filament.app.resources.exams.edit', ['record' => $exam->id]))
                     ->button()
+                    ->close()
                     ->color('primary')
             ])
             ->sendToDatabase($admins);

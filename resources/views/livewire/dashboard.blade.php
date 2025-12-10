@@ -1,4 +1,6 @@
-<div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 transition-colors duration-300">
+<div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8 transition-colors duration-300"
+     x-data="{}"
+     @refresh-table.window="$wire.refreshTableData()">
     <div class="flex flex-wrap gap-4 justify-between items-start mb-6">
         <div class="flex-1 min-w-[300px]">
             <div class="space-y-4 mb-6">
@@ -155,34 +157,33 @@
                     $problemTotals = [];
                     $problemCounts = [];
                     $totalScores = [];
+
+                    // Load all marks for this exam at once (more efficient)
+                    $allMarks = \App\Models\Mark::where('exam_id', $selectedExamId)
+                        ->whereIn('student_id', $students->pluck('id'))
+                        ->get()
+                        ->groupBy('student_id');
                 @endphp
 
                 @foreach($students as $index => $student)
                     @php
                         // Get pre-calculated values from pivot table if available
                         $pivotData = $student->exams->first()?->pivot ?? null;
-                        $overall = $pivotData ? $pivotData->total : 0;
-                        $percentage = $pivotData ? $pivotData->percentage : 0;
 
-                        // If no pivot data, fall back to calculation (for backwards compatibility)
-                        if (!$pivotData) {
-                            $overall = 0;
-                            foreach($problems as $problem) {
-                                $mark = \App\Models\Mark::where('student_id', $student->id)
-                                    ->where('problem_id', $problem['id'])
-                                    ->where('exam_id', $selectedExamId)
-                                    ->first();
-
-                                if ($mark) {
-                                    // Ensure mark doesn't exceed problem's maximum
-                                    $actualMark = min($mark->mark, $problem['max_mark']);
-                                    $overall += $actualMark;
-                                }
-                            }
-                            $percentage = $totalMaxScore > 0 ? round(($overall / $totalMaxScore) * 100, 1) : 0;
+                        if ($pivotData) {
+                            // Use cached calculations - DO NOT RECALCULATE
+                            $overall = $pivotData->total;
+                            $percentage = $pivotData->percentage;
+                        } else {
+                            // Use centralized service for consistency
+                            $calculation = \App\Services\ExamCalculationService::calculateStudentScore($student,
+                                \App\Models\Exam::find($selectedExamId));
+                            $overall = $calculation['total'];
+                            $percentage = $calculation['percentage'];
                         }
 
                         $totalScores[] = $overall;
+                        $studentMarks = $allMarks->get($student->id, collect());
                     @endphp
                     <tr class="">
                         <td class="border border-gray-300 dark:border-gray-600 py-2 px-3 text-center text-gray-800 dark:text-gray-200">{{ $index + 1 }}</td>
@@ -190,11 +191,11 @@
 
                         @foreach($problems as $problem)
                             @php
-                                $mark = \App\Models\Mark::where('student_id', $student->id)
-                                    ->where('problem_id', $problem['id'])
-                                    ->where('exam_id', $selectedExamId)
-                                    ->first();
-                                $score = $mark ? $mark->mark : 0;
+                                $mark = $studentMarks->firstWhere('problem_id', $problem['id']);
+                                $rawScore = $mark ? $mark->mark : 0;
+
+                                // CRITICAL FIX: Apply max limit for consistency with total calculation
+                                $score = min($rawScore, $problem['max_mark']);
 
                                 if (!isset($problemTotals[$problem['id']])) {
                                     $problemTotals[$problem['id']] = 0;

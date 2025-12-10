@@ -22,3 +22,7 @@ yarn-error.log
 /.zed
 database_dump.sql
 *.sql
+*.sqlite
+*.sqlite3
+*.md
+!README.md

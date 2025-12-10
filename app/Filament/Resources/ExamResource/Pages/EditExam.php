@@ -26,6 +26,25 @@ class EditExam extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
+        // Only allow admin to edit status without affecting uniqueness constraints
+        $user = auth()->user();
+
+        if ($user->role->name === 'admin') {
+            // For admin edits, preserve existing values if not provided
+            $currentRecord = $this->getRecord();
+
+            // Preserve critical fields that affect uniqueness
+            if (!isset($data['sinf_id'])) {
+                $data['sinf_id'] = $currentRecord->sinf_id;
+            }
+            if (!isset($data['subject_id'])) {
+                $data['subject_id'] = $currentRecord->subject_id;
+            }
+            if (!isset($data['serial_number'])) {
+                $data['serial_number'] = $currentRecord->serial_number;
+            }
+        }
+
         $teacher2ID = $this->getRecord()->teacher2_id ?? null;
         $teacher = Teacher::find($data['teacher_id'])->user;
         $teacher2 = Teacher::find($teacher2ID)->user ?? null;
@@ -33,6 +52,7 @@ class EditExam extends EditRecord
         $subject = Subject::find($data['subject_id'])->name ?? null;
         $serial_number = $data['serial_number'] ?? null;
         $type = $data['type'];
+        $quarter = isset($data['quarter']) ? " ({$data['quarter']} chorak)" : "";
 
         $teachers = $teacher2 ? [$teacher, $teacher2] : [$teacher];
 
@@ -56,8 +76,11 @@ class EditExam extends EditRecord
                 ->sendToDatabase($teachers);
         }
 
-
-
         return $data;
+    }
+
+    protected function getRedirectUrl(): ?string
+    {
+        return "/";
     }
 }

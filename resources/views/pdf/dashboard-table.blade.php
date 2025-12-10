@@ -193,20 +193,26 @@
         @php
             $name = $student->extractFirstAndLastName($student->full_name);
 
-            // Get pre-calculated values from pivot table if available
+            // CRITICAL FIX: Always use pre-calculated pivot data to prevent value changes
             $pivotData = $student->exams->first()?->pivot ?? null;
 
-            $overall = $pivotData ? $pivotData->total : 0;
-            $percentage = $pivotData ? $pivotData->percentage : 0;
-
-            // If no pivot data, fall back to manual calculation (for backwards compatibility)
-            if (!$pivotData) {
+            if ($pivotData) {
+                // Use stored calculations - DO NOT RECALCULATE
+                $overall = $pivotData->total;
+                $percentage = $pivotData->percentage;
+            } else {
+                // Fallback only if absolutely no pivot data exists
+                // This should rarely happen with our new system
                 $overall = 0;
                 foreach($problems as $problem) {
                     $mark = $marks->first(function ($m) use ($student, $problem) {
                         return $m->student_id == $student->id && $m->problem_id == $problem['id'];
                     });
-                    $overall += $mark->mark ?? 0;
+
+                    $rawMark = $mark->mark ?? 0;
+                    // Apply max limit constraint for consistency
+                    $actualMark = min($rawMark, $problem['max_mark']);
+                    $overall += $actualMark;
                 }
                 $percentage = $totalMaxScore > 0 ? round(($overall / $totalMaxScore) * 100, 1) : 0;
             }
@@ -221,7 +227,11 @@
                     $mark = $marks->first(function ($m) use ($student, $problem) {
                         return $m->student_id == $student->id && $m->problem_id == $problem['id'];
                     });
-                    $score = $mark->mark ?? 0;
+
+                    $rawScore = $mark->mark ?? 0;
+                    // CRITICAL: Enforce max limit for display consistency
+                    $score = min($rawScore, $problem['max_mark']);
+
                     $problemTotals[$problem['id']] = ($problemTotals[$problem['id']] ?? 0) + $score;
                     $problemCounts[$problem['id']] = ($problemCounts[$problem['id']] ?? 0) + 1;
                 @endphp

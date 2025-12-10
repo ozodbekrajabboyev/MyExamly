@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\ScopesSchool;
+use App\Services\ExamCalculationService;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Section;
@@ -29,6 +30,11 @@ class Exam extends Model
 
     protected $casts = [
         'problems' => 'array', // Cast JSONB to array
+    ];
+
+    protected $fillable = [
+        'maktab_id', 'sinf_id', 'subject_id', 'teacher_id', 'teacher2_id',
+        'type', 'serial_number', 'quarter', 'metod_id', 'problems', 'status'
     ];
 
     protected static function boot()
@@ -143,37 +149,21 @@ class Exam extends Model
 
     /**
      * Calculate and store totals for all students in this exam
+     * Now uses ExamCalculationService for consistent calculations
      */
     public function calculateStudentTotals()
     {
         $students = Student::where('sinf_id', $this->sinf_id)->get();
-        $problems = $this->problems ?? [];
-        $totalMaxScore = collect($problems)->sum('max_mark');
 
         foreach ($students as $student) {
-            // Calculate total score for this student by summing one mark per problem
-            $totalScore = 0;
-            foreach ($problems as $problem) {
-                $mark = Mark::where('exam_id', $this->id)
-                    ->where('student_id', $student->id)
-                    ->where('problem_id', $problem['id'])
-                    ->first();
-
-                if ($mark) {
-                    // Ensure the mark doesn't exceed the maximum for this problem
-                    $actualMark = min($mark->mark, $problem['max_mark']);
-                    $totalScore += $actualMark;
-                }
-            }
-
-            // Calculate percentage
-            $percentage = $totalMaxScore > 0 ? round(($totalScore / $totalMaxScore) * 100, 2) : 0;
+            // Use centralized calculation service for consistency
+            $calculation = ExamCalculationService::calculateStudentScore($student, $this);
 
             // Update or create the pivot record
             $this->students()->syncWithoutDetaching([
                 $student->id => [
-                    'total' => $totalScore,
-                    'percentage' => $percentage,
+                    'total' => $calculation['total'],
+                    'percentage' => $calculation['percentage'],
                     'updated_at' => now(),
                 ]
             ]);
@@ -290,7 +280,43 @@ class Exam extends Model
                         ->hint("Masalan, 5-BSB, 2-CHSB dagi tartib raqamini kiriting")
                         ->hintIcon('heroicon-o-information-circle')
                         ->required()
-                        ->numeric(),
+                        ->numeric()
+                        ->rules([
+                            function (Get $get) {
+                                return function (string $attribute, $value, \Closure $fail) use ($get) {
+                                    $sinfId = $get('sinf_id');
+                                    $subjectId = $get('subject_id');
+                                    $recordId = $get('id'); // For edit mode
+
+                                    if ($sinfId && $subjectId && $value) {
+                                        $query = \App\Models\Exam::where('sinf_id', $sinfId)
+                                            ->where('subject_id', $subjectId)
+                                            ->where('serial_number', $value);
+
+                                        // Exclude current record when editing
+                                        if ($recordId) {
+                                            $query->where('id', '!=', $recordId);
+                                        }
+
+                                        if ($query->exists()) {
+                                            $fail('Bu sinf va fan uchun bunday tartib raqamli imtihon allaqachon mavjud.');
+                                        }
+                                    }
+                                };
+                            }
+                        ]),
+
+                    Select::make('quarter')
+                        ->label('Chorakni tanlang')
+                        ->options([
+                            'I' => 'I chorak',
+                            'II' => 'II chorak',
+                            'III' => 'III chorak',
+                            'IV' => 'IV chorak'
+                        ])
+                        ->columnSpanFull()
+                        ->nullable()
+                        ->placeholder('Chorak tanlang'),
 
                     Select::make('metod_id')
                         ->label('Metodbirlashma rahbarini tanlang')

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\ScopesSchool;
+use App\Services\ExamCalculationService;
 use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Section;
@@ -15,6 +16,7 @@ use Filament\Forms\Components\TextInput;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\HtmlString;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 
 function createGroupedProblemsForm($students, \Illuminate\Support\Collection $problems, mixed $examId)
 {
@@ -280,6 +282,13 @@ class Mark extends Model
      */
     protected static function booted()
     {
+        parent::booted();
+
+        // Add validation before saving
+        static::saving(function ($mark) {
+            $mark->validateMarkAgainstProblem();
+        });
+
         static::saved(function ($mark) {
             $mark->updateStudentExamTotals();
         });
@@ -290,7 +299,30 @@ class Mark extends Model
     }
 
     /**
+     * Validate that the mark doesn't exceed the maximum allowed for this problem
+     */
+    public function validateMarkAgainstProblem()
+    {
+        if (!$this->exam || !$this->problem_id) {
+            return;
+        }
+
+        $problem = $this->problem;
+        if (!$problem) {
+            Log::warning("Problem {$this->problem_id} not found in exam {$this->exam_id}");
+            return;
+        }
+
+        if (!ExamCalculationService::validateMark($this->mark, $problem)) {
+            throw ValidationException::withMessages([
+                'mark' => "Ball {$this->mark} maksimal ball {$problem['max_mark']} dan oshmasligi kerak."
+            ]);
+        }
+    }
+
+    /**
      * Update the student_exams pivot table for this mark's student and exam
+     * Now uses ExamCalculationService for consistent calculations
      */
     public function updateStudentExamTotals()
     {
@@ -301,25 +333,21 @@ class Mark extends Model
             return;
         }
 
-        // Calculate total score for this student in this exam
-        $totalScore = Mark::where('exam_id', $this->exam_id)
-            ->where('student_id', $this->student_id)
-            ->sum('mark');
-
-        // Get exam problems and calculate total max score
-        $problems = $exam->problems ?? [];
-        $totalMaxScore = collect($problems)->sum('max_mark');
-
-        // Calculate percentage
-        $percentage = $totalMaxScore > 0 ? round(($totalScore / $totalMaxScore) * 100, 2) : 0;
+        // Use our centralized calculation service for consistency
+        $calculation = ExamCalculationService::calculateStudentScore($student, $exam);
 
         // Update or create the pivot record
         $exam->students()->syncWithoutDetaching([
             $this->student_id => [
-                'total' => $totalScore,
-                'percentage' => $percentage,
+                'total' => $calculation['total'],
+                'percentage' => $calculation['percentage'],
                 'updated_at' => now(),
             ]
+        ]);
+
+        Log::info("Updated student totals using ExamCalculationService for student {$this->student_id} in exam {$this->exam_id}", [
+            'total' => $calculation['total'],
+            'percentage' => $calculation['percentage']
         ]);
     }
 }
