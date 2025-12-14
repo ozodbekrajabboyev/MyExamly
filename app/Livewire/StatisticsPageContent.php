@@ -7,6 +7,7 @@ use App\Models\Mark;
 use App\Models\Sinf;
 use App\Models\Subject;
 use App\Models\Student;
+use App\Services\QuarterStatisticsService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -16,19 +17,9 @@ class StatisticsPageContent extends Component
 {
     public ?int $sinfId = null;
     public ?int $subjectId = null;
-    public ?string $startDate = null;
-    public ?string $endDate = null;
+    public ?string $quarter = null;
     public $studentsData = [];
-
-    /**
-     * The mount method is called when the component is first initialized.
-     * We'll set a default date range here (e.g., last 3 months for more data).
-     */
-    public function mount(): void
-    {
-        $this->startDate = Carbon::now()->subMonths(3)->format('Y-m-d');
-        $this->endDate = Carbon::now()->format('Y-m-d');
-    }
+    public $summary = [];
 
     /**
      * Apply filters and load student data
@@ -37,75 +28,33 @@ class StatisticsPageContent extends Component
     {
         if (!$this->sinfId || !$this->subjectId) {
             $this->studentsData = [];
+            $this->summary = [];
             return;
         }
 
         $this->loadStudentsData();
 
-        // Also dispatch the event for charts if needed
+        // Dispatch the event for charts
         $this->dispatch('updateStats',
             sinfId: $this->sinfId,
             subjectId: $this->subjectId,
-            startDate: $this->startDate,
-            endDate: $this->endDate
+            quarter: $this->quarter
         );
     }
 
     /**
-     * Load students data with their BSB and CHSB results
+     * Load students data with their BSB and CHSB results using QuarterStatisticsService
      */
     public function loadStudentsData(): void
     {
-        $students = Student::where('sinf_id', $this->sinfId)
-            ->orderBy('full_name')
-            ->get();
+        $result = QuarterStatisticsService::getQuarterStatistics(
+            $this->sinfId,
+            $this->subjectId,
+            $this->quarter
+        );
 
-        if ($students->isEmpty()) {
-            $this->studentsData = [];
-            return;
-        }
-
-        // First, let's check if we have any exam data at all for this sinf and subject
-        $hasAnyExams = DB::table('exams')
-            ->where('sinf_id', $this->sinfId)
-            ->where('subject_id', $this->subjectId)
-            ->exists();
-
-        if (!$hasAnyExams) {
-            $this->studentsData = [];
-            return;
-        }
-
-        // Check if student_exams pivot table has data, if not, try to populate it
-        $hasStudentExamData = DB::table('student_exams')
-            ->join('exams', 'student_exams.exam_id', '=', 'exams.id')
-            ->where('exams.sinf_id', $this->sinfId)
-            ->where('exams.subject_id', $this->subjectId)
-            ->exists();
-
-        if (!$hasStudentExamData) {
-            // Try to populate the pivot table for missing data
-            $this->populateStudentExamData();
-        }
-
-        $this->studentsData = $students->map(function ($student) {
-            // Get BSB exams for this student, subject, and date range
-            $bsbExams = $this->getExamResults($student->id, 'BSB');
-            $chsbExams = $this->getExamResults($student->id, 'CHSB');
-
-            $bsbAvg = $bsbExams["total_sum"];
-            $chsbAvg = $chsbExams["total_sum"];
-
-            $overallTotal = ($bsbAvg + $chsbAvg);
-
-            return [
-                'id' => $student->id,
-                'full_name' => $student->full_name,
-                'bsb' => $bsbAvg,
-                'chsb' => $chsbAvg,
-                'overall_total' => round($overallTotal, 2)
-            ];
-        })->toArray();
+        $this->studentsData = $result['students_data'];
+        $this->summary = $result['summary'];
     }
 
     /**
@@ -113,14 +62,20 @@ class StatisticsPageContent extends Component
      */
     private function populateStudentExamData(): void
     {
-        $exams = Exam::where('sinf_id', $this->sinfId)
-            ->where('subject_id', $this->subjectId)
-            ->whereHas('marks')
-            ->get();
+        $examQuery = Exam::where('sinf_id', $this->sinfId)
+            ->where('subject_id', $this->subjectId);
+
+        if ($this->quarter) {
+            $examQuery->where('quarter', $this->quarter);
+        } else {
+            $examQuery->whereNotNull('quarter');
+        }
+
+        $exams = $examQuery->whereHas('marks')->get();
 
         foreach ($exams as $exam) {
             // Clear existing potentially wrong pivot data
-            \DB::table('student_exams')->where('exam_id', $exam->id)->delete();
+            DB::table('student_exams')->where('exam_id', $exam->id)->delete();
 
             // Recalculate with the fixed logic
             $exam->calculateStudentTotals();
@@ -128,7 +83,7 @@ class StatisticsPageContent extends Component
     }
 
     /**
-     * Get exam results for a student by type (BSB or CHSB)
+     * Get exam results for a student by type (BSB or CHSB) with quarter filtering
      */
     private function getExamResults($studentId, $examType)
     {
@@ -139,12 +94,11 @@ class StatisticsPageContent extends Component
             ->where('exams.sinf_id', $this->sinfId)
             ->where('exams.type', $examType);
 
-        // Apply date filters
-        if ($this->startDate) {
-            $query->whereDate('exams.created_at', '>=', $this->startDate);
-        }
-        if ($this->endDate) {
-            $query->whereDate('exams.created_at', '<=', $this->endDate);
+        // Apply quarter filter instead of date filters
+        if ($this->quarter) {
+            $query->where('exams.quarter', $this->quarter);
+        } else {
+            $query->whereNotNull('exams.quarter');
         }
 
         // Get results
@@ -159,7 +113,7 @@ class StatisticsPageContent extends Component
         return [
             'results' => $results,
             'total_sum' => $totalSum,
-            'percentage_sum' => $percentageSum, // remove if not needed
+            'percentage_sum' => $percentageSum,
         ];
     }
 
@@ -185,33 +139,33 @@ class StatisticsPageContent extends Component
     }
 
     /**
-     * Quick filter method for setting the date range to the last 7 days.
+     * Filter by specific quarter
      */
-    public function filterLast7Days(): void
+    public function filterByQuarter($quarter): void
     {
-        $this->startDate = Carbon::now()->subDays(7)->format('Y-m-d');
-        $this->endDate = Carbon::now()->format('Y-m-d');
-        $this->applyFilters(); // Re-apply filters after setting dates
-    }
-
-    /**
-     * Quick filter method for setting the date range to the last 30 days.
-     */
-    public function filterLast30Days(): void
-    {
-        $this->startDate = Carbon::now()->subDays(30)->format('Y-m-d');
-        $this->endDate = Carbon::now()->format('Y-m-d');
+        $this->quarter = $quarter;
         $this->applyFilters();
     }
 
     /**
-     * Quick filter method for setting the date range to the last 3 months.
+     * Clear quarter filter to show all quarters
      */
-    public function filterLast3Months(): void
+    public function clearQuarterFilter(): void
     {
-        $this->startDate = Carbon::now()->subMonths(3)->format('Y-m-d');
-        $this->endDate = Carbon::now()->format('Y-m-d');
+        $this->quarter = null;
         $this->applyFilters();
+    }
+
+    /**
+     * Get available quarters for the current sinf and subject
+     */
+    public function getAvailableQuarters(): array
+    {
+        if (!$this->sinfId || !$this->subjectId) {
+            return [];
+        }
+
+        return QuarterStatisticsService::getAvailableQuarters($this->sinfId, $this->subjectId);
     }
 
 
@@ -234,8 +188,8 @@ class StatisticsPageContent extends Component
             'studentsData' => $this->studentsData,
             'sinf' => $sinf,
             'subject' => $subject,
-            'startDate' => $this->startDate,
-            'endDate' => $this->endDate,
+            'quarter' => $this->quarter,
+            'summary' => $this->summary,
             'generatedAt' => Carbon::now()->format('d.m.Y H:i'),
         ];
 
@@ -244,7 +198,8 @@ class StatisticsPageContent extends Component
             ->setPaper('a4', 'landscape');
 
         // Create filename
-        $filename = "{$sinf->name}_sinf_{$subject->name}_statistika_" . date('Y-m-d') . ".pdf";
+        $quarterText = $this->quarter ? "_{$this->quarter}_chorak" : "_barcha_choraklar";
+        $filename = "{$sinf->name}_sinf_{$subject->name}_statistika{$quarterText}_" . date('Y-m-d') . ".pdf";
 
         // Return the PDF download response
         return response()->streamDownload(function () use ($pdf) {

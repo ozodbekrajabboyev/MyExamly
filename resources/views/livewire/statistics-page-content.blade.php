@@ -6,7 +6,7 @@
     <x-filament::section>
         <div class="space-y-4">
             {{-- Filter Inputs --}}
-            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {{-- Sinf (Class) Dropdown --}}
                 <x-filament::input.wrapper>
                     <x-slot name="label">
@@ -35,20 +35,19 @@
                     </x-filament::input.select>
                 </x-filament::input.wrapper>
 
-                {{-- Start Date Picker --}}
+                {{-- Quarter Dropdown --}}
                 <x-filament::input.wrapper>
                     <x-slot name="label">
-                        Boshlanish sanasi
+                        Chorakni tanlang
                     </x-slot>
-                    <x-filament::input type="date" wire:model="startDate" />
-                </x-filament::input.wrapper>
 
-                {{-- End Date Picker --}}
-                <x-filament::input.wrapper>
-                    <x-slot name="label">
-                        Tugash sanasi
-                    </x-slot>
-                    <x-filament::input type="date" wire:model="endDate" />
+                    <x-filament::input.select wire:model="quarter">
+                        <option value="">Barcha choraklar</option>
+                        <option value="I">I chorak</option>
+                        <option value="II">II chorak</option>
+                        <option value="III">III chorak</option>
+                        <option value="IV">IV chorak</option>
+                    </x-filament::input.select>
                 </x-filament::input.wrapper>
             </div>
 
@@ -61,17 +60,23 @@
                     </x-filament::button>
                 </div>
 
-                {{-- Quick filter buttons --}}
+                {{-- Quick quarter filter buttons --}}
                 <div class="flex flex-wrap items-center gap-2">
-                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Tezkor Filtrlar:</span>
-                    <x-filament::button color="gray" wire:click="filterLast7Days">
-                        So'nggi 7 kun
+                    <span class="text-sm font-medium text-gray-500 dark:text-gray-400">Tezkor Chorak Filtrlari:</span>
+                    <x-filament::button color="gray" wire:click="filterByQuarter('I')">
+                        I chorak
                     </x-filament::button>
-                    <x-filament::button color="gray" wire:click="filterLast30Days">
-                        So'nggi 30 kun
+                    <x-filament::button color="gray" wire:click="filterByQuarter('II')">
+                        II chorak
                     </x-filament::button>
-                    <x-filament::button color="gray" wire:click="filterLast3Months">
-                        So'nggi 3 oy
+                    <x-filament::button color="gray" wire:click="filterByQuarter('III')">
+                        III chorak
+                    </x-filament::button>
+                    <x-filament::button color="gray" wire:click="filterByQuarter('IV')">
+                        IV chorak
+                    </x-filament::button>
+                    <x-filament::button color="gray" wire:click="clearQuarterFilter">
+                        Barchasi
                     </x-filament::button>
                 </div>
             </div>
@@ -138,30 +143,33 @@
                                     {{ $student['full_name'] }}
                                 </td>
                                 <td class="border border-gray-300 dark:border-gray-600 px-4 py-3 text-center text-sm text-gray-900 dark:text-gray-100">
-                                    @if($student['bsb'] > 0)
-                                        <span class="font-semibold">{{ $student['bsb'] }}</span>
+                                    @if($student['bsb']['total'] > 0)
+                                        <span class="font-semibold">{{ $student['bsb']['total'] }}</span>
                                     @else
                                         <span class="text-gray-400 dark:text-gray-500">-</span>
                                     @endif
                                 </td>
                                 <td class="border border-gray-300 dark:border-gray-600 px-4 py-3 text-center text-sm text-gray-900 dark:text-gray-100">
-                                    @if($student['chsb'] > 0)
-                                        <span class="font-semibold">{{ $student['chsb'] }}</span>
+                                    @if($student['chsb']['total'] > 0)
+                                        <span class="font-semibold">{{ $student['chsb']['total'] }}</span>
                                     @else
                                         <span class="text-gray-400 dark:text-gray-500">-</span>
                                     @endif
                                 </td>
                                 <td class="border border-gray-300 dark:border-gray-600 px-4 py-3 text-center text-sm">
-                                    @if($student['overall_total'] > 0)
+                                    @php
+                                        $totalSum = $student['bsb']['total'] + $student['chsb']['total'];
+                                    @endphp
+                                    @if($totalSum > 0)
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                            @if($student['overall_total'] >= 80)
+                                            @if($totalSum >= 16)
                                                 bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100
-                                            @elseif($student['overall_total'] >= 60)
+                                            @elseif($totalSum >= 12)
                                                 bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100
                                             @else
                                                 bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100
                                             @endif">
-                                            {{ $student['overall_total'] }}
+                                            {{ $totalSum }}
                                         </span>
                                     @else
                                         <span class="text-gray-400 dark:text-gray-500">-</span>
@@ -191,8 +199,7 @@
                 <ul class="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
                     <li><strong>Sinf ID:</strong> {{ $sinfId }}</li>
                     <li><strong>Fan ID:</strong> {{ $subjectId }}</li>
-                    <li><strong>Boshlanish sanasi:</strong> {{ $startDate }}</li>
-                    <li><strong>Tugash sanasi:</strong> {{ $endDate }}</li>
+                    <li><strong>Chorak:</strong> {{ $quarter ?: 'Barcha choraklar' }}</li>
                     <li><strong>StudentsData miqdori:</strong> {{ count($studentsData) }}</li>
                 </ul>
             </div>

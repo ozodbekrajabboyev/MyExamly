@@ -116,7 +116,11 @@
     <div class="header">
         <h1>{{ $sinf->name }} sinf - {{ $subject->name }} fani natijalari</h1>
         <div class="header-info">
-            {{ \Carbon\Carbon::parse($startDate)->format('d.m.Y') }} - {{ \Carbon\Carbon::parse($endDate)->format('d.m.Y') }} davri |
+            @if($quarter)
+                {{ $quarter }} chorak |
+            @else
+                Barcha choraklar |
+            @endif
             Jami: {{ count($studentsData) }} nafar o'quvchi
         </div>
     </div>
@@ -138,28 +142,31 @@
                     <td class="student-name">{{ $student['full_name'] }}</td>
                     <td class="score-col">
                         @if($student['bsb']['total'] > 0)
-                            <span class="bsb-score">{{ $student['bsb']['total'] }} / {{ $student['bsb']['percentage'] }}%</span>
+                            <span class="bsb-score">{{ $student['bsb']['total'] }}</span>
                         @else
                             <span class="no-data">-</span>
                         @endif
                     </td>
                     <td class="score-col">
                         @if($student['chsb']['total'] > 0)
-                            <span class="chsb-score">{{ $student['chsb']['total'] }} / {{ $student['chsb']['percentage'] }}%</span>
+                            <span class="chsb-score">{{ $student['chsb']['total'] }}</span>
                         @else
                             <span class="no-data">-</span>
                         @endif
                     </td>
                     <td class="total-col
-                        @if($student['overall_total'] >= 80)
+                        @php
+                            $totalSum = $student['bsb']['total'] + $student['chsb']['total'];
+                        @endphp
+                        @if($totalSum >= 16)
                             overall-excellent
-                        @elseif($student['overall_total'] >= 60)
+                        @elseif($totalSum >= 12)
                             overall-good
-                        @elseif($student['overall_total'] > 0)
+                        @elseif($totalSum > 0)
                             overall-poor
                         @endif">
-                        @if($student['overall_total'] > 0)
-                            {{ $student['overall_total'] }}%
+                        @if($totalSum > 0)
+                            {{ $totalSum }}
                         @else
                             <span class="no-data">-</span>
                         @endif

@@ -20,45 +20,44 @@ class StatisticsChartWidgetByCHSB extends ChartWidget
 
     public ?int $sinfId = null;
     public ?int $subjectId = null;
-    public ?string $startDate = null;
-    public ?string $endDate = null;
+    public ?string $quarter = null;
 
     public function mount(): void
     {
-        $this->startDate = Carbon::now()->subDays(7)->format('Y-m-d');
-        $this->endDate = Carbon::now()->format('Y-m-d');
+        // No default initialization needed for quarter-based filtering
     }
 
     #[On('updateStats')]
-    public function updateStats(?int $sinfId, ?int $subjectId, ?string $startDate, ?string $endDate): void
+    public function updateStats(?int $sinfId, ?int $subjectId, ?string $quarter): void
     {
         $this->sinfId = $sinfId;
         $this->subjectId = $subjectId;
-        $this->startDate = $startDate;
-        $this->endDate = $endDate;
+        $this->quarter = $quarter;
     }
 
     protected function getData(): array
     {
-        if (!$this->sinfId || !$this->subjectId || !$this->startDate || !$this->endDate) {
+        if (!$this->sinfId || !$this->subjectId) {
             return [
                 'datasets' => [],
                 'labels' => [],
             ];
         }
 
-        $exams = Exam::query()
+        $examQuery = Exam::query()
             ->where('maktab_id', auth()->user()->maktab_id)
             ->where('sinf_id', $this->sinfId)
             ->where('subject_id', $this->subjectId)
             ->where('type', 'CHSB')
             ->whereHas('marks') // Only include exams that have marks
-            ->whereBetween('created_at', [
-                Carbon::parse($this->startDate)->startOfDay(),
-                Carbon::parse($this->endDate)->endOfDay()
-            ])
-            ->orderBy('serial_number')
-            ->get();
+            ->whereNotNull('quarter'); // Exclude exams with null quarters
+
+        // Apply quarter filter if specified
+        if ($this->quarter) {
+            $examQuery->where('quarter', $this->quarter);
+        }
+
+        $exams = $examQuery->orderBy('quarter')->orderBy('serial_number')->get();
 
         if ($exams->isEmpty()) {
             return ['datasets' => [], 'labels' => []];
@@ -116,7 +115,8 @@ class StatisticsChartWidgetByCHSB extends ChartWidget
             $averageScore = round($marksForThisExam->avg('total_student_mark'), 1);
             $masteryPercentage = round(($averageScore / $totalMaxScore) * 100, 1);
 
-            $labels[] = "{$exam->serial_number}-{$exam->type} (" . Carbon::parse($exam->created_at)->format('M d') . ")";
+            $quarterText = $exam->quarter ? "({$exam->quarter} chorak)" : "";
+            $labels[] = "{$exam->serial_number}-{$exam->type} {$quarterText}";
             $data[] = $masteryPercentage;
         }
 
