@@ -159,6 +159,7 @@ class Dashboard extends Component implements HasForms
 
         // Check if exam is approved
         if (!$exam || $exam->status !== 'approved') {
+            $this->refreshTableData();
             Notification::make()
                 ->title('Tasdiqlash jarayoni!')
                 ->body("Natijalarni PDF shaklida yuklab olish imkoniyati faqat imtihon tasdiqlangandan so'ng beriladi.")
