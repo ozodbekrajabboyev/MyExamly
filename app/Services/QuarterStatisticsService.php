@@ -6,6 +6,7 @@ use App\Models\Student;
 use App\Models\Exam;
 use App\Models\Sinf;
 use App\Models\Subject;
+use App\Models\FbMark;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -57,6 +58,9 @@ class QuarterStatisticsService
             $bsbResults = self::getExamResultsByType($student->id, $sinfId, $subjectId, 'BSB', $quarter);
             $chsbResults = self::getExamResultsByType($student->id, $sinfId, $subjectId, 'CHSB', $quarter);
 
+            // Get FB marks for this student
+            $fbMarks = self::getFbMarksByStudent($student->id, $sinfId, $subjectId, $quarter);
+
             $bsbTotal = $bsbResults['total_sum'];
             $chsbTotal = $chsbResults['total_sum'];
             $bsbPercentage = $bsbResults['percentage_avg'];
@@ -81,6 +85,7 @@ class QuarterStatisticsService
                     'percentage' => $chsbPercentage,
                     'exam_count' => $chsbResults['exam_count']
                 ],
+                'fb_marks' => $fbMarks,
                 'overall_total' => round($overallTotal, 2),
                 'overall_percentage' => $overallPercentage
             ];
@@ -128,6 +133,50 @@ class QuarterStatisticsService
             'percentage_avg' => $percentageAvg,
             'exam_count' => $examCount
         ];
+    }
+
+    /**
+     * Get FB marks for a specific student, sinf, subject, and quarter
+     */
+    private static function getFbMarksByStudent(
+        int $studentId,
+        int $sinfId,
+        int $subjectId,
+        ?string $quarter = null
+    ): array {
+        $query = FbMark::where('student_id', $studentId)
+            ->where('subject_id', $subjectId)
+            ->where('sinf_id', $sinfId);
+
+        if ($quarter) {
+            // Specific quarter requested
+            $query->where('quarter', $quarter);
+            $fbMark = $query->first();
+
+            return [
+                'current_quarter' => $quarter,
+                'fb_value' => $fbMark ? $fbMark->fb : 4, // Default to 4 if no record exists
+                'fb_id' => $fbMark ? $fbMark->id : null,
+                'is_sum' => false
+            ];
+        } else {
+            // All quarters - return sum
+            $fbMarks = $query->get();
+            $totalFb = $fbMarks->sum('fb');
+
+            // If no records exist, return sum of default values for all quarters (4 * 4 = 16)
+            if ($fbMarks->isEmpty()) {
+                $totalFb = 16; // 4 quarters * default value of 4
+            }
+
+            return [
+                'current_quarter' => null,
+                'fb_value' => $totalFb,
+                'fb_id' => null,
+                'is_sum' => true,
+                'quarters_data' => $fbMarks->keyBy('quarter')->toArray()
+            ];
+        }
     }
 
     /**

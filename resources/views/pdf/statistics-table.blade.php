@@ -81,6 +81,11 @@
             font-weight: bold;
         }
 
+        .fb-score {
+            color: #7c3aed;
+            font-weight: bold;
+        }
+
         .overall-excellent {
             background-color: #dcfce7;
             color: #166534;
@@ -132,6 +137,13 @@
                 <th class="student-name-col">O'quvchi F.I.Sh.</th>
                 <th class="score-col">BSB</th>
                 <th class="score-col">CHSB</th>
+                <th class="score-col">
+                    @if($quarter)
+                        FB ({{ $quarter }})
+                    @else
+                        FB (Jami)
+                    @endif
+                </th>
                 <th class="total-col">Umumiy</th>
             </tr>
         </thead>
@@ -154,13 +166,24 @@
                             <span class="no-data">-</span>
                         @endif
                     </td>
+                    <td class="score-col">
+                        @if(isset($student['fb_marks']) && $student['fb_marks']['fb_value'])
+                            <span class="fb-score">{{ $student['fb_marks']['fb_value'] }}</span>
+                        @else
+                            <span class="no-data">-</span>
+                        @endif
+                    </td>
                     <td class="total-col
                         @php
                             $totalSum = $student['bsb']['total'] + $student['chsb']['total'];
+                            // Add FB marks to total sum if available
+                            if (isset($student['fb_marks']) && $student['fb_marks']['fb_value']) {
+                                $totalSum += $student['fb_marks']['fb_value'];
+                            }
                         @endphp
-                        @if($totalSum >= 16)
+                        @if($totalSum >= 24)
                             overall-excellent
-                        @elseif($totalSum >= 12)
+                        @elseif($totalSum >= 18)
                             overall-good
                         @elseif($totalSum > 0)
                             overall-poor

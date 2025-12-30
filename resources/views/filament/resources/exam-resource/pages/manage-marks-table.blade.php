@@ -148,7 +148,118 @@
             background-color: rgb(17 24 39) !important;
             color: #f3f4f6 !important;
         }
+        /* Total column styling */
+        .total-column {
+            background-color: #eff6ff !important;
+            border-left: 2px solid #3b82f6 !important;
+            font-weight: bold !important;
+        }
+
+        .dark .total-column {
+            background-color: rgb(30 58 138 / 0.2) !important;
+            border-left-color: #60a5fa !important;
+            color: #93c5fd !important;
+        }
+
+        /* Total column sticky positioning */
+        .fi-ta-table .total-column {
+            position: sticky !important;
+            right: 0 !important;
+            z-index: 5 !important;
+        }
+
+        /* Mark input highlighting on focus */
+        .mark-input:focus {
+            background-color: #fef3c7 !important;
+            border-color: #f59e0b !important;
+        }
+
+        .dark .mark-input:focus {
+            background-color: rgb(120 53 15 / 0.2) !important;
+            border-color: #fbbf24 !important;
+        }
     </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Function to calculate and update total for a specific student row
+            window.updateTotal = function(inputElement) {
+                const row = inputElement.closest('tr');
+                if (!row) return;
+
+                // Find all mark inputs in this row
+                const markInputs = row.querySelectorAll('input[type="number"][data-problem-id]');
+                let total = 0;
+
+                markInputs.forEach(input => {
+                    const value = parseFloat(input.value) || 0;
+                    total += value;
+                });
+
+                // Find and update the total column in this row
+                const totalColumn = row.querySelector('.total-column');
+                if (totalColumn) {
+                    totalColumn.textContent = total.toFixed(1);
+
+                    // Add visual feedback
+                    totalColumn.style.animation = 'none';
+                    totalColumn.offsetHeight; // Trigger reflow
+                    totalColumn.style.animation = 'pulse 0.5s';
+                }
+            };
+
+            // Function to update all totals (in case of bulk changes)
+            window.updateAllTotals = function() {
+                const rows = document.querySelectorAll('tbody tr');
+                rows.forEach(row => {
+                    const firstInput = row.querySelector('input[type="number"][data-problem-id]');
+                    if (firstInput) {
+                        updateTotal(firstInput);
+                    }
+                });
+            };
+
+            // Add event listeners to existing inputs (for dynamically loaded content)
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.nodeType === 1) { // Element node
+                            const inputs = node.querySelectorAll ? node.querySelectorAll('input[type="number"][data-problem-id]') : [];
+                            inputs.forEach(input => {
+                                if (!input.hasAttribute('data-total-listener')) {
+                                    input.addEventListener('input', function() {
+                                        updateTotal(this);
+                                    });
+                                    input.setAttribute('data-total-listener', 'true');
+                                }
+                            });
+                        }
+                    });
+                });
+            });
+
+            observer.observe(document.body, {
+                childList: true,
+                subtree: true
+            });
+
+            // Initial calculation for existing elements
+            setTimeout(() => {
+                updateAllTotals();
+            }, 500);
+        });
+
+        // Add CSS animation for pulse effect
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse {
+                0% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+                100% { transform: scale(1); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
 
     <div class="space-y-6">
         <!-- Exam Information Header -->

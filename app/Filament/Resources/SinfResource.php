@@ -88,4 +88,15 @@ class SinfResource extends Resource
 //            'edit' => Pages\EditSinf::route('/{record}/edit'),
         ];
     }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+
+        if (auth()->user()->role->name === 'admin') {
+            $query->where('maktab_id', auth()->user()->maktab_id);
+        }
+
+        return $query;
+    }
 }

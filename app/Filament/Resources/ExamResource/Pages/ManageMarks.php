@@ -162,12 +162,34 @@ class ManageMarks extends Page implements HasForms, HasTable
                 ->rules(function () use ($problem) {
                     return StoreMarksRequest::getMarkRules($problem['max_mark']);
                 })
-                ->extraAttributes(['class' => 'text-center'])
+                ->extraAttributes([
+                    'class' => 'text-center mark-input',
+                    'data-problem-id' => $problem['id'],
+                    'x-on:input' => 'updateTotal($event.target)'
+                ])
                 ->alignment('center')
                 ->width('100px')
                 ->type('number')
                 ->step(0.1);
         }
+
+        // Add Total column (UI-only, real-time calculation)
+        $totalMaxMarks = collect($this->problems)->sum('max_mark');
+        $columns[] = Tables\Columns\TextColumn::make('total_marks')
+            ->label("Jami\n(Max: {$totalMaxMarks})")
+            ->getStateUsing(function ($record) {
+                // Calculate total from existing marks
+                $total = Mark::where('student_id', $record->id)
+                    ->where('exam_id', $this->exam->id)
+                    ->sum('mark');
+                return number_format($total, 1);
+            })
+            ->extraAttributes([
+                'class' => 'text-center font-bold bg-blue-50 dark:bg-blue-900/20 total-column'
+            ])
+            ->alignment('center')
+            ->width('100px')
+            ->color('primary');
 
 
         return $table

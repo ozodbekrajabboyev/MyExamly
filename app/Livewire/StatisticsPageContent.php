@@ -7,7 +7,9 @@ use App\Models\Mark;
 use App\Models\Sinf;
 use App\Models\Subject;
 use App\Models\Student;
+use App\Models\FbMark;
 use App\Services\QuarterStatisticsService;
+use Filament\Notifications\Notification;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Component;
@@ -20,6 +22,7 @@ class StatisticsPageContent extends Component
     public ?string $quarter = null;
     public $studentsData = [];
     public $summary = [];
+    public $canEditFbMarks = false;
 
     /**
      * Apply filters and load student data
@@ -29,10 +32,12 @@ class StatisticsPageContent extends Component
         if (!$this->sinfId || !$this->subjectId) {
             $this->studentsData = [];
             $this->summary = [];
+            $this->canEditFbMarks = false;
             return;
         }
 
         $this->loadStudentsData();
+        $this->checkFbMarksPermissions();
 
         // Dispatch the event for charts
         $this->dispatch('updateStats',
@@ -55,6 +60,38 @@ class StatisticsPageContent extends Component
 
         $this->studentsData = $result['students_data'];
         $this->summary = $result['summary'];
+    }
+
+    /**
+     * Check if current user can edit FB marks
+     */
+    private function checkFbMarksPermissions(): void
+    {
+        $user = auth()->user();
+
+        // FB marks are never editable when showing all quarters (sum view)
+        if (!$this->quarter) {
+            $this->canEditFbMarks = false;
+            return;
+        }
+
+        // Only teachers can potentially edit FB marks
+        if (!$user || !$user->teacher || !$user->role || $user->role->name !== 'teacher') {
+            $this->canEditFbMarks = false;
+            return;
+        }
+
+        // Check if this teacher is related to any exams in this sinf+subject+quarter
+        $hasRelatedExams = Exam::where('sinf_id', $this->sinfId)
+            ->where('subject_id', $this->subjectId)
+            ->where('quarter', $this->quarter)
+            ->where(function ($query) use ($user) {
+                $query->where('teacher_id', $user->teacher->id)
+                      ->orWhere('teacher2_id', $user->teacher->id);
+            })
+            ->exists();
+
+        $this->canEditFbMarks = $hasRelatedExams;
     }
 
     /**
@@ -123,7 +160,7 @@ class StatisticsPageContent extends Component
     /**
      * Calculate average total and percentage from exam results
      */
-    private function calculateAverage($examResults)
+    private function calculateAverage($examResults): array
     {
         if ($examResults->isEmpty()) {
             return ['total' => 0, 'percentage' => 0];
@@ -154,6 +191,68 @@ class StatisticsPageContent extends Component
     {
         $this->quarter = null;
         $this->applyFilters();
+    }
+
+    /**
+     * Update FB mark for a specific student
+     */
+    public function updateFbMark(int $studentId, int $fbValue): void
+    {
+        // Validate permissions
+        if (!$this->canEditFbMarks || !$this->quarter) {
+            Notification::make()
+                ->title('Xato')
+                ->body('Sizga bu amaliyotni bajarish ruxsati yo\'q.')
+                ->danger()
+                ->send();
+            return;
+        }
+
+        // Validate FB value range
+        if ($fbValue < 4 || $fbValue > 10) {
+            Notification::make()
+                ->title('Xato')
+                ->body('FB baho 4 dan 10 gacha bo\'lishi kerak.')
+                ->danger()
+                ->send();
+            return;
+        }
+
+        try {
+            // Find or create FB mark record
+            $fbMark = FbMark::firstOrCreate(
+                [
+                    'student_id' => $studentId,
+                    'subject_id' => $this->subjectId,
+                    'sinf_id' => $this->sinfId,
+                    'quarter' => $this->quarter,
+                ],
+                [
+                    'fb' => $fbValue,
+                ]
+            );
+
+            // Update if it already existed
+            if (!$fbMark->wasRecentlyCreated) {
+                $fbMark->update(['fb' => $fbValue]);
+            }
+
+            // Refresh the data
+            $this->loadStudentsData();
+
+            Notification::make()
+                ->title('Muvaffaqiyat')
+                ->body('FB baho muvaffaqiyatli yangilandi.')
+                ->success()
+                ->send();
+
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('Xato')
+                ->body('Xatolik yuz berdi: ' . $e->getMessage())
+                ->danger()
+                ->send();
+        }
     }
 
     /**
@@ -215,9 +314,30 @@ class StatisticsPageContent extends Component
      */
     public function render()
     {
+        $user = auth()->user();
+
+        // Apply school-specific filtering for admin and teacher users
+        $sinfsQuery = Sinf::query();
+        $subjectsQuery = Subject::query();
+
+        if ($user && $user->role && $user->role->name === 'admin' && $user->maktab_id) {
+            $sinfsQuery->where('maktab_id', $user->maktab_id);
+            $subjectsQuery->where('maktab_id', $user->maktab_id);
+        } elseif ($user && $user->role && $user->role->name === 'teacher' && $user->maktab_id) {
+            // For teachers, filter by their school
+            $sinfsQuery->where('maktab_id', $user->maktab_id);
+            // For subjects, teachers should only see subjects they teach
+            if ($user->teacher) {
+                $subjectsQuery->whereHas('teachers', function ($query) use ($user) {
+                    $query->where('teacher_id', $user->teacher->id);
+                });
+            }
+        }
+        // Superadmin sees all sinfs and subjects (no filtering)
+
         return view('livewire.statistics-page-content', [
-            'sinfs' => Sinf::query()->pluck('name', 'id'),
-            'subjects' => Subject::query()->pluck('name', 'id'),
+            'sinfs' => $sinfsQuery->pluck('name', 'id'),
+            'subjects' => $subjectsQuery->pluck('name', 'id'),
         ]);
     }
 }

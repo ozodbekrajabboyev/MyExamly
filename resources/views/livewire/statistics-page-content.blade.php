@@ -129,6 +129,13 @@
                                 CHSB
                             </th>
                             <th class="border border-gray-300 dark:border-gray-600 px-4 py-3 text-center text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                @if($quarter)
+                                    FB ({{ $quarter }} chorak)
+                                @else
+                                    FB (Jami)
+                                @endif
+                            </th>
+                            <th class="border border-gray-300 dark:border-gray-600 px-4 py-3 text-center text-sm font-semibold text-gray-900 dark:text-gray-100">
                                 Umumiy natija
                             </th>
                         </tr>
@@ -156,15 +163,52 @@
                                         <span class="text-gray-400 dark:text-gray-500">-</span>
                                     @endif
                                 </td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-4 py-3 text-center text-sm text-gray-900 dark:text-gray-100">
+                                    @if(isset($student['fb_marks']) && !$student['fb_marks']['is_sum'] && $canEditFbMarks)
+                                        {{-- Editable FB mark for specific quarter --}}
+                                        <div class="inline-flex items-center space-x-1">
+                                            <input
+                                                type="number"
+                                                min="4"
+                                                max="10"
+                                                value="{{ $student['fb_marks']['fb_value'] }}"
+                                                class="w-16 px-2 py-1 text-center text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100"
+                                                wire:change="updateFbMark({{ $student['id'] }}, $event.target.value)"
+                                                wire:loading.attr="disabled"
+                                                wire:target="updateFbMark"
+                                            />
+                                            <div wire:loading wire:target="updateFbMark" class="text-xs text-gray-500">
+                                                <svg class="animate-spin h-3 w-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    @elseif(isset($student['fb_marks']))
+                                        {{-- Read-only FB mark --}}
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-800 dark:text-blue-100">
+                                            {{ $student['fb_marks']['fb_value'] }}
+                                            @if($student['fb_marks']['is_sum'])
+                                                <span class="ml-1 text-xs opacity-75">(Jami)</span>
+                                            @endif
+                                        </span>
+                                    @else
+                                        <span class="text-gray-400 dark:text-gray-500">-</span>
+                                    @endif
+                                </td>
                                 <td class="border border-gray-300 dark:border-gray-600 px-4 py-3 text-center text-sm">
                                     @php
                                         $totalSum = $student['bsb']['total'] + $student['chsb']['total'];
+                                        // Add FB marks to total sum if available
+                                        if (isset($student['fb_marks']) && $student['fb_marks']['fb_value']) {
+                                            $totalSum += $student['fb_marks']['fb_value'];
+                                        }
                                     @endphp
                                     @if($totalSum > 0)
                                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
-                                            @if($totalSum >= 16)
+                                            @if($totalSum >= 24)
                                                 bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100
-                                            @elseif($totalSum >= 12)
+                                            @elseif($totalSum >= 18)
                                                 bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100
                                             @else
                                                 bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100
@@ -228,3 +272,4 @@
         </x-filament::section>
     @endif
 </div>
+
