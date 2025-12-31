@@ -209,10 +209,10 @@ class StatisticsPageContent extends Component
         }
 
         // Validate FB value range
-        if ($fbValue < 4 || $fbValue > 10) {
+        if ($fbValue < 0 || $fbValue > 10) {
             Notification::make()
                 ->title('Xato')
-                ->body('FB baho 4 dan 10 gacha bo\'lishi kerak.')
+                ->body('FB baho 0 dan 10 gacha bo\'lishi kerak.')
                 ->danger()
                 ->send();
             return;

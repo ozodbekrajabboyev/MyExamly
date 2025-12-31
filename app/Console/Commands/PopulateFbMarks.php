@@ -118,7 +118,7 @@ class PopulateFbMarks extends Command
                 ['Total FB marks created', number_format($totalCreated)],
                 ['Total combinations skipped', number_format($totalSkipped)],
                 ['Processing quarters', implode(', ', $quarters)],
-                ['Default FB value used', '4']
+                ['Default FB value used', '0']
             ]
         );
 
@@ -170,7 +170,7 @@ class PopulateFbMarks extends Command
                         'sinf_id' => $student->sinf_id,
                         'subject_id' => $subject->id,
                         'student_id' => $student->id,
-                        'fb' => 4, // Default value
+                        'fb' => 0, // Default value
                         'created_at' => now(),
                         'updated_at' => now(),
                     ];

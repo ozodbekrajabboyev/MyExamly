@@ -169,7 +169,7 @@
                                         <div class="inline-flex items-center space-x-1">
                                             <input
                                                 type="number"
-                                                min="4"
+                                                min="0"
                                                 max="10"
                                                 value="{{ $student['fb_marks']['fb_value'] }}"
                                                 class="w-16 px-2 py-1 text-center text-sm border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-gray-100"
