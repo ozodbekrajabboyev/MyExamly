@@ -704,7 +704,8 @@ class TeacherResource extends Resource
                         if (empty($state)) {
                             return 'Ulanmagan';
                         }
-                        return "@{$state}";
+                        // Check if the state already starts with "@"
+                        return str_starts_with($state, '@') ? $state : "@{$state}";
                     })
                     ->badge()
                     ->color(function ($state) {
@@ -716,9 +717,12 @@ class TeacherResource extends Resource
                     ->copyable(fn ($state) => !empty($state))
                     ->copyMessage('Telegram username nusxalandi!')
                     ->tooltip(function ($record) {
-                        return $record->telegram_id ?
-                            "Telegram hisobi: @{$record->telegram_id}" :
-                            'Telegram hisobi ulanmagan';
+                        if (!$record->telegram_id) {
+                            return 'Telegram hisobi ulanmagan';
+                        }
+                        // Also apply the same logic to tooltip
+                        $username = str_starts_with($record->telegram_id, '@') ? $record->telegram_id : "@{$record->telegram_id}";
+                        return "Telegram hisobi: {$username}";
                     })
                     ->placeholder('Ma\'lumot kiritilmagan')
                     ->searchable()

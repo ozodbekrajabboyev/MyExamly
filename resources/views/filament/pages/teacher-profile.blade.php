@@ -87,6 +87,7 @@
                     </p>
                 </div>
             </div>
+            <br>
 
             <form wire:submit="save">
                 {{ $this->form }}

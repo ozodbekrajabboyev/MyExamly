@@ -71,13 +71,13 @@ class TeacherProfile extends Page implements HasForms
                     ->icon('heroicon-o-identification')
                     ->schema([
                         TextInput::make('passport_serial_number')
-                            ->label('Pasport seriya raqami')
+                            ->label('Pasport seriya va raqami')
                             ->placeholder('Masalan: AB1234567')
                             ->prefixIcon('heroicon-o-document-text')
                             ->maxLength(50)
                             ->rules(['regex:/^[A-Z]{2}\d{7}$/'])
                             ->validationMessages([
-                                'regex' => 'Pasport seriya raqami noto\'g\'ri formatda (Masalan: AB1234567)'
+                                'regex' => 'Pasport seriya va raqami noto\'g\'ri formatda (Masalan: AB1234567)'
                             ]),
 
                         TextInput::make('passport_jshshir')
@@ -277,10 +277,11 @@ class TeacherProfile extends Page implements HasForms
                         TextInput::make('telegram_id')
                             ->label('Telegram')
                             ->placeholder('@username yoki raqamli ID')
-                            ->prefixIcon('heroicon-o-chat-bubble-left-right')
+//                            ->prefixIcon('heroicon-o-chat-bubble-left-right')
+                            ->prefix("@")
                             ->maxLength(100)
                             ->columnSpanFull()
-                            ->helperText('Telegram username (@bilan) yoki raqamli ID ni kiriting')
+                            ->helperText('Telegram username ni kiriting')
                             ->rules(['regex:/^@?[a-zA-Z0-9_]+$/'])
                             ->validationMessages([
                                 'regex' => 'Telegram ID formati noto\'g\'ri (@username yoki raqam)'
