@@ -123,17 +123,17 @@
                                 O'quvchi F.I.Sh.
                             </th>
                             <th class="border border-gray-300 dark:border-gray-600 px-4 py-3 text-center text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                @if($quarter)
+                                    FB ({{ $quarter }})
+                                @else
+                                    FB (Jami)
+                                @endif
+                            </th>
+                            <th class="border border-gray-300 dark:border-gray-600 px-4 py-3 text-center text-sm font-semibold text-gray-900 dark:text-gray-100">
                                 BSB
                             </th>
                             <th class="border border-gray-300 dark:border-gray-600 px-4 py-3 text-center text-sm font-semibold text-gray-900 dark:text-gray-100">
                                 CHSB
-                            </th>
-                            <th class="border border-gray-300 dark:border-gray-600 px-4 py-3 text-center text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                @if($quarter)
-                                    FB ({{ $quarter }} chorak)
-                                @else
-                                    FB (Jami)
-                                @endif
                             </th>
                             <th class="border border-gray-300 dark:border-gray-600 px-4 py-3 text-center text-sm font-semibold text-gray-900 dark:text-gray-100">
                                 Umumiy natija
@@ -148,20 +148,6 @@
                                 </td>
                                 <td class="border border-gray-300 dark:border-gray-600 px-4 py-3 text-sm font-medium text-gray-900 dark:text-gray-100">
                                     {{ $student['full_name'] }}
-                                </td>
-                                <td class="border border-gray-300 dark:border-gray-600 px-4 py-3 text-center text-sm text-gray-900 dark:text-gray-100">
-                                    @if($student['bsb']['total'] > 0)
-                                        <span class="font-semibold">{{ $student['bsb']['total'] }}</span>
-                                    @else
-                                        <span class="text-gray-400 dark:text-gray-500">-</span>
-                                    @endif
-                                </td>
-                                <td class="border border-gray-300 dark:border-gray-600 px-4 py-3 text-center text-sm text-gray-900 dark:text-gray-100">
-                                    @if($student['chsb']['total'] > 0)
-                                        <span class="font-semibold">{{ $student['chsb']['total'] }}</span>
-                                    @else
-                                        <span class="text-gray-400 dark:text-gray-500">-</span>
-                                    @endif
                                 </td>
                                 <td class="border border-gray-300 dark:border-gray-600 px-4 py-3 text-center text-sm text-gray-900 dark:text-gray-100">
                                     @if(isset($student['fb_marks']) && !$student['fb_marks']['is_sum'] && $canEditFbMarks)
@@ -192,6 +178,20 @@
                                                 <span class="ml-1 text-xs opacity-75">(Jami)</span>
                                             @endif
                                         </span>
+                                    @else
+                                        <span class="text-gray-400 dark:text-gray-500">-</span>
+                                    @endif
+                                </td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-4 py-3 text-center text-sm text-gray-900 dark:text-gray-100">
+                                    @if($student['bsb']['total'] > 0)
+                                        <span class="font-semibold">{{ $student['bsb']['total'] }}</span>
+                                    @else
+                                        <span class="text-gray-400 dark:text-gray-500">-</span>
+                                    @endif
+                                </td>
+                                <td class="border border-gray-300 dark:border-gray-600 px-4 py-3 text-center text-sm text-gray-900 dark:text-gray-100">
+                                    @if($student['chsb']['total'] > 0)
+                                        <span class="font-semibold">{{ $student['chsb']['total'] }}</span>
                                     @else
                                         <span class="text-gray-400 dark:text-gray-500">-</span>
                                     @endif
