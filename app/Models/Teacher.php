@@ -23,79 +23,96 @@ class Teacher extends Model
     /** @use HasFactory<\Database\Factories\TeacherFactory> */
     use HasFactory, ScopesSchool, Notifiable;
 
+    protected $fillable = [
+        'maktab_id',
+        'full_name',
+        'user_id',
+        'phone',
+        'passport_serial_number',
+        'passport_jshshir',
+        'passport_photo_path',
+        'diplom_path',
+        'malaka_toifa_daraja',
+        'malaka_toifa_path',
+        'malaka_toifa_expdate',
+        'milliy_sertifikat1_path',
+        'milliy_sertifikat1_expdate',
+        'milliy_sertifikat2_path',
+        'milliy_sertifikat2_expdate',
+        'xalqaro_sertifikat_path',
+        'xalqaro_sertifikat_expdate',
+        'malumotnoma_path',
+        'ustama_sertifikat_path',
+        'ustama_sertifikat_expdate',
+        'vazir_buyruq_path',
+        'qoshimcha_ustama_path',
+        'telegram_id',
+        'profile_photo_path',
+    ];
 
-    // Add these methods to your existing Teacher model
+    protected $casts = [
+        'malaka_toifa_expdate' => 'date',
+        'milliy_sertifikat1_expdate' => 'date',
+        'milliy_sertifikat2_expdate' => 'date',
+        'xalqaro_sertifikat_expdate' => 'date',
+        'ustama_sertifikat_expdate' => 'date',
+    ];
 
-    /**
-     * Set certificate expiry for testing
-     */
-    public function setCertificateExpiryForTesting(string $field, string $date): bool
-    {
-        $fields = self::getCertificateFields();
-        if (!array_key_exists($field, $fields)) {
-            throw new \InvalidArgumentException("Invalid field: {$field}");
-        }
 
-        $cacheKey = "teacher:{$this->id}:cert:{$field}:expires_at";
-        $result = Cache::put($cacheKey, $date, now()->addDays(30));
-
-        Log::info("Certificate expiry set for testing", [
-            'teacher_id' => $this->id,
-            'field' => $field,
-            'expiry_date' => $date,
-            'cache_result' => $result
-        ]);
-
-        return $result;
-    }
-
-    /**
-     * Get all cache keys for debugging
-     */
-    public function getCertificateCacheInfo(): array
-    {
-        $info = [];
-        foreach (self::getCertificateFields() as $field => $label) {
-            $cacheKey = "teacher:{$this->id}:cert:{$field}:expires_at";
-            $info[$field] = [
-                'label' => $label,
-                'cache_key' => $cacheKey,
-                'cached_value' => Cache::get($cacheKey),
-                'has_file' => !empty($this->{$field}),
-                'file_path' => $this->{$field}
-            ];
-        }
-        return $info;
-    }
+    // Certificate field configuration methods
 
     public static function getCertificateFields(): array
     {
         return [
-            'malaka_toifa_path' => 'Malaka toifasi',
-            'milliy_sertifikat1_path' => '1-milliy sertifikat',
-            'milliy_sertifikat2_path' => '2-milliy sertifikat',
-            'xalqaro_sertifikat_path' => 'Xalqaro sertifikat',
-            'ustama_sertifikat_path' => 'Ustama sertifikat',
+            'malaka_toifa_path' => [
+                'label' => 'Malaka toifasi',
+                'expiry_field' => 'malaka_toifa_expdate'
+            ],
+            'milliy_sertifikat1_path' => [
+                'label' => '1-milliy sertifikat',
+                'expiry_field' => 'milliy_sertifikat1_expdate'
+            ],
+            'milliy_sertifikat2_path' => [
+                'label' => '2-milliy sertifikat',
+                'expiry_field' => 'milliy_sertifikat2_expdate'
+            ],
+            'xalqaro_sertifikat_path' => [
+                'label' => 'Xalqaro sertifikat',
+                'expiry_field' => 'xalqaro_sertifikat_expdate'
+            ],
+            'ustama_sertifikat_path' => [
+                'label' => 'Ustama sertifikat',
+                'expiry_field' => 'ustama_sertifikat_expdate'
+            ],
         ];
     }
 
 
     public function getCertificateExpiryStatus(string $field): ?array
     {
-        $cacheKey = "teacher:{$this->id}:cert:{$field}:expires_at";
-        $value = Cache::get($cacheKey);
-        if (! $value) return null;
+        $certificateFields = self::getCertificateFields();
+
+        if (!isset($certificateFields[$field])) {
+            return null;
+        }
+
+        $expiryField = $certificateFields[$field]['expiry_field'];
+        $expiryDate = $this->{$expiryField};
+
+        if (!$expiryDate) {
+            return null;
+        }
 
         try {
             $tz = 'Asia/Tashkent';
-            $expiry   = Carbon::parse($value, $tz)->startOfDay();
-            $today    = Carbon::now($tz)->startOfDay();
+            $expiry = Carbon::parse($expiryDate)->startOfDay();
+            $today = Carbon::now($tz)->startOfDay();
             $daysLeft = $today->diffInDays($expiry, false);
 
             return [
-                'expires_at'       => $expiry,
-                'days_left'        => $daysLeft,
-                'is_expired'       => $daysLeft < 0,
+                'expires_at' => $expiry,
+                'days_left' => $daysLeft,
+                'is_expired' => $daysLeft < 0,
                 'is_expiring_soon' => $daysLeft >= 0 && $daysLeft <= 3,
             ];
         } catch (\Throwable) {
@@ -106,35 +123,17 @@ class Teacher extends Model
     public function getAllCertificatesStatus(): array
     {
         $out = [];
-        foreach (self::getCertificateFields() as $field => $label) {
+        foreach (self::getCertificateFields() as $field => $config) {
             $out[$field] = [
-                'label'      => $label,
-                'status'     => $this->getCertificateExpiryStatus($field),
+                'label' => $config['label'],
+                'status' => $this->getCertificateExpiryStatus($field),
             ];
         }
         return $out;
     }
 
 
-    protected static function booted()
-    {
-        static::updated(function (self $teacher) {
-            $certFields = [
-                'malaka_toifa_path',
-                'milliy_sertifikat1_path',
-                'milliy_sertifikat2_path',
-                'xalqaro_sertifikat_path',
-                'ustama_sertifikat_path',
-            ];
-
-            foreach ($certFields as $field) {
-                if ($teacher->wasChanged($field)) {
-                    $cacheKey = "teacher:{$teacher->id}:cert:{$field}:expires_at";
-                    Cache::forget($cacheKey);
-                }
-            }
-        });
-    }
+    // Relationships
 
     public function exams():BelongsToMany
     {

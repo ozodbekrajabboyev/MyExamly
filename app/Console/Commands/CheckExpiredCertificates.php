@@ -16,7 +16,6 @@ class CheckExpiredCertificates extends Command
     protected $signature = 'certificates:check-expiry {--debug : Show debug information}';
     protected $description = 'Checks teacher certificates from cache, warns at 3 days, and removes expired files.';
 
-    protected array $fields;
     protected array $certificateLabels = [
         'malaka_toifa_path' => 'malaka toifa sertifikat',
         'milliy_sertifikat1_path' => 'birinchi milliy sertifikat',
@@ -30,33 +29,28 @@ class CheckExpiredCertificates extends Command
         $this->info('Starting certificate expiry check at: ' . now()->toDateTimeString());
         Log::info('Certificate expiry check started', ['timestamp' => now()]);
 
-        $this->fields = Teacher::getCertificateFields();
+        $certificateFields = Teacher::getCertificateFields();
         $expiringCount = 0;
         $expiredCount = 0;
         $debugMode = $this->option('debug');
 
         $this->info('Checking certificates...');
 
-        Teacher::with(['user'])->chunkById(200, function ($teachers) use (&$expiringCount, &$expiredCount, $debugMode) {
+        Teacher::with(['user'])->chunkById(200, function ($teachers) use ($certificateFields, &$expiringCount, &$expiredCount, $debugMode) {
             foreach ($teachers as $teacher) {
                 if ($debugMode) {
                     $this->line("Checking teacher: {$teacher->full_name} (ID: {$teacher->id})");
                 }
 
-                foreach ($this->fields as $field => $label) {
-                    if (!$teacher->{$field}) {
-                        continue;
-                    }
+                foreach ($certificateFields as $field => $config) {
+                    $expiryField = $config['expiry_field'];
 
-                    $cacheKey = "teacher:{$teacher->id}:cert:{$field}:expires_at";
-                    $expiresAt = Cache::get($cacheKey);
-
-                    if (!$expiresAt || $expiresAt === 'no_expiry' || $expiresAt === 'error') {
+                    if (!$teacher->{$field} || !$teacher->{$expiryField}) {
                         continue;
                     }
 
                     try {
-                        $expiry = Carbon::parse($expiresAt)->startOfDay();
+                        $expiry = Carbon::parse($teacher->{$expiryField})->startOfDay();
                         $today = Carbon::now('Asia/Tashkent')->startOfDay();
                         $daysLeft = $today->diffInDays($expiry, false);
 
@@ -65,7 +59,7 @@ class CheckExpiredCertificates extends Command
                         }
 
                         if ($daysLeft <= 0) {
-                            $this->processExpired($teacher, $field, $expiry, $cacheKey);
+                            $this->processExpired($teacher, $field, $expiry);
                             $expiredCount++;
                         } elseif ($daysLeft <= 3) {
                             $this->notifyExpiringFilament($teacher, $field, $expiry, $daysLeft);
@@ -73,7 +67,7 @@ class CheckExpiredCertificates extends Command
                         }
 
                     } catch (\Throwable $e) {
-                        $this->error("Error processing {$teacher->full_name} - {$label}: {$e->getMessage()}");
+                        $this->error("Error processing {$teacher->full_name} - {$config['label']}: {$e->getMessage()}");
                         Log::error("Certificate check error", [
                             'teacher_id' => $teacher->id,
                             'field' => $field,
@@ -153,7 +147,7 @@ class CheckExpiredCertificates extends Command
         ]);
     }
 
-    protected function processExpired(Teacher $teacher, string $field, Carbon $expiredAt, string $cacheKey): void
+    protected function processExpired(Teacher $teacher, string $field, Carbon $expiry): void
     {
         $certificateName = $this->certificateLabels[$field] ?? $field;
 
@@ -176,19 +170,16 @@ class CheckExpiredCertificates extends Command
             $this->error("❌ Failed to update database");
         }
 
-        // 3. Clear cache
-        Cache::forget($cacheKey);
-
-        // 4. Send Filament notification about removal
-        $this->sendExpiredNotification($teacher, $certificateName, $expiredAt);
+        // 3. Send Filament notification about removal
+        $this->sendExpiredNotification($teacher, $certificateName, $expiry);
 
         $this->error("🗑️ EXPIRED: {$teacher->full_name} - {$certificateName} removed");
     }
 
-    protected function sendExpiredNotification(Teacher $teacher, string $certificateName, Carbon $expiredAt): void
+    protected function sendExpiredNotification(Teacher $teacher, string $certificateName, Carbon $expiry): void
     {
         // Check if notification already sent
-        $notificationFlag = "expired_notif_sent:{$teacher->id}:{$certificateName}:" . $expiredAt->toDateString();
+        $notificationFlag = "expired_notif_sent:{$teacher->id}:{$certificateName}:" . $expiry->toDateString();
         if (Cache::has($notificationFlag)) {
             return;
         }
@@ -227,7 +218,7 @@ class CheckExpiredCertificates extends Command
         Log::channel('certificate')->info('Certificate expired notification sent', [
             'teacher_id' => $teacher->id,
             'certificate' => $certificateName,
-            'expired_at' => $expiredAt->toDateString()
+            'expired_at' => $expiry->toDateString()
         ]);
     }
 

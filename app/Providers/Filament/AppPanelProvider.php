@@ -17,6 +17,7 @@ use App\Filament\Widgets\StatsOverview;
 use App\Filament\Widgets\TeacherNotificationsWidget;
 use App\Filament\Widgets\TeacherQualificationChartWidget;
 use App\Filament\Widgets\MalakaStatisticsChart;
+use App\Models\Maktab;
 use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;

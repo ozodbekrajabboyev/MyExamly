@@ -2,12 +2,12 @@
 
 namespace App\Filament\Pages;
 
-use App\Jobs\FetchCertificateExpiry;
 use App\Models\Teacher;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
@@ -16,7 +16,6 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
 use Filament\Forms\Components\Select;
-use Illuminate\Support\Facades\Cache;
 
 
 class TeacherProfile extends Page implements HasForms
@@ -48,18 +47,21 @@ class TeacherProfile extends Page implements HasForms
             'diplom_path' => $this->teacher->diplom_path,
             'malaka_toifa_daraja' => $this->teacher->malaka_toifa_daraja,
             'malaka_toifa_path' => $this->teacher->malaka_toifa_path,
+            'malaka_toifa_expdate' => $this->teacher->malaka_toifa_expdate,
             'milliy_sertifikat1_path' => $this->teacher->milliy_sertifikat1_path,
+            'milliy_sertifikat1_expdate' => $this->teacher->milliy_sertifikat1_expdate,
             'milliy_sertifikat2_path' => $this->teacher->milliy_sertifikat2_path,
+            'milliy_sertifikat2_expdate' => $this->teacher->milliy_sertifikat2_expdate,
             'xalqaro_sertifikat_path' => $this->teacher->xalqaro_sertifikat_path,
+            'xalqaro_sertifikat_expdate' => $this->teacher->xalqaro_sertifikat_expdate,
             'ustama_sertifikat_path' => $this->teacher->ustama_sertifikat_path,
+            'ustama_sertifikat_expdate' => $this->teacher->ustama_sertifikat_expdate,
             'vazir_buyruq_path' => $this->teacher->vazir_buyruq_path,
             'qoshimcha_ustama_path' => $this->teacher->qoshimcha_ustama_path,
             'malumotnoma_path' => $this->teacher->malumotnoma_path,
             'telegram_id' => $this->teacher->telegram_id,
             'profile_photo_path' => $this->teacher->profile_photo_path,
         ]);
-
-        $this->checkExistingDocuments();
     }
 
     public function form(Form $form): Form
@@ -177,6 +179,16 @@ class TeacherProfile extends Page implements HasForms
                             ->required(fn (Get $get) => $get('malaka_toifa_daraja') && $get('malaka_toifa_daraja') !== 'mutaxasis')
                             ->uploadingMessage('Hujjat yuklanmoqda...')
                             ->downloadable(),
+
+                        DatePicker::make('malaka_toifa_expdate')
+                            ->label('📅 Malaka toifa amal qilish muddati')
+                            ->helperText('Malaka toifa hujjatining amal qilish muddatini tanlang')
+                            ->native(false)
+                            ->displayFormat('d/m/Y')
+                            ->format('Y-m-d')
+                            ->columnSpanFull()
+                            ->visible(fn (Get $get) => $get('malaka_toifa_daraja') && $get('malaka_toifa_daraja') !== 'mutaxasis')
+                            ->nullable(),
                     ])
                     ->columns(2)
                     ->collapsible()
@@ -198,6 +210,15 @@ class TeacherProfile extends Page implements HasForms
                             ->uploadingMessage('Sertifikat yuklanmoqda...')
                             ->downloadable(),
 
+                        DatePicker::make('milliy_sertifikat1_expdate')
+                            ->label('📅 1-milliy sertifikat amal qilish muddati')
+                            ->helperText('Birinchi milliy sertifikatning amal qilish muddatini tanlang')
+                            ->native(false)
+                            ->displayFormat('d/m/Y')
+                            ->format('Y-m-d')
+                            ->columnSpanFull()
+                            ->nullable(),
+
                         FileUpload::make('milliy_sertifikat2_path')
                             ->label('🇺🇿 Ikkinchi milliy sertifikat')
                             ->disk('public')
@@ -210,6 +231,15 @@ class TeacherProfile extends Page implements HasForms
                             ->uploadingMessage('Sertifikat yuklanmoqda...')
                             ->downloadable(),
 
+                        DatePicker::make('milliy_sertifikat2_expdate')
+                            ->label('📅 2-milliy sertifikat amal qilish muddati')
+                            ->helperText('Ikkinchi milliy sertifikatning amal qilish muddatini tanlang')
+                            ->native(false)
+                            ->displayFormat('d/m/Y')
+                            ->format('Y-m-d')
+                            ->columnSpanFull()
+                            ->nullable(),
+
                         FileUpload::make('xalqaro_sertifikat_path')
                             ->label('🌍 Xalqaro sertifikat')
                             ->disk('public')
@@ -221,6 +251,15 @@ class TeacherProfile extends Page implements HasForms
                             ->helperText('Xalqaro sertifikat nusxasi (CEFR, IELTS, TOEFL va boshqalar)')
                             ->uploadingMessage('Sertifikat yuklanmoqda...')
                             ->downloadable(),
+
+                        DatePicker::make('xalqaro_sertifikat_expdate')
+                            ->label('📅 Xalqaro sertifikat amal qilish muddati')
+                            ->helperText('Xalqaro sertifikatning amal qilish muddatini tanlang')
+                            ->native(false)
+                            ->displayFormat('d/m/Y')
+                            ->format('Y-m-d')
+                            ->columnSpanFull()
+                            ->nullable(),
                     ])
                     ->columns(2)
                     ->collapsible()
@@ -253,6 +292,15 @@ class TeacherProfile extends Page implements HasForms
                             ->helperText('70% ustama to\'lov sertifikati')
                             ->uploadingMessage('Sertifikat yuklanmoqda...')
                             ->downloadable(),
+
+                        DatePicker::make('ustama_sertifikat_expdate')
+                            ->label('📅 Ustama sertifikat amal qilish muddati')
+                            ->helperText('Ustama sertifikatning amal qilish muddatini tanlang')
+                            ->native(false)
+                            ->displayFormat('d/m/Y')
+                            ->format('Y-m-d')
+                            ->columnSpanFull()
+                            ->nullable(),
 
                         FileUpload::make('qoshimcha_ustama_path')
                             ->label('📄 Qo\'shimcha ustama hujjati')
@@ -295,57 +343,11 @@ class TeacherProfile extends Page implements HasForms
             ->columns(1);
     }
 
-    private function checkExistingDocuments()
-    {
-        $certificateFields = [
-            'malaka_toifa_path',
-            'milliy_sertifikat1_path',
-            'milliy_sertifikat2_path',
-            'xalqaro_sertifikat_path',
-            'ustama_sertifikat_path'
-        ];
-
-        foreach ($certificateFields as $field) {
-            if ($this->teacher->{$field}) {
-                $cacheKey = "teacher:{$this->teacher->id}:cert:{$field}:expires_at";
-                $cachedValue = Cache::get($cacheKey);
-
-                // Only dispatch job if NO cache exists at all (first time processing)
-                // Skip if any cache exists: 'no_expiry', 'no_document', 'error', or actual date
-                // This prevents re-dispatching jobs on every page refresh for failed certificates
-                if (is_null($cachedValue)) {
-                    FetchCertificateExpiry::dispatch($this->teacher->id, $field, $cacheKey);
-                }
-            }
-        }
-    }
-
     public function save()
     {
         $data = $this->form->getState();
         $this->teacher->update($data);
 
-        $certificateFields = [
-            'malaka_toifa_path',
-            'milliy_sertifikat1_path',
-            'milliy_sertifikat2_path',
-            'xalqaro_sertifikat_path',
-            'ustama_sertifikat_path'
-        ];
-
-        foreach ($certificateFields as $field) {
-            if ($this->teacher->{$field}) {
-                $cacheKey = "teacher:{$this->teacher->id}:cert:{$field}:expires_at";
-                $expire_date = Cache::get($cacheKey);
-
-                // Only dispatch job if no cache exists OR if document was just updated
-                // Skip if cache exists with 'no_expiry' value
-                if (is_null($expire_date) || (isset($data[$field]) && $expire_date !== 'no_expiry')) {
-                    Cache::forget($cacheKey);
-                    FetchCertificateExpiry::dispatch($this->teacher->id, $field, $cacheKey);
-                }
-            }
-        }
 
         Notification::make()
             ->title('Profil muvaffaqiyatli yangilandi')

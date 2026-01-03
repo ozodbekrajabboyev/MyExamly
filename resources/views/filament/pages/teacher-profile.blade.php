@@ -1,6 +1,5 @@
 @php
-    use App\Jobs\FetchCertificateExpiry;
-    use Illuminate\Support\Facades\Cache;
+    // No imports needed - using database fields now
 @endphp
 
 <x-filament-panels::page>
@@ -136,14 +135,6 @@
                             </div>
                         @endif
 
-                        <!-- Elektron Imzo -->
-                        @if($teacher->signature_path)
-                            <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
-                                <h4 class="text-xl font-bold text-gray-900 dark:text-white">Shaxsiy Imzo</h4>
-                                <img src="{{ $teacher->signature_url }}" alt="Elektron Imzo" class="w-full h-32 object-cover rounded">
-                            </div>
-                        @endif
-
                         <!-- Diplom -->
                         @if($teacher->diplom_path)
                             <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
@@ -156,15 +147,10 @@
 
                         <!-- Malaka toifasi -->
                         @if($teacher->malaka_toifa_path && $teacher->isDocumentRequired('malaka_toifa_path'))
-                            @php
-                                $field = 'malaka_toifa_path';
-                                $cacheKey = "teacher:{$teacher->id}:cert:{$field}:expires_at";
-                                $expire_date = Cache::get($cacheKey);
-                            @endphp
                             <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
                                 <h4 class="text-xl font-bold text-gray-900 dark:text-white">Malaka toifasi ({{ $teacher->malaka_toifa_daraja ?? 'Daraja kiritilmagan' }})</h4>
-                                @if($expire_date)
-                                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Amal qilish muddati: {{ $expire_date }}</p>
+                                @if($teacher->malaka_toifa_expdate)
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Amal qilish muddati: {{ $teacher->malaka_toifa_expdate->format('d.m.Y') }}</p>
                                 @endif
                                 <a href="{{ $teacher->malaka_toifa_url }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm">
                                     Hujjatni ko'rish
@@ -173,16 +159,11 @@
                         @endif
 
                         <!-- 1-Milliy sertifikat -->
-                        @php
-                            $field = 'milliy_sertifikat1_path';
-                            $cacheKey = "teacher:{$teacher->id}:cert:{$field}:expires_at";
-                            $expire_date = Cache::get($cacheKey);
-                        @endphp
                         @if($teacher->milliy_sertifikat1_path)
                             <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
                                 <h4 class="text-xl font-bold text-gray-900 dark:text-white">1-milliy sertifikat</h4>
-                                @if($expire_date)
-                                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Amal qilish muddati: {{ $expire_date }}</p>
+                                @if($teacher->milliy_sertifikat1_expdate)
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Amal qilish muddati: {{ $teacher->milliy_sertifikat1_expdate->format('d.m.Y') }}</p>
                                 @endif
                                 <a href="{{ $teacher->milliy_sertifikat1_url }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm">
                                     Hujjatni ko'rish
@@ -191,16 +172,11 @@
                         @endif
 
                         <!-- 2-Milliy sertifikat -->
-                        @php
-                            $field = 'milliy_sertifikat2_path';
-                            $cacheKey = "teacher:{$teacher->id}:cert:{$field}:expires_at";
-                            $expire_date = Cache::get($cacheKey);
-                        @endphp
                         @if($teacher->milliy_sertifikat2_path)
                             <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
                                 <h4 class="text-xl font-bold text-gray-900 dark:text-white">2-milliy sertifikat</h4>
-                                @if($expire_date)
-                                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Amal qilish muddati: {{ $expire_date }}</p>
+                                @if($teacher->milliy_sertifikat2_expdate)
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Amal qilish muddati: {{ $teacher->milliy_sertifikat2_expdate->format('d.m.Y') }}</p>
                                 @endif
                                 <a href="{{ $teacher->milliy_sertifikat2_url }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm">
                                     Hujjatni ko'rish
@@ -210,15 +186,10 @@
 
                         <!-- Xalqaro sertifikat -->
                         @if($teacher->xalqaro_sertifikat_path)
-                            @php
-                                $field = 'xalqaro_sertifikat_path';
-                                $cacheKey = "teacher:{$teacher->id}:cert:{$field}:expires_at";
-                                $expire_date = Cache::get($cacheKey);
-                            @endphp
                             <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
                                 <h4 class="text-xl font-bold text-gray-900 dark:text-white">Xalqaro sertifikat</h4>
-                                @if($expire_date)
-                                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Amal qilish muddati: {{ $expire_date }}</p>
+                                @if($teacher->xalqaro_sertifikat_expdate)
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Amal qilish muddati: {{ $teacher->xalqaro_sertifikat_expdate->format('d.m.Y') }}</p>
                                 @endif
                                 <a href="{{ $teacher->xalqaro_sertifikat_url }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm">
                                     Hujjatni ko'rish
@@ -227,16 +198,11 @@
                         @endif
 
                         <!-- Ustama sertifikat -->
-                        @php
-                            $field = 'ustama_sertifikat_path';
-                            $cacheKey = "teacher:{$teacher->id}:cert:{$field}:expires_at";
-                            $expire_date = Cache::get($cacheKey);
-                        @endphp
                         @if($teacher->ustama_sertifikat_path)
                             <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-3">
                                 <h4 class="text-xl font-bold text-gray-900 dark:text-white">Ustama sertifikat</h4>
-                                @if($expire_date)
-                                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Amal qilish muddati: {{ $expire_date }}</p>
+                                @if($teacher->ustama_sertifikat_expdate)
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 mb-2">Amal qilish muddati: {{ $teacher->ustama_sertifikat_expdate->format('d.m.Y') }}</p>
                                 @endif
                                 <a href="{{ $teacher->ustama_sertifikat_url }}" target="_blank" class="text-blue-600 hover:text-blue-800 text-sm">
                                     Hujjatni ko'rish

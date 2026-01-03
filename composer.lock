@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "044362e986f2f9ffbf3d3c1bed3f3fcc",
+    "content-hash": "a8305a66a9702cab712e0d9e24bfe82d",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -4231,56 +4231,6 @@
             "time": "2021-06-08T11:07:13+00:00"
         },
         {
-            "name": "norbek/aivent",
-            "version": "v1.0.6",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/hamidovnorbek/aivent.git",
-                "reference": "7c9ca75f29415bcc5f59ce2459668c70efb58783"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/hamidovnorbek/aivent/zipball/7c9ca75f29415bcc5f59ce2459668c70efb58783",
-                "reference": "7c9ca75f29415bcc5f59ce2459668c70efb58783",
-                "shasum": ""
-            },
-            "require": {
-                "guzzlehttp/guzzle": "^7.0",
-                "illuminate/support": "^10.0|^11.0|^12.0",
-                "php": ">=8.1",
-                "thiagoalessio/tesseract_ocr": "^2.13"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "aliases": {
-                        "Aivent": "Norbek\\Aivent\\Facades\\Aivent"
-                    },
-                    "providers": [
-                        "Norbek\\Aivent\\AiventServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "files": [
-                    "src/helpers.php"
-                ],
-                "psr-4": {
-                    "Norbek\\Aivent\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Universal AI Suite for Laravel — connect OpenAI, DeepSeek, Gemini, and Ollama with one clean API.",
-            "support": {
-                "issues": "https://github.com/hamidovnorbek/aivent/issues",
-                "source": "https://github.com/hamidovnorbek/aivent/tree/v1.0.6"
-            },
-            "time": "2025-10-22T14:47:28+00:00"
-        },
-        {
             "name": "nunomaduro/termwind",
             "version": "v2.3.2",
             "source": {
@@ -8270,55 +8220,6 @@
             "time": "2025-09-11T10:12:26+00:00"
         },
         {
-            "name": "thiagoalessio/tesseract_ocr",
-            "version": "2.13.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/thiagoalessio/tesseract-ocr-for-php.git",
-                "reference": "232a8cb9d571992f9bd1e263f2f6909cf6c173a1"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/thiagoalessio/tesseract-ocr-for-php/zipball/232a8cb9d571992f9bd1e263f2f6909cf6c173a1",
-                "reference": "232a8cb9d571992f9bd1e263f2f6909cf6c173a1",
-                "shasum": ""
-            },
-            "require": {
-                "php": "^5.3 || ^7.0 || ^8.0"
-            },
-            "require-dev": {
-                "phpunit/php-code-coverage": "^2.2.4 || ^9.0.0"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "thiagoalessio\\TesseractOCR\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "thiagoalessio",
-                    "email": "thiagoalessio@me.com"
-                }
-            ],
-            "description": "A wrapper to work with Tesseract OCR inside PHP.",
-            "keywords": [
-                "OCR",
-                "Tesseract",
-                "text recognition"
-            ],
-            "support": {
-                "irc": "irc://irc.freenode.net/tesseract-ocr-for-php",
-                "issues": "https://github.com/thiagoalessio/tesseract-ocr-for-php/issues",
-                "source": "https://github.com/thiagoalessio/tesseract-ocr-for-php"
-            },
-            "time": "2023-10-05T21:14:48+00:00"
-        },
-        {
             "name": "tijsverkoyen/css-to-inline-styles",
             "version": "v2.3.0",
             "source": {
@@ -11103,5 +11004,5 @@
         "ext-iconv": "*"
     },
     "platform-dev": {},
-    "plugin-api-version": "2.6.0"
+    "plugin-api-version": "2.9.0"
 }
