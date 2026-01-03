@@ -2,6 +2,7 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Schedule;
 use Illuminate\Support\Facades\Schedule as ScheduleAlias;
 
 Artisan::command('inspire', function () {
@@ -9,4 +10,5 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 
-\Illuminate\Support\Facades\Schedule::command('certificates:check-expiry')->everySixHours();
+Schedule::command('certificates:check-expiry')->everySixHours();
+Schedule::command('imports:cleanup-failed-rows')->dailyAt('02:00');
