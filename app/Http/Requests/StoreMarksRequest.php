@@ -49,20 +49,18 @@ class StoreMarksRequest extends FormRequest
             'mark.min' => 'Baho 0 dan kam bo\'lmasligi kerak.',
             'mark.max' => 'Baho :max dan oshmasligi kerak.',
             'mark.regex' => 'Baho faqat 1 ta kasr raqamga ega bo\'lishi mumkin (masalan: 2.5).',
-            'student_id.required' => 'O\'quvchi ID si majburiy.',
-            'student_id.exists' => 'Bunday o\'quvchi topilmadi.',
-            'exam_id.required' => 'Imtihon ID si majburiy.',
-            'exam_id.exists' => 'Bunday imtihon topilmadi.',
-            'problem_id.required' => 'Masala ID si majburiy.',
-            'problem_id.integer' => 'Masala ID si butun son bo\'lishi kerak.',
-            'problem_id.min' => 'Masala ID si 1 dan kam bo\'lmasligi kerak.',
-            'max_mark.numeric' => 'Maksimal baho raqam bo\'lishi kerak.',
-            'max_mark.min' => 'Maksimal baho 0 dan kam bo\'lmasligi kerak.',
+            'student_id.required' => 'O\'quvchi ID si kerak.',
+            'student_id.exists' => 'O\'quvchi topilmadi.',
+            'exam_id.required' => 'Imtihon ID si kerak.',
+            'exam_id.exists' => 'Imtihon topilmadi.',
+            'problem_id.required' => 'Topshiriq ID si kerak.',
+            'problem_id.integer' => 'Topshiriq ID si butun son bo\'lishi kerak.',
+            'problem_id.min' => 'Topshiriq ID si 1 dan kichik bo\'lmasligi kerak.'
         ];
     }
 
     /**
-     * Static method to get validation rules for a specific max mark
+     * Get validation rules for a specific mark with max value
      */
     public static function getMarkRules(float $maxMark): array
     {

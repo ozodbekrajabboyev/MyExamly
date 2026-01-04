@@ -6,6 +6,7 @@ use App\Models\Exam;
 use App\Models\Mark;
 use App\Models\Student;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class MarkService
 {
@@ -22,6 +23,9 @@ class MarkService
         // Get problems from the exam
         $problems = $exam->getProblems();
 
+        // Clean up any orphaned marks that don't match current exam structure
+        $this->cleanupOrphanedMarks($exam);
+
         // Auto-create marks for each student and problem combination
         foreach ($students as $student) {
             foreach ($problems as $problem) {
@@ -35,6 +39,36 @@ class MarkService
                     'sinf_id' => $exam->sinf_id, // Add the missing sinf_id
                 ]);
             }
+        }
+    }
+
+    /**
+     * Clean up orphaned marks that don't match the current exam structure
+     */
+    public function cleanupOrphanedMarks(Exam $exam): void
+    {
+        // Get valid problem IDs from exam structure
+        $validProblemIds = collect($exam->getProblems())->pluck('id')->toArray();
+
+        // Find orphaned marks before deletion for logging
+        $orphanedMarks = Mark::where('exam_id', $exam->id)
+            ->whereNotIn('problem_id', $validProblemIds)
+            ->get();
+
+        if ($orphanedMarks->count() > 0) {
+            $orphanedProblemIds = $orphanedMarks->pluck('problem_id')->unique()->sort()->values()->toArray();
+
+            // Delete orphaned marks
+            $deletedCount = Mark::where('exam_id', $exam->id)
+                ->whereNotIn('problem_id', $validProblemIds)
+                ->delete();
+
+            \Log::info("Cleaned up {$deletedCount} orphaned marks for exam {$exam->id}", [
+                'exam_id' => $exam->id,
+                'valid_problem_ids' => $validProblemIds,
+                'orphaned_problem_ids' => $orphanedProblemIds,
+                'deleted_count' => $deletedCount
+            ]);
         }
     }
 

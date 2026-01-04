@@ -10,14 +10,14 @@ class CleanupOldFailedImportRows extends Command
 {
     protected $signature = 'imports:cleanup-failed-rows';
 
-    protected $description = 'Delete failed import rows older than 30 days';
+    protected $description = 'Delete failed import rows older than 15 days';
 
     public function handle(): int
     {
-        $deleted = FailedImportRow::where('created_at', '<', now()->subDays(30))
+        $deleted = FailedImportRow::where('created_at', '<', now()->subDays(15))
             ->delete();
 
-        $this->info("Deleted {$deleted} failed import rows older than 30 days.");
+        $this->info("Deleted {$deleted} failed import rows older than 15 days.");
 
         return Command::SUCCESS;
     }

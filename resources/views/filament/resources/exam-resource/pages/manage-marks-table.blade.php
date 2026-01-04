@@ -182,23 +182,53 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Get valid problem IDs from the exam structure (passed from PHP)
+            const validProblemIds = @json(collect($this->problems ?? [])->pluck('id')->toArray());
+            console.log('Valid problem IDs for exam:', validProblemIds);
+
+            // Debounce function to prevent excessive calculations
+            function debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+
+            // Consistent calculation function (matches PHP logic)
+            function calculateTotal(inputs) {
+                let total = 0;
+                inputs.forEach(input => {
+                    const problemId = parseInt(input.getAttribute('data-problem-id'));
+                    // Only include marks for problems defined in the exam structure
+                    if (validProblemIds.includes(problemId)) {
+                        const value = parseFloat(input.value) || 0;
+                        total += value;
+                    }
+                });
+                // Use parseFloat with toFixed(1) to match PHP number_format($total, 1)
+                return parseFloat(total.toFixed(1));
+            }
+
             // Function to calculate and update total for a specific student row
-            window.updateTotal = function(inputElement) {
+            window.updateTotal = debounce(function(inputElement) {
                 const row = inputElement.closest('tr');
                 if (!row) return;
 
-                // Find all mark inputs in this row
-                const markInputs = row.querySelectorAll('input[type="number"][data-problem-id]');
-                let total = 0;
+                // Get ALL mark inputs in this row (including potentially orphaned ones)
+                const markInputs = Array.from(row.querySelectorAll('input[type="number"][data-problem-id]'));
 
-                markInputs.forEach(input => {
-                    const value = parseFloat(input.value) || 0;
-                    total += value;
-                });
+                // Use consistent calculation logic (which filters by valid problem IDs)
+                const total = calculateTotal(markInputs);
 
                 // Find and update the total column in this row
                 const totalColumn = row.querySelector('.total-column');
                 if (totalColumn) {
+                    // Format consistently with PHP (1 decimal place)
                     totalColumn.textContent = total.toFixed(1);
 
                     // Add visual feedback
@@ -206,7 +236,10 @@
                     totalColumn.offsetHeight; // Trigger reflow
                     totalColumn.style.animation = 'pulse 0.5s';
                 }
-            };
+
+                // Optional: Validate against expected total (could be enhanced with AJAX call)
+                console.log(`Student total calculated: ${total} from ${markInputs.filter(input => validProblemIds.includes(parseInt(input.getAttribute('data-problem-id')))).length} valid inputs`);
+            }, 100); // 100ms debounce
 
             // Function to update all totals (in case of bulk changes)
             window.updateAllTotals = function() {
@@ -219,7 +252,7 @@
                 });
             };
 
-            // Add event listeners to existing inputs (for dynamically loaded content)
+            // Enhanced observer for dynamic content
             const observer = new MutationObserver(function(mutations) {
                 mutations.forEach(function(mutation) {
                     mutation.addedNodes.forEach(function(node) {
@@ -243,7 +276,7 @@
                 subtree: true
             });
 
-            // Initial calculation for existing elements
+            // Initial calculation for existing elements (with delay for DOM readiness)
             setTimeout(() => {
                 updateAllTotals();
             }, 500);

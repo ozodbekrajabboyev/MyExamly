@@ -89,11 +89,21 @@ class ManageMarks extends Page implements HasForms, HasTable
     protected function ensureMarksExist(): void
     {
         $markService = new MarkService();
+        // First clean up any orphaned marks, then create missing marks
+        $markService->cleanupOrphanedMarks($this->exam);
         $markService->createMarksForExam($this->exam);
     }
 
     public function table(Table $table): Table
     {
+        // Pre-load all marks for this exam to avoid N+1 queries
+        $marksLookup = Mark::where('exam_id', $this->exam->id)
+            ->get()
+            ->groupBy('student_id')
+            ->map(function ($studentMarks) {
+                return $studentMarks->keyBy('problem_id');
+            });
+
         $columns = [
             Tables\Columns\TextColumn::make('full_name')
                 ->label('O\'quvchi nomi')
@@ -108,13 +118,13 @@ class ManageMarks extends Page implements HasForms, HasTable
         foreach ($this->problems as $problem) {
             $columns[] = Tables\Columns\TextInputColumn::make("problem_{$problem['id']}")
                 ->label("T-{$problem['id']}\n(Max: {$problem['max_mark']})")
-                ->getStateUsing(function ($record) use ($problem) {
-                    // Get the mark for this student and problem
-                    $mark = Mark::where('student_id', $record->id)
-                        ->where('exam_id', $this->exam->id)
-                        ->where('problem_id', $problem['id'])
-                        ->first();
-
+                ->getStateUsing(function ($record) use ($problem, $marksLookup) {
+                    // Use pre-loaded marks to avoid N+1 queries
+                    $studentMarks = $marksLookup->get($record->id);
+                    if (!$studentMarks) {
+                        return 0;
+                    }
+                    $mark = $studentMarks->get($problem['id']);
                     return $mark ? $mark->mark : 0;
                 })
                 ->updateStateUsing(function ($record, $state) use ($problem) {
@@ -139,25 +149,41 @@ class ManageMarks extends Page implements HasForms, HasTable
                         return $this->getStateForColumn($record, $problem);
                     }
 
-                    // Update or create the mark with sinf_id included
-                    Mark::updateOrCreate([
-                        'student_id' => $record->id,
-                        'exam_id' => $this->exam->id,
-                        'problem_id' => $problem['id'],
-                    ], [
-                        'mark' => $state,
-                        'maktab_id' => $this->exam->maktab_id,
-                        'sinf_id' => $this->exam->sinf_id, // Add the missing sinf_id
-                    ]);
+                    // Update or create the mark with proper transaction handling
+                    try {
+                        \DB::transaction(function () use ($record, $state, $problem) {
+                            Mark::updateOrCreate([
+                                'student_id' => $record->id,
+                                'exam_id' => $this->exam->id,
+                                'problem_id' => $problem['id'],
+                            ], [
+                                'mark' => $state,
+                                'maktab_id' => $this->exam->maktab_id,
+                                'sinf_id' => $this->exam->sinf_id,
+                            ]);
+                        });
 
-                    Notification::make()
-                        ->title('Saqlandi')
-                        ->body("T-{$problem['id']} uchun baho saqlandi")
-                        ->success()
-                        ->duration(2000)
-                        ->send();
+                        // Validate consistency between JS and PHP calculations
+                        $calculationService = new MarkCalculationService();
+                        // Note: We would validate the total here if we had the JS calculated total
 
-                    return $state;
+                        Notification::make()
+                            ->title('Saqlandi')
+                            ->body("T-{$problem['id']} uchun baho saqlandi")
+                            ->success()
+                            ->duration(2000)
+                            ->send();
+
+                        return $state;
+                    } catch (\Exception $e) {
+                        Notification::make()
+                            ->title('Xato')
+                            ->body('Bahoni saqlashda xatolik yuz berdi')
+                            ->danger()
+                            ->send();
+
+                        return $this->getStateForColumn($record, $problem);
+                    }
                 })
                 ->rules(function () use ($problem) {
                     return StoreMarksRequest::getMarkRules($problem['max_mark']);
@@ -173,15 +199,18 @@ class ManageMarks extends Page implements HasForms, HasTable
                 ->step(0.1);
         }
 
-        // Add Total column (UI-only, real-time calculation)
+        // Add Total column (optimized calculation using pre-loaded data)
         $totalMaxMarks = collect($this->problems)->sum('max_mark');
         $columns[] = Tables\Columns\TextColumn::make('total_marks')
             ->label("Jami\n(Max: {$totalMaxMarks})")
-            ->getStateUsing(function ($record) {
-                // Calculate total from existing marks
-                $total = Mark::where('student_id', $record->id)
-                    ->where('exam_id', $this->exam->id)
-                    ->sum('mark');
+            ->getStateUsing(function ($record) use ($marksLookup) {
+                // Calculate total from pre-loaded marks to avoid N+1 queries
+                $studentMarks = $marksLookup->get($record->id);
+                if (!$studentMarks) {
+                    return '0.0';
+                }
+
+                $total = $studentMarks->sum('mark');
                 return number_format($total, 1);
             })
             ->extraAttributes([
