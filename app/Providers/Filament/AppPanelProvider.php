@@ -18,6 +18,7 @@ use App\Filament\Widgets\TeacherNotificationsWidget;
 use App\Filament\Widgets\TeacherQualificationChartWidget;
 use App\Filament\Widgets\MalakaStatisticsChart;
 use App\Models\Maktab;
+use App\Notifications\FilamentResetPassword;
 use Filament\Facades\Filament;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -59,6 +60,7 @@ class AppPanelProvider extends PanelProvider
             ->emailVerificationRouteSlug('verify')
             ->path('/')
             ->login()
+            ->passwordReset()
             ->colors([
                 'primary' => Color::Sky,
                 'gray' => Color::Slate, // This gives you the dark blue-gray tones
