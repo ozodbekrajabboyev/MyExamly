@@ -20,6 +20,7 @@ use Filament\Tables;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\DB;
 
 class ManageMarks extends Page implements HasForms, HasTable
 {
@@ -97,21 +98,17 @@ class ManageMarks extends Page implements HasForms, HasTable
 
     public function table(Table $table): Table
     {
-        // Pre-load all marks for this exam to avoid N+1 queries
-        $marksLookup = Mark::where('exam_id', $this->exam->id)
-            ->get()
-            ->groupBy('student_id')
-            ->map(function ($studentMarks) {
-                return $studentMarks->keyBy('problem_id');
-            });
+        // Note: We can't cache marks lookup here because it needs to refresh after updates
+        // Each getStateUsing callback will fetch fresh data to ensure consistency
 
         $columns = [
             Tables\Columns\TextColumn::make('full_name')
-                ->label('O\'quvchi nomi')
+                ->label('O\'quvchi IFSH')
                 ->weight('medium')
                 ->width('200px')
+                ->wrap()
                 ->extraAttributes([
-                    'class' => 'sticky left-0 bg-white dark:bg-gray-800 dark:text-gray-100 z-10 border-r border-gray-200 dark:border-gray-600'
+                    'class' => 'sticky left-0 bg-white dark:bg-gray-800 dark:text-gray-100 z-10 border-r border-gray-200 dark:border-gray-600 student-name-column'
                 ])
         ];
 
@@ -119,16 +116,18 @@ class ManageMarks extends Page implements HasForms, HasTable
         foreach ($this->problems as $problem) {
             $columns[] = Tables\Columns\TextInputColumn::make("problem_{$problem['id']}")
                 ->label("T-{$problem['id']}\n(Max: {$problem['max_mark']})")
-                ->getStateUsing(function ($record) use ($problem, $marksLookup) {
-                    // Use pre-loaded marks to avoid N+1 queries
-                    $studentMarks = $marksLookup->get($record->id);
-                    if (!$studentMarks) {
-                        return 0;
-                    }
-                    $mark = $studentMarks->get($problem['id']);
+                ->getStateUsing(function ($record) use ($problem) {
+                    // Fetch fresh mark data to avoid stale cache issues
+                    $mark = Mark::where('student_id', $record->id)
+                        ->where('exam_id', $this->exam->id)
+                        ->where('problem_id', $problem['id'])
+                        ->first();
                     return $mark ? $mark->mark : 0;
                 })
                 ->updateStateUsing(function ($record, $state) use ($problem) {
+                    // Log for debugging
+                    \Log::info("Updating mark for student {$record->id}, problem {$problem['id']}, new value: {$state}");
+
                     // Create and validate using StoreMarksRequest
                     $request = new StoreMarksRequest();
                     $request->merge([
@@ -152,21 +151,20 @@ class ManageMarks extends Page implements HasForms, HasTable
 
                     // Update or create the mark with proper transaction handling
                     try {
-                        \DB::transaction(function () use ($record, $state, $problem) {
-                            Mark::updateOrCreate([
+                        $updatedMark = null;
+                        DB::transaction(function () use ($record, $state, $problem, &$updatedMark) {
+                            $updatedMark = Mark::updateOrCreate([
                                 'student_id' => $record->id,
                                 'exam_id' => $this->exam->id,
                                 'problem_id' => $problem['id'],
                             ], [
-                                'mark' => $state,
+                                'mark' => (float) $state,
                                 'maktab_id' => $this->exam->maktab_id,
                                 'sinf_id' => $this->exam->sinf_id,
                             ]);
                         });
 
-                        // Validate consistency between JS and PHP calculations
-                        $calculationService = new MarkCalculationService();
-                        // Note: We would validate the total here if we had the JS calculated total
+                        \Log::info("Mark saved successfully: {$updatedMark->mark}");
 
                         Notification::make()
                             ->title('Saqlandi')
@@ -175,24 +173,38 @@ class ManageMarks extends Page implements HasForms, HasTable
                             ->duration(2000)
                             ->send();
 
-                        return $state;
+                        // Return the actual saved value from database to ensure UI consistency
+                        $returnValue = $updatedMark ? (float) $updatedMark->mark : (float) $state;
+                        \Log::info("Returning value: {$returnValue}");
+                        return $returnValue;
                     } catch (\Exception $e) {
+                        \Log::error("Error saving mark: " . $e->getMessage());
+
                         Notification::make()
                             ->title('Xato')
-                            ->body('Bahoni saqlashda xatolik yuz berdi')
+                            ->body('Bahoni saqlashda xatolik yuz berdi: ' . $e->getMessage())
                             ->danger()
                             ->send();
 
                         return $this->getStateForColumn($record, $problem);
                     }
                 })
+                ->afterStateUpdated(function ($record, $state) use ($problem) {
+                    // Dispatch events to update UI and totals
+                    $this->dispatch('mark-updated', [
+                        'studentId' => $record->id,
+                        'problemId' => $problem['id'],
+                        'newMark' => $state
+                    ]);
+                })
                 ->rules(function () use ($problem) {
                     return StoreMarksRequest::getMarkRules($problem['max_mark']);
                 })
                 ->extraAttributes([
-                    'class' => 'text-center mark-input',
+                    'class' => 'text-center mark-input problem-column',
                     'data-problem-id' => $problem['id'],
-                    'x-on:input' => 'updateTotal($event.target)'
+                    'x-on:input' => 'updateTotal($event.target)',
+                    'x-on:change' => 'setTimeout(() => updateTotal($event.target), 500)'
                 ])
                 ->alignment('center')
                 ->width('100px')
@@ -204,18 +216,18 @@ class ManageMarks extends Page implements HasForms, HasTable
         $totalMaxMarks = collect($this->problems)->sum('max_mark');
         $columns[] = Tables\Columns\TextColumn::make('total_marks')
             ->label("Jami\n(Max: {$totalMaxMarks})")
-            ->getStateUsing(function ($record) use ($marksLookup) {
-                // Calculate total from pre-loaded marks to avoid N+1 queries
-                $studentMarks = $marksLookup->get($record->id);
-                if (!$studentMarks) {
-                    return '0.0';
-                }
+            ->getStateUsing(function ($record) {
+                // Calculate total from fresh marks data to avoid stale cache
+                $marks = Mark::where('student_id', $record->id)
+                    ->where('exam_id', $this->exam->id)
+                    ->whereIn('problem_id', collect($this->problems)->pluck('id'))
+                    ->get();
 
-                $total = $studentMarks->sum('mark');
+                $total = $marks->sum('mark');
                 return number_format($total, 1);
             })
             ->extraAttributes([
-                'class' => 'text-center font-bold bg-blue-50 dark:bg-blue-900/20 total-column'
+                'class' => 'text-center font-bold bg-blue-50 dark:bg-blue-900/20 total-column sticky right-0 z-5'
             ])
             ->alignment('center')
             ->width('100px')
@@ -233,7 +245,7 @@ class ManageMarks extends Page implements HasForms, HasTable
             ->striped()
             ->paginated(false)
             ->heading('Baholar jadvali')
-            ->description("Har bir katakchani bosib bahoni to'g'ridan-to'g'ri tahrirlang. Baholar avtomatik saqlanadi.")
+            ->description("Har bir katakchani bosib bahoni to'g'ridan-to'g'ri tahrirlang. Baholar avtomatik saqlanadi. Mobil qurilmalarda chapga-o'nga surib barcha ustunlarni ko'ring.")
             ->headerActions([
                 Tables\Actions\Action::make('save_marks')
                     ->label('Baholarni saqlash')
@@ -251,12 +263,15 @@ class ManageMarks extends Page implements HasForms, HasTable
 
     protected function getStateForColumn($record, $problem)
     {
+        // Get the current mark from database for consistency
         $mark = Mark::where('student_id', $record->id)
             ->where('exam_id', $this->exam->id)
             ->where('problem_id', $problem['id'])
             ->first();
 
-        return $mark ? $mark->mark : 0;
+        $value = $mark ? (float) $mark->mark : 0.0;
+        \Log::info("getStateForColumn returning: {$value} for student {$record->id}, problem {$problem['id']}");
+        return $value;
     }
 
     protected function getActions(): array
