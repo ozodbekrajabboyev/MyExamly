@@ -326,12 +326,19 @@ class StatisticsPageContent extends Component
         } elseif ($user && $user->role && $user->role->name === 'teacher' && $user->maktab_id) {
             // For teachers, filter by their school
             $sinfsQuery->where('maktab_id', $user->maktab_id);
-            // For subjects, teachers should only see subjects they teach
-//            if ($user->teacher) {
-//                $subjectsQuery->whereHas('teachers', function ($query) use ($user) {
-//                    $query->where('teacher_id', $user->teacher->id);
-//                });
-//            }
+
+            // For subjects, teachers should only see subjects from their school
+            $subjectsQuery->where('maktab_id', $user->maktab_id);
+
+            // Optionally, further filter to only subjects they teach
+            // Uncomment the lines below if you want teachers to see only their assigned subjects
+            /*
+            if ($user->teacher) {
+                $subjectsQuery->whereHas('teachers', function ($query) use ($user) {
+                    $query->where('teacher_id', $user->teacher->id);
+                });
+            }
+            */
         }
         // Superadmin sees all sinfs and subjects (no filtering)
 
