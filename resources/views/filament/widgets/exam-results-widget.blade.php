@@ -19,7 +19,11 @@
                 {{-- Prominent Icon --}}
                 <div class="flex-shrink-0">
                     <div class="rounded-full bg-blue-100 p-4 dark:bg-blue-500/20">
-                        <img src="{{ asset('logo.svg') }}" alt="{{ auth()->user()->maktab->name }} Logo" class="h-11 w-11" />
+                        @if(auth()->user()->maktab->id == 2)
+                            <img src="{{ asset('logomain.svg') }}" alt="{{ auth()->user()->maktab->name }} Logo" class="h-11 w-11" />
+                        @else
+                            <img src="{{ asset('logo.svg') }}" alt="{{ auth()->user()->maktab->name }} Logo" class="h-11 w-11" />
+                        @endif
                     </div>
                 </div>
                 {{-- Text Content --}}
