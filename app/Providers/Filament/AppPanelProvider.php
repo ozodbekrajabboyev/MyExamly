@@ -2,7 +2,6 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Widgets\CertificateStatusWidget;
 use App\Filament\Widgets\StatisticsBSBbyViloyatlar;
 use App\Filament\Widgets\StatisticsByFanBSB;
 use App\Filament\Widgets\StatisticsByFanCHSB;
@@ -14,7 +13,6 @@ use App\Filament\Widgets\StatisticsChartWidgetByCHSB;
 use App\Filament\Widgets\StatisticsChartWidgetByBSB;
 use App\Filament\Widgets\StatisticsCHSBbyViloyatlar;
 use App\Filament\Widgets\StatsOverview;
-use App\Filament\Widgets\TeacherNotificationsWidget;
 use App\Filament\Widgets\TeacherQualificationChartWidget;
 use App\Filament\Widgets\MalakaStatisticsChart;
 use App\Models\Maktab;

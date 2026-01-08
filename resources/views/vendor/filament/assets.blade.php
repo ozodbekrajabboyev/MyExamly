@@ -10,6 +10,9 @@
     @endif
 @endforeach
 
+{{-- Include our snow animation assets --}}
+@include('snow-assets')
+
 <style>
     :root {
         @foreach ($cssVariables ?? [] as $cssVariableName => $cssVariableValue) --{{ $cssVariableName }}:{{ $cssVariableValue }}; @endforeach
