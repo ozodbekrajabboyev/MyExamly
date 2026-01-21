@@ -11,6 +11,9 @@ use App\Http\Controllers\ContactController;
 
 Route::get('/exam/{code}/validate', [GeneratePdfController::class, 'validateExamCode']);
 
+// Contact form endpoint (no middleware required)
+Route::post('/contacts', ContactController::class);
+
 Route::middleware('telegram.api-key')->group(function () {
     Route::get('/regions', [RegionController::class, 'index']);
     Route::get('/regions/{id}/districts', [DistrictController::class, 'byRegion']);
