@@ -9,17 +9,46 @@ use Illuminate\Support\Facades\DB;
 
 class StatisticsByFanBSB extends ChartWidget
 {
-    protected static ?string $heading = "Fanlar kesimida BSB o‘zlashtirish foizi";
-
     protected int | string | array $columnSpan = 'full';
+
+    protected static ?string $pollingInterval = null;
 
     public static function canView(): bool
     {
         return auth()->check() && auth()->user()->role_id !== 3;
     }
+
+    public function getHeading(): ?string
+    {
+        $baseHeading = "Fanlar kesimida BSB o'zlashtirish foizi";
+        $filter = $this->filter;
+
+        if ($filter && $filter !== 'all') {
+            return $filter . " chorak - " . $baseHeading;
+        }
+
+        return $baseHeading;
+    }
+
+    protected function getFilters(): ?array
+    {
+        return [
+            'all' => 'Barcha choraklar',
+            'I' => 'I chorak',
+            'II' => 'II chorak',
+            'III' => 'III chorak',
+            'IV' => 'IV chorak',
+        ];
+    }
+
+    protected function getDefaultFilter(): ?string
+    {
+        return 'all';
+    }
     protected function getData(): array
     {
         $maktabId = auth()->user()->maktab_id;
+        $filter = $this->filter;
 
         // Fanlar
         $allSubjects = DB::table('subjects')
@@ -32,11 +61,17 @@ class StatisticsByFanBSB extends ChartWidget
 
         foreach ($allSubjects as $subject) {
             // Shu fanga oid BSB imtihonlar
-            $exams = Exam::query()
+            $examsQuery = Exam::query()
                 ->where('maktab_id', $maktabId)
                 ->where('subject_id', $subject->id)
-                ->where('type', 'BSB')
-                ->get();
+                ->where('type', 'BSB');
+
+            // Quarter filter qo'shish
+            if ($filter && $filter !== 'all') {
+                $examsQuery->where('quarter', $filter);
+            }
+
+            $exams = $examsQuery->get();
 
             if ($exams->isEmpty()) {
                 $labels[] = $subject->name;

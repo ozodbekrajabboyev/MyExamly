@@ -9,18 +9,48 @@ use Illuminate\Support\Facades\DB;
 
 class StatisticsBySinfBSB extends ChartWidget
 {
-    protected static ?string $heading = "Sinflar kesimida BSB imtihon natijalari";
-
     protected int | string | array $columnSpan = 'full';
+
+    protected static ?string $pollingInterval = null;
+
     public static function canView(): bool
     {
         return auth()->check() && auth()->user()->role_id !== 3;
     }
+
+    public function getHeading(): ?string
+    {
+        $baseHeading = "Sinflar kesimida BSB imtihon natijalari";
+        $filter = $this->filter ?? 'all';
+
+        if ($filter && $filter !== 'all') {
+            return $filter . " chorak - " . $baseHeading;
+        }
+
+        return $baseHeading;
+    }
+
+    protected function getFilters(): ?array
+    {
+        return [
+            'all' => 'Barcha choraklar',
+            'I' => 'I chorak',
+            'II' => 'II chorak',
+            'III' => 'III chorak',
+            'IV' => 'IV chorak',
+        ];
+    }
+
+    protected function getDefaultFilter(): ?string
+    {
+        return 'all';
+    }
     protected function getData(): array
     {
         $maktabId = auth()->user()->maktab_id;
+        $filter = $this->filter ?? 'all';
 
-        // Sinflar ro‘yxati
+        // Sinflar ro'yxati
         $allSinfs = DB::table('sinfs')
             ->where('maktab_id', $maktabId)
             ->orderBy('name')
@@ -30,12 +60,18 @@ class StatisticsBySinfBSB extends ChartWidget
         $values = [];
 
         foreach ($allSinfs as $sinf) {
-            // Shu sinf bo‘yicha BSB imtihonlar
-            $exams = Exam::query()
+            // Shu sinf bo'yicha BSB imtihonlar
+            $examsQuery = Exam::query()
                 ->where('maktab_id', $maktabId)
                 ->where('sinf_id', $sinf->id)
-                ->where('type', 'BSB')
-                ->get();
+                ->where('type', 'BSB');
+
+            // Quarter filter qo'shish
+            if ($filter && $filter !== 'all') {
+                $examsQuery->where('quarter', $filter);
+            }
+
+            $exams = $examsQuery->get();
 
             if ($exams->isEmpty()) {
                 $labels[] = $sinf->name;
