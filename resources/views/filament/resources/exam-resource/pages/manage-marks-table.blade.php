@@ -248,20 +248,71 @@
             }
         }
 
-        @media (max-width: 480px) {
+        @media (max-width: 640px) {
+            /* Hide row number column on small phones */
+            .marks-table .col-num {
+                display: none;
+            }
+
             .marks-table .col-name {
-                min-width: 120px;
-                max-width: 140px;
-                font-size: 0.75rem;
+                min-width: 110px;
+                max-width: 130px;
+                font-size: 0.7rem;
+                padding: 0.25rem 0.375rem;
             }
 
             .mark-input {
-                width: 60px;
+                width: 56px;
                 font-size: 0.8125rem;
+                padding: 0.375rem 0.125rem;
             }
 
             .marks-table .col-total {
-                min-width: 70px;
+                min-width: 60px;
+                font-size: 0.8125rem;
+            }
+
+            .marks-table th {
+                font-size: 0.625rem;
+                padding: 0.25rem 0.375rem;
+            }
+
+            .marks-table td {
+                padding: 0.25rem 0.375rem;
+            }
+
+            /* Compact exam info header on small phones */
+            .exam-info-header .info-grid {
+                grid-template-columns: 1fr !important;
+                gap: 0.5rem !important;
+            }
+
+            .exam-info-card {
+                padding: 0.5rem 0.75rem !important;
+            }
+
+            .exam-info-card .info-label {
+                font-size: 0.6875rem;
+                margin-bottom: 0;
+            }
+
+            .exam-info-card .info-value {
+                font-size: 0.875rem;
+            }
+
+            .exam-info-card svg {
+                display: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .marks-table .col-name {
+                min-width: 100px;
+                max-width: 120px;
+            }
+
+            .mark-input {
+                width: 50px;
             }
         }
 
@@ -301,55 +352,48 @@
         }
     </script>
 
-    <div class="space-y-6">
+    <div class="space-y-3 sm:space-y-6">
         <!-- Exam Information Header -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-            <div class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 px-6 py-4 border-b border-gray-200 dark:border-gray-600">
-                <h2 class="text-xl font-bold text-gray-900 dark:text-gray-100">Imtihon ma'lumotlari</h2>
+        <div class="exam-info-header bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 dark:border-gray-600">
+                <h2 class="text-base sm:text-xl font-bold text-gray-900 dark:text-gray-100">Imtihon ma'lumotlari</h2>
             </div>
-            <div class="p-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Left Column -->
-                    <div class="space-y-6">
-                        <div class="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-4">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Fan</p>
-                                    <p class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ $this->exam->subject->name }}</p>
-                                </div>
-                                <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
+            <div class="p-3 sm:p-6">
+                <div class="info-grid grid grid-cols-3 sm:grid-cols-3 gap-2 sm:gap-6">
+                    <div class="exam-info-card bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-2 sm:p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="info-label text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-0.5 sm:mb-1">Fan</p>
+                                <p class="info-value text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-100">{{ $this->exam->subject->name }}</p>
                             </div>
-                        </div>
-
-                        <div class="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-4">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Sinf</p>
-                                    <p class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ $this->exam->sinf->name }}</p>
-                                </div>
-                                <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
-                            </div>
+                            <svg class="hidden sm:block w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
                         </div>
                     </div>
 
-                    <!-- Right Column -->
-                    <div class="space-y-6">
-                        <div class="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-4">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Imtihon</p>
-                                    <p class="text-lg font-semibold text-gray-900 dark:text-gray-100">{{ $this->exam->serial_number }} - {{ $this->exam->type }}</p>
-                                </div>
-                                <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
+                    <div class="exam-info-card bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-2 sm:p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="info-label text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-0.5 sm:mb-1">Sinf</p>
+                                <p class="info-value text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-100">{{ $this->exam->sinf->name }}</p>
                             </div>
+                            <svg class="hidden sm:block w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
                         </div>
+                    </div>
 
+                    <div class="exam-info-card bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-2 sm:p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="info-label text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-0.5 sm:mb-1">Imtihon</p>
+                                <p class="info-value text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-100">{{ $this->exam->serial_number }} - {{ $this->exam->type }}</p>
+                            </div>
+                            <svg class="hidden sm:block w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -359,10 +403,10 @@
         @if($this->students->count() > 0 && count($this->problems) > 0)
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <!-- Table header with Save button -->
-                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4 px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600">
                     <div>
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Baholar jadvali</h3>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        <h3 class="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Baholar jadvali</h3>
+                        <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1">
                             Baholarni kiriting va <strong>"Saqlash"</strong> tugmasini bosing.
                         </p>
                     </div>
@@ -370,15 +414,15 @@
                         wire:click="saveAll"
                         color="success"
                         icon="heroicon-o-check"
-                        size="lg"
+                        class="self-end sm:self-auto"
                     >
                         Saqlash
                     </x-filament::button>
                 </div>
 
                 <!-- Mobile scroll hint -->
-                <div class="block lg:hidden bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-600 px-4 py-2">
-                    <div class="flex items-center justify-between text-sm text-blue-800 dark:text-blue-200">
+                <div class="block lg:hidden bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-600 px-3 sm:px-4 py-1.5 sm:py-2">
+                    <div class="flex items-center justify-between text-xs sm:text-sm text-blue-800 dark:text-blue-200">
                         <div class="flex items-center space-x-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16l-4-4m0 0l4-4m-4 4h18m-2 4l4-4m0 0l-4-4"></path>
@@ -422,7 +466,7 @@
                                 >
                                     <td class="col-num">{{ $loop->iteration }}</td>
                                     <td class="col-name font-medium text-gray-900 dark:text-gray-100">
-                                        {{ $student->full_name }}
+                                        {{ Str::words($student->full_name, 2, '') }}
                                     </td>
                                     @foreach($this->problems as $problem)
                                         <td class="text-center">
@@ -447,7 +491,7 @@
 
                 <!-- Bottom Save button (for long tables) -->
                 @if($this->students->count() > 10)
-                    <div class="flex justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                    <div class="flex justify-end px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
                         <x-filament::button
                             wire:click="saveAll"
                             color="success"
