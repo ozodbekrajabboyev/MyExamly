@@ -86,31 +86,9 @@ class MarkResource extends Resource
                     ->label('Sinf')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('status')
-                    ->label('Status')
-                    ->badge()
-                    ->formatStateUsing(fn(string $state): string => match ($state) {
-                        'pending' => 'Jarayonda',
-                        'approved' => 'Tasdiqlangan',
-                        'rejected' => 'Rad etilgan',
-                    })
-                    ->color(fn (string $state): string => match ($state) {
-                        'pending' => 'warning',
-                        'approved' => 'success',
-                        'rejected' => 'danger',
-                    })
-                    ->sortable(),
             ])
             ->defaultSort('created_at', 'asc')
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
-                    ->label('Status')
-                    ->options([
-                        'pending' => 'Jarayonda',
-                        'approved' => 'Tasdiqlangan',
-                        'rejected' => 'Rad etilgan',
-                    ]),
-
                 Tables\Filters\SelectFilter::make('subject_id')
                     ->label('Fan')
                     ->relationship('subject', 'name')
