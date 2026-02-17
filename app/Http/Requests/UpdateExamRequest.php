@@ -44,7 +44,7 @@ class UpdateExamRequest extends FormRequest
             'problems' => ['nullable', 'array'],
             'problems.*.id' => ['required_with:problems', 'integer'],
             'problems.*.max_mark' => ['required_with:problems', 'numeric', 'min:0'],
-            'status' => ['sometimes', 'in:pending,approved,rejected'],
+
         ];
     }
 

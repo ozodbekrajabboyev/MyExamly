@@ -1,792 +1,304 @@
 <x-filament-panels::page>
     <style>
-        /* Custom CSS for sticky first column */
-        .fi-ta-table .fi-ta-cell:first-child,
-        .fi-ta-table .fi-ta-header-cell:first-child {
-            position: sticky !important;
-            left: 0 !important;
-            z-index: 10 !important;
-            border-right: 1px solid #e5e7eb !important;
+        /* Table container */
+        .marks-table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
-        /* Light mode sticky column */
-        .fi-ta-table .fi-ta-cell:first-child,
-        .fi-ta-table .fi-ta-header-cell:first-child {
-            background-color: inherit !important;
-            color: inherit !important;
-            border-right-color: #e5e7eb !important;
+        .marks-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
         }
 
-        .fi-ta-table .fi-ta-header-cell:first-child {
-            background-color: inherit !important;
+        .marks-table th,
+        .marks-table td {
+            padding: 0.5rem 0.75rem;
+            border-bottom: 1px solid #e5e7eb;
+            white-space: nowrap;
         }
 
-        .fi-ta-table .fi-ta-row:hover .fi-ta-cell:first-child {
-            background-color: inherit !important;
+        .marks-table thead th {
+            background-color: #f9fafb;
+            font-weight: 600;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: #6b7280;
+            border-bottom: 2px solid #e5e7eb;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
-        /* Dark mode sticky column - match the table background */
-        .dark .fi-ta-table .fi-ta-cell:first-child,
-        .dark .fi-ta-table .fi-ta-header-cell:first-child {
-            background-color: inherit !important;
-            color: inherit !important;
-            border-right-color: #4b5563 !important;
+        /* Zebra striping */
+        .marks-table tbody tr:nth-child(even) td {
+            background-color: #f9fafb;
         }
 
-        .dark .fi-ta-table .fi-ta-header-cell:first-child {
-            background-color: inherit !important;
+        .marks-table tbody tr:hover td {
+            background-color: #f3f4f6;
         }
 
-        .dark .fi-ta-table .fi-ta-row:hover .fi-ta-cell:first-child {
-            background-color: inherit !important;
+        /* Number column */
+        .marks-table .col-num {
+            width: 40px;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 0.75rem;
         }
 
-        .dark .fi-ta-table .fi-ta-row:nth-child(even) .fi-ta-cell:first-child {
-            background-color: inherit !important;
+        /* Sticky student name column */
+        .marks-table .col-name {
+            position: sticky;
+            left: 0;
+            z-index: 5;
+            background-color: white;
+            border-right: 2px solid #e5e7eb;
+            min-width: 200px;
         }
 
-        /* Dark mode for ALL table elements - make everything dark */
-        .dark .fi-ta-table,
-        .dark .fi-ta-table * {
-            background-color: rgb(31 41 55) !important;
+        .marks-table thead .col-name {
+            z-index: 15;
+            background-color: #f9fafb;
         }
 
-        .dark .fi-ta-header-cell,
-        .dark .fi-ta-header-cell * {
-            background-color: rgb(17 24 39) !important;
-            color: #f3f4f6 !important;
-            border-color: #4b5563 !important;
+        .marks-table tbody tr:nth-child(even) .col-name {
+            background-color: #f9fafb;
         }
 
-        .dark .fi-ta-cell,
-        .dark .fi-ta-cell * {
-            background-color: rgb(31 41 55) !important;
-            color: #d1d5db !important;
-            border-color: #4b5563 !important;
+        .marks-table tbody tr:hover .col-name {
+            background-color: #f3f4f6;
         }
 
-        .dark .fi-ta-row:hover .fi-ta-cell,
-        .dark .fi-ta-row:hover .fi-ta-cell * {
-            background-color: rgb(55 65 81) !important;
+        /* Sticky total column */
+        .marks-table .col-total {
+            position: sticky;
+            right: 0;
+            z-index: 5;
+            background-color: #eff6ff;
+            border-left: 2px solid #3b82f6;
+            font-weight: 700;
+            text-align: center;
+            min-width: 90px;
         }
 
-        .dark .fi-ta-row:nth-child(even) .fi-ta-cell,
-        .dark .fi-ta-row:nth-child(even) .fi-ta-cell * {
+        .marks-table thead .col-total {
+            z-index: 15;
+            background-color: #dbeafe;
+        }
+
+        /* Mark input */
+        .mark-input {
+            width: 80px;
+            padding: 0.375rem 0.5rem;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            text-align: center;
+            font-size: 0.875rem;
+            background-color: white;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .mark-input:focus {
+            outline: none;
+            border-color: #f59e0b;
+            box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+            background-color: #fef3c7;
+        }
+
+        /* ======================== */
+        /* DARK MODE                */
+        /* ======================== */
+        .dark .marks-table th {
+            background-color: rgb(17 24 39);
+            color: #9ca3af;
+            border-bottom-color: #4b5563;
+        }
+
+        .dark .marks-table {
+            background-color: rgb(31 41 55);
+        }
+
+        .dark .marks-table td {
+            background-color: rgb(31 41 55);
+            color: #d1d5db;
+            border-bottom-color: #374151;
+        }
+
+        .dark .marks-table tbody tr:nth-child(even) td {
+            background-color: rgb(38 47 61);
+        }
+
+        .dark .marks-table tbody tr:hover td {
+            background-color: rgb(55 65 81);
+        }
+
+        .dark .marks-table .col-name {
+            background-color: rgb(31 41 55);
+            border-right-color: #4b5563;
+        }
+
+        .dark .marks-table thead .col-name {
+            background-color: rgb(17 24 39);
+        }
+
+        .dark .marks-table tbody tr:nth-child(even) .col-name {
             background-color: rgb(38 47 61) !important;
         }
 
-        /* Input fields in dark mode - force dark backgrounds */
-        .dark .fi-input,
-        .dark input[type="number"],
-        .dark input[type="text"] {
-            background-color: rgb(55 65 81) !important;
-            border-color: #4b5563 !important;
-            color: #f3f4f6 !important;
-        }
-
-        .dark .fi-input:focus,
-        .dark input:focus {
-            border-color: #3b82f6 !important;
-            box-shadow: 0 0 0 1px #3b82f6 !important;
+        .dark .marks-table tbody tr:hover .col-name {
             background-color: rgb(55 65 81) !important;
         }
 
-        /* Force dark mode on Filament table wrapper */
-        .dark [data-filament-table],
-        .dark [data-filament-table] * {
-            background-color: rgb(31 41 55) !important;
+        .dark .marks-table .col-total {
+            background-color: rgb(30 41 66);
+            border-left-color: #60a5fa;
+            color: #93c5fd;
         }
 
-        .dark .fi-ta-content,
-        .dark .fi-ta-content * {
-            background-color: rgb(31 41 55) !important;
+        .dark .marks-table thead .col-total {
+            background-color: rgb(24 34 58);
         }
 
-        /* Table heading and description */
-        .dark .fi-ta-header-heading {
-            color: #f3f4f6 !important;
+        .dark .marks-table tbody tr:nth-child(even) .col-total {
+            background-color: rgb(33 45 72);
         }
 
-        .dark .fi-ta-header-description {
-            color: #9ca3af !important;
+        .dark .marks-table tbody tr:hover .col-total {
+            background-color: rgb(40 52 80);
         }
 
-        .fi-ta-table table {
-            border-collapse: separate !important;
+        .dark .mark-input {
+            background-color: rgb(55 65 81);
+            border-color: #4b5563;
+            color: #f3f4f6;
         }
 
-        /* =================================== */
-        /* DESKTOP-SAFE TABLE CONTAINER        */
-        /* Basic overflow for all screen sizes */
-        /* =================================== */
-        .fi-ta-table-container {
-            overflow-x: auto !important;
+        .dark .mark-input:focus {
+            border-color: #fbbf24;
+            box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2);
+            background-color: rgba(120, 53, 15, 0.2);
         }
 
-        /* =================================== */
-        /* MOBILE AND TABLET OPTIMIZATIONS    */
-        /* Only applies to screens ≤ 1024px   */
-        /* Desktop (>1024px) keeps original   */
-        /* =================================== */
-
-        /* Tablet and mobile enhanced scrolling */
+        /* ======================== */
+        /* MOBILE / TABLET          */
+        /* ======================== */
         @media (max-width: 1024px) {
-            .fi-ta-table-container {
-                -webkit-overflow-scrolling: touch !important; /* iOS smooth scrolling */
-                position: relative;
+            .marks-table-container {
                 scrollbar-width: thin;
                 scrollbar-color: #cbd5e0 #f7fafc;
             }
 
-            /* WebKit scrollbar styling for mobile/tablet */
-            .fi-ta-table-container::-webkit-scrollbar {
+            .marks-table-container::-webkit-scrollbar {
                 height: 8px;
             }
 
-            .fi-ta-table-container::-webkit-scrollbar-track {
+            .marks-table-container::-webkit-scrollbar-track {
                 background: #f7fafc;
                 border-radius: 4px;
             }
 
-            .fi-ta-table-container::-webkit-scrollbar-thumb {
+            .marks-table-container::-webkit-scrollbar-thumb {
                 background: #cbd5e0;
                 border-radius: 4px;
             }
-
-            .fi-ta-table-container::-webkit-scrollbar-thumb:hover {
-                background: #a0aec0;
-            }
         }
 
-        /* Tablet specific (769px to 1024px) */
-        @media (max-width: 1024px) and (min-width: 769px) {
-            /* Subtle scroll indicators for tablets */
-            .fi-ta-table-container::before,
-            .fi-ta-table-container::after {
-                content: '';
-                position: absolute;
-                top: 0;
-                bottom: 0;
-                width: 15px;
-                z-index: 15;
-                pointer-events: none;
-                transition: opacity 0.3s ease;
-            }
-
-            .fi-ta-table-container::before {
-                left: 200px;
-                background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.05));
-                opacity: 0;
-            }
-
-            .fi-ta-table-container::after {
-                right: 100px;
-                background: linear-gradient(to left, transparent, rgba(0, 0, 0, 0.05));
-                opacity: 1;
-            }
-
-            .fi-ta-table-container.scrolled-left::before {
-                opacity: 1;
-            }
-
-            .fi-ta-table-container.scrolled-right::after {
-                opacity: 0;
-            }
-        }
-        /* Mobile specific optimizations (768px and below) */
         @media (max-width: 768px) {
-            /* Mobile scroll indicators */
-            .fi-ta-table-container::before,
-            .fi-ta-table-container::after {
-                content: '';
-                position: absolute;
-                top: 0;
-                bottom: 0;
-                width: 20px;
-                z-index: 15;
-                pointer-events: none;
-                transition: opacity 0.3s ease;
+            .marks-table .col-name {
+                min-width: 150px;
+                max-width: 180px;
+                font-size: 0.8125rem;
             }
 
-            .fi-ta-table-container::before {
-                left: 150px; /* Position after sticky column on mobile */
-                background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.1));
-                opacity: 0;
+            .mark-input {
+                width: 70px;
+                min-height: 44px;
+                padding: 0.5rem 0.25rem;
             }
 
-            .fi-ta-table-container::after {
-                right: 80px; /* Position before total column on mobile */
-                background: linear-gradient(to left, transparent, rgba(0, 0, 0, 0.1));
-                opacity: 1;
+            .marks-table .col-total {
+                min-width: 80px;
             }
 
-            .fi-ta-table-container.scrolled-left::before {
-                opacity: 1;
+            .marks-table th {
+                font-size: 0.6875rem;
+                padding: 0.375rem 0.5rem;
             }
 
-            .fi-ta-table-container.scrolled-right::after {
-                opacity: 0;
+            .marks-table td {
+                padding: 0.375rem 0.5rem;
             }
 
-            /* Mobile responsive column sizing */
-            .student-name-column,
-            .fi-ta-table .fi-ta-cell:first-child,
-            .fi-ta-table .fi-ta-header-cell:first-child {
-                min-width: 150px !important;
-                max-width: 180px !important;
+            .marks-table .col-name {
+                box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
             }
 
-            /* Mobile problem columns */
-            .problem-column,
-            .fi-ta-table .mark-input {
-                width: 80px !important;
-                min-width: 80px !important;
-                font-size: 14px !important;
-                padding: 8px 4px !important;
+            .marks-table .col-total {
+                box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
             }
 
-            /* Mobile total column */
-            .fi-ta-table .total-column {
-                min-width: 80px !important;
-                max-width: 90px !important;
-                font-size: 14px !important;
+            .dark .marks-table .col-name {
+                box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
             }
 
-            /* Improve touch targets for mobile */
-            .fi-ta-table input[type="number"] {
-                min-height: 44px !important; /* iOS recommended touch target */
-                padding: 12px 8px !important;
-            }
-
-            /* Better table header on mobile */
-            .fi-ta-table .fi-ta-header-cell {
-                font-size: 12px !important;
-                line-height: 1.2 !important;
-                padding: 8px 4px !important;
-            }
-
-            /* Mobile table improvements */
-            .fi-ta-table {
-                font-size: 14px !important;
-            }
-
-            .fi-ta-header {
-                padding: 12px 16px !important;
-            }
-
-            .fi-ta-header-heading {
-                font-size: 18px !important;
-            }
-
-            .fi-ta-header-description {
-                font-size: 13px !important;
-                margin-top: 4px !important;
-            }
-
-            /* Mobile action buttons */
-            .fi-ta-header-actions {
-                gap: 8px !important;
-            }
-
-            .fi-ta-header-actions .fi-btn {
-                padding: 8px 12px !important;
-                font-size: 13px !important;
-            }
-
-            /* Mobile table borders */
-            .fi-ta-table .fi-ta-cell,
-            .fi-ta-table .fi-ta-header-cell {
-                border-width: 1px !important;
-                border-style: solid !important;
-            }
-
-            /* Mobile sticky column shadows */
-            .student-name-column,
-            .fi-ta-table .fi-ta-cell:first-child,
-            .fi-ta-table .fi-ta-header-cell:first-child {
-                box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1) !important;
-            }
-
-            .dark .student-name-column,
-            .dark .fi-ta-table .fi-ta-cell:first-child,
-            .dark .fi-ta-table .fi-ta-header-cell:first-child {
-                box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3) !important;
-            }
-
-            /* Mobile total column shadow */
-            .fi-ta-table .total-column {
-                box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1) !important;
-            }
-
-            .dark .fi-ta-table .total-column {
-                box-shadow: -2px 0 5px rgba(0, 0, 0, 0.3) !important;
+            .dark .marks-table .col-total {
+                box-shadow: -2px 0 5px rgba(0, 0, 0, 0.3);
             }
         }
 
-        /* Very small screens (phones in portrait) */
         @media (max-width: 480px) {
-            .student-name-column,
-            .fi-ta-table .fi-ta-cell:first-child,
-            .fi-ta-table .fi-ta-header-cell:first-child {
-                min-width: 120px !important;
-                max-width: 140px !important;
-                font-size: 12px !important;
+            .marks-table .col-name {
+                min-width: 120px;
+                max-width: 140px;
+                font-size: 0.75rem;
             }
 
-            .problem-column,
-            .fi-ta-table .mark-input {
-                width: 70px !important;
-                min-width: 70px !important;
-                font-size: 13px !important;
+            .mark-input {
+                width: 60px;
+                font-size: 0.8125rem;
             }
 
-            .fi-ta-table .total-column {
-                min-width: 70px !important;
-                max-width: 80px !important;
-                font-size: 13px !important;
+            .marks-table .col-total {
+                min-width: 70px;
             }
         }
 
-        /* Mobile table wrapper improvements - only on mobile/tablet */
-        @media (max-width: 1024px) {
-            .mobile-optimized-table {
-                position: relative;
-            }
-
-            .mobile-optimized-table .fi-ta-content {
-                padding: 0 !important;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .mobile-optimized-table .fi-ta-table-container {
-                margin: 0 -16px !important;
-                padding: 0 16px !important;
-            }
-        }
-
-        /* =================================== */
-        /* DESKTOP PRESERVATION                */
-        /* Remove mobile shadows on desktop   */
-        /* =================================== */
+        /* Remove mobile shadows on desktop */
         @media (min-width: 1025px) {
-            /* Remove any mobile-specific shadows or effects on desktop */
-            .fi-ta-table .fi-ta-cell:first-child,
-            .fi-ta-table .fi-ta-header-cell:first-child {
-                box-shadow: none !important;
-            }
-
-            .fi-ta-table .total-column {
-                box-shadow: none !important;
-            }
-
-            .dark .fi-ta-table .fi-ta-cell:first-child,
-            .dark .fi-ta-table .fi-ta-header-cell:first-child {
-                box-shadow: none !important;
-            }
-
-            .dark .fi-ta-table .total-column {
-                box-shadow: none !important;
+            .marks-table .col-name,
+            .marks-table .col-total {
+                box-shadow: none;
             }
         }
 
-        /* Force all table elements to be dark */
-        .dark table,
-        .dark table *,
-        .dark tbody,
-        .dark tbody *,
-        .dark thead,
-        .dark thead *,
-        .dark tr,
-        .dark tr *,
-        .dark td,
-        .dark td *,
-        .dark th,
-        .dark th * {
-            background-color: rgb(31 41 55) !important;
-            color: #d1d5db !important;
+        /* Dark mode table container */
+        .dark .marks-table-container {
+            background-color: rgb(31 41 55);
         }
 
-        .dark thead th,
-        .dark thead th * {
-            background-color: rgb(17 24 39) !important;
-            color: #f3f4f6 !important;
-        }
-
-        /* =================================== */
-        /* UNIVERSAL STYLES (ALL SCREEN SIZES) */
-        /* These apply to both desktop & mobile */
-        /* =================================== */
-
-        /* Total column styling */
-        .total-column {
-            background-color: #eff6ff !important;
-            border-left: 2px solid #3b82f6 !important;
-            font-weight: bold !important;
-        }
-
-        .dark .total-column {
-            background-color: rgb(30 58 138 / 0.2) !important;
-            border-left-color: #60a5fa !important;
-            color: #93c5fd !important;
-        }
-
-        /* Total column sticky positioning */
-        .fi-ta-table .total-column {
-            position: sticky !important;
-            right: 0 !important;
-            z-index: 5 !important;
-        }
-
-        /* Mark input highlighting on focus */
-        .mark-input:focus {
-            background-color: #fef3c7 !important;
-            border-color: #f59e0b !important;
-        }
-
-        .dark .mark-input:focus {
-            background-color: rgb(120 53 15 / 0.2) !important;
-            border-color: #fbbf24 !important;
+        /* Remove bottom border on last row */
+        .marks-table tbody tr:last-child td {
+            border-bottom: none;
         }
     </style>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Get valid problem IDs from the exam structure (passed from PHP)
-            const validProblemIds = @json(collect($this->problems ?? [])->pluck('id')->toArray());
-            console.log('Valid problem IDs for exam:', validProblemIds);
-
-            // Debounce function to prevent excessive calculations
-            function debounce(func, wait) {
-                let timeout;
-                return function executedFunction(...args) {
-                    const later = () => {
-                        clearTimeout(timeout);
-                        func(...args);
-                    };
-                    clearTimeout(timeout);
-                    timeout = setTimeout(later, wait);
-                };
-            }
-
-            // Consistent calculation function (matches PHP logic)
-            function calculateTotal(inputs) {
-                let total = 0;
-                inputs.forEach(input => {
-                    const problemId = parseInt(input.getAttribute('data-problem-id'));
-                    // Only include marks for problems defined in the exam structure
-                    if (validProblemIds.includes(problemId)) {
-                        const value = parseFloat(input.value) || 0;
-                        total += value;
-                    }
-                });
-                // Use parseFloat with toFixed(1) to match PHP number_format($total, 1)
-                return parseFloat(total.toFixed(1));
-            }
-
-            // Function to calculate and update total for a specific student row
-            window.updateTotal = debounce(function(inputElement) {
-                const row = inputElement.closest('tr');
-                if (!row) return;
-
-                // Get ALL mark inputs in this row (including potentially orphaned ones)
-                const markInputs = Array.from(row.querySelectorAll('input[type="number"][data-problem-id]'));
-
-                // Use consistent calculation logic (which filters by valid problem IDs)
-                const total = calculateTotal(markInputs);
-
-                // Find and update the total column in this row
-                const totalColumn = row.querySelector('.total-column');
-                if (totalColumn) {
-                    // Format consistently with PHP (1 decimal place)
-                    totalColumn.textContent = total.toFixed(1);
-
-                    // Add visual feedback
-                    totalColumn.style.animation = 'none';
-                    totalColumn.offsetHeight; // Trigger reflow
-                    totalColumn.style.animation = 'pulse 0.5s';
-                }
-
-                // Optional: Validate against expected total (could be enhanced with AJAX call)
-                console.log(`Student total calculated: ${total} from ${markInputs.filter(input => validProblemIds.includes(parseInt(input.getAttribute('data-problem-id')))).length} valid inputs`);
-            }, 300); // Increased debounce to 300ms to allow for Filament updates
-
-            // Function to update all totals (in case of bulk changes)
-            window.updateAllTotals = function() {
-                const rows = document.querySelectorAll('tbody tr');
-                rows.forEach(row => {
-                    const firstInput = row.querySelector('input[type="number"][data-problem-id]');
-                    if (firstInput) {
-                        updateTotal(firstInput);
-                    }
-                });
-            };
-
-            // Enhanced observer for dynamic content
-            const observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    mutation.addedNodes.forEach(function(node) {
-                        if (node.nodeType === 1) { // Element node
-                            const inputs = node.querySelectorAll ? node.querySelectorAll('input[type="number"][data-problem-id]') : [];
-                            inputs.forEach(input => {
-                                if (!input.hasAttribute('data-total-listener')) {
-                                    // Add input event listener for real-time total updates
-                                    input.addEventListener('input', function() {
-                                        updateTotal(this);
-                                    });
-
-                                    // Add blur event listener for when field loses focus (after Filament save)
-                                    input.addEventListener('blur', function() {
-                                        const currentValue = this.value;
-                                        setTimeout(() => {
-                                            // Ensure the input value is what we expect
-                                            if (this.value !== currentValue) {
-                                                console.log(`Input value changed from ${currentValue} to ${this.value}`);
-                                            }
-                                            updateTotal(this);
-                                        }, 500); // Delay to allow Filament to complete its update cycle
-                                    });
-
-                                    // Add keydown event listener for Tab key handling
-                                    input.addEventListener('keydown', function(e) {
-                                        if (e.key === 'Tab') {
-                                            // Save current value before tab
-                                            const currentValue = this.value;
-                                            setTimeout(() => {
-                                                // After tab, make sure the value is preserved
-                                                if (this.value !== currentValue && currentValue !== '') {
-                                                    console.log(`Restoring value ${currentValue} after Tab key`);
-                                                    this.value = currentValue;
-                                                    // Trigger input event to ensure it's saved
-                                                    this.dispatchEvent(new Event('input', { bubbles: true }));
-                                                }
-                                                updateTotal(this);
-                                            }, 100);
-                                        }
-                                    });
-
-                                    // Add change event listener for final validation
-                                    input.addEventListener('change', function() {
-                                        setTimeout(() => {
-                                            updateTotal(this);
-                                        }, 300);
-                                    });
-
-                                    input.setAttribute('data-total-listener', 'true');
-                                }
-                            });
-                        }
+        function markRow(initialTotal) {
+            return {
+                total: initialTotal,
+                recalcTotal() {
+                    let sum = 0;
+                    this.$el.querySelectorAll('input[type=number]').forEach(input => {
+                        const max = parseFloat(input.dataset.max) || Infinity;
+                        const val = parseFloat(input.value) || 0;
+                        sum += Math.min(val, max);
                     });
-                });
-            });
-
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true
-            });
-
-            // Listen for Livewire/Alpine events when marks are updated
-            document.addEventListener('mark-updated', function(event) {
-                console.log('Mark updated event received:', event.detail);
-                setTimeout(() => {
-                    updateAllTotals();
-                    // Force refresh of the specific input field to show the saved value
-                    const studentId = event.detail.studentId;
-                    const problemId = event.detail.problemId;
-                    const newMark = event.detail.newMark;
-
-                    // Find and update the specific input
-                    const input = document.querySelector(`input[data-problem-id="${problemId}"]`);
-                    if (input) {
-                        const row = input.closest('tr');
-                        if (row) {
-                            const allInputsInRow = row.querySelectorAll('input[data-problem-id]');
-                            // Find the correct input for this student
-                            allInputsInRow.forEach(inp => {
-                                if (inp.getAttribute('data-problem-id') == problemId) {
-                                    inp.value = newMark;
-                                    updateTotal(inp);
-                                }
-                            });
-                        }
-                    }
-                }, 100);
-            });
-
-            // Also listen for Livewire component updates
-            document.addEventListener('livewire:updated', function() {
-                console.log('Livewire component updated');
-                setTimeout(() => {
-                    updateAllTotals();
-                }, 200);
-            });
-
-            // Listen for Alpine.js data updates (Filament uses Alpine)
-            document.addEventListener('alpine:updated', function() {
-                console.log('Alpine component updated');
-                setTimeout(() => {
-                    updateAllTotals();
-                }, 150);
-            });
-
-            // Initial calculation for existing elements (with delay for DOM readiness)
-            setTimeout(() => {
-                // Add event listeners to existing inputs
-                const existingInputs = document.querySelectorAll('input[type="number"][data-problem-id]');
-                existingInputs.forEach(input => {
-                    if (!input.hasAttribute('data-total-listener')) {
-                        // Add input event listener for real-time total updates
-                        input.addEventListener('input', function() {
-                            updateTotal(this);
-                        });
-
-                        // Add blur event listener for when field loses focus (after Filament save)
-                        input.addEventListener('blur', function() {
-                            const currentValue = this.value;
-                            setTimeout(() => {
-                                // Ensure the input value is what we expect
-                                if (this.value !== currentValue) {
-                                    console.log(`Input value changed from ${currentValue} to ${this.value}`);
-                                }
-                                updateTotal(this);
-                            }, 500); // Delay to allow Filament to complete its update cycle
-                        });
-
-                        // Add keydown event listener for Tab key handling
-                        input.addEventListener('keydown', function(e) {
-                            if (e.key === 'Tab') {
-                                // Save current value before tab
-                                const currentValue = this.value;
-                                setTimeout(() => {
-                                    // After tab, make sure the value is preserved
-                                    if (this.value !== currentValue && currentValue !== '') {
-                                        console.log(`Restoring value ${currentValue} after Tab key`);
-                                        this.value = currentValue;
-                                        // Trigger input event to ensure it's saved
-                                        this.dispatchEvent(new Event('input', { bubbles: true }));
-                                    }
-                                    updateTotal(this);
-                                }, 100);
-                            }
-                        });
-
-                        // Add change event listener for final validation
-                        input.addEventListener('change', function() {
-                            setTimeout(() => {
-                                updateTotal(this);
-                            }, 300);
-                        });
-
-                        input.setAttribute('data-total-listener', 'true');
-                    }
-                });
-
-                updateAllTotals();
-                initializeMobileScrollIndicators();
-            }, 500);
-
-            // Mobile scroll indicators functionality
-            function initializeMobileScrollIndicators() {
-                const tableContainer = document.querySelector('.fi-ta-table-container');
-                if (!tableContainer) return;
-
-                function updateScrollIndicators() {
-                    const scrollLeft = tableContainer.scrollLeft;
-                    const scrollWidth = tableContainer.scrollWidth;
-                    const clientWidth = tableContainer.clientWidth;
-                    const maxScroll = scrollWidth - clientWidth;
-
-                    // Update scroll indicator classes
-                    if (scrollLeft > 20) {
-                        tableContainer.classList.add('scrolled-left');
-                    } else {
-                        tableContainer.classList.remove('scrolled-left');
-                    }
-
-                    if (scrollLeft < maxScroll - 20) {
-                        tableContainer.classList.add('can-scroll-right');
-                    } else {
-                        tableContainer.classList.add('scrolled-right');
-                        tableContainer.classList.remove('can-scroll-right');
-                    }
+                    this.total = sum.toFixed(1);
                 }
-
-                // Add scroll event listener with throttling
-                let scrollTimeout;
-                tableContainer.addEventListener('scroll', function() {
-                    if (scrollTimeout) clearTimeout(scrollTimeout);
-                    scrollTimeout = setTimeout(updateScrollIndicators, 10);
-                });
-
-                // Initialize indicators
-                updateScrollIndicators();
-
-                // Re-check on window resize
-                window.addEventListener('resize', updateScrollIndicators);
             }
-
-            // Add touch-friendly interaction for mobile devices only
-            function initializeMobileTouch() {
-                // Only apply on touch devices or small screens
-                if (!('ontouchstart' in window) && window.innerWidth > 768) {
-                    return; // Skip on desktop without touch
-                }
-
-                const markInputs = document.querySelectorAll('.mark-input');
-
-                markInputs.forEach(input => {
-                    // Prevent zoom on iOS when focusing input
-                    input.addEventListener('touchstart', function() {
-                        // Temporarily increase font size to prevent zoom
-                        this.style.fontSize = '16px';
-                    });
-
-                    input.addEventListener('blur', function() {
-                        // Reset font size
-                        this.style.fontSize = '';
-                    });
-
-                    // Better mobile keyboard handling
-                    input.addEventListener('focus', function() {
-                        // Scroll the input into view on mobile
-                        setTimeout(() => {
-                            this.scrollIntoView({
-                                behavior: 'smooth',
-                                block: 'center',
-                                inline: 'center'
-                            });
-                        }, 300);
-                    });
-                });
-            }
-
-            // Initialize mobile enhancements only on mobile/tablet devices
-            setTimeout(() => {
-                // Check if we're on a mobile/tablet device (screen width <= 1024px)
-                if (window.innerWidth <= 1024) {
-                    initializeMobileTouch();
-                    initializeMobileScrollIndicators();
-                }
-
-                // Re-check on window resize
-                window.addEventListener('resize', function() {
-                    if (window.innerWidth <= 1024) {
-                        initializeMobileScrollIndicators();
-                    }
-                });
-            }, 1000);
-        });
-
-        // Add CSS animation for pulse effect
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes pulse {
-                0% { transform: scale(1); }
-                50% { transform: scale(1.05); }
-                100% { transform: scale(1); }
-            }
-        `;
-        document.head.appendChild(style);
+        }
     </script>
 
     <div class="space-y-6">
@@ -838,33 +350,6 @@
                             </div>
                         </div>
 
-                        <div class="bg-white dark:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 p-4">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <p class="text-sm text-gray-500 dark:text-gray-400 mb-1">Status</p>
-                                    <x-filament::badge
-                                        :color="match($this->exam->status) {
-                                            'pending' => 'warning',
-                                            'approved' => 'success',
-                                            'rejected' => 'danger',
-                                            default => 'gray'
-                                        }"
-                                        size="md"
-                                        class="font-medium"
-                                    >
-                                        {{ match($this->exam->status) {
-                                            'pending' => 'Jarayonda',
-                                            'approved' => 'Tasdiqlangan',
-                                            'rejected' => 'Rad etilgan',
-                                            default => $this->exam->status
-                                        } }}
-                                    </x-filament::badge>
-                                </div>
-                                <svg class="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                </svg>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -872,9 +357,27 @@
 
         <!-- Main Table -->
         @if($this->students->count() > 0 && count($this->problems) > 0)
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <!-- Mobile and Tablet scroll hint (hidden on desktop) -->
-                <div class="block lg:hidden bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-600 px-4 py-3">
+            <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <!-- Table header with Save button -->
+                <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Baholar jadvali</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                            Baholarni kiriting va <strong>"Saqlash"</strong> tugmasini bosing.
+                        </p>
+                    </div>
+                    <x-filament::button
+                        wire:click="saveAll"
+                        color="success"
+                        icon="heroicon-o-check"
+                        size="lg"
+                    >
+                        Saqlash
+                    </x-filament::button>
+                </div>
+
+                <!-- Mobile scroll hint -->
+                <div class="block lg:hidden bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-600 px-4 py-2">
                     <div class="flex items-center justify-between text-sm text-blue-800 dark:text-blue-200">
                         <div class="flex items-center space-x-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -882,28 +385,79 @@
                             </svg>
                             <span>Chapga-o'nga surib ko'ring</span>
                         </div>
-                        <div class="text-xs opacity-75">
-                            {{ count($this->problems) }} ta topshiriq
-                        </div>
+                        <span class="text-xs opacity-75">{{ count($this->problems) }} ta topshiriq</span>
                     </div>
                 </div>
 
-                <div class="overflow-x-auto relative">
-                    <!-- Loading overlay for mobile -->
-                    <div id="mobile-loading" class="hidden absolute inset-0 bg-white/80 dark:bg-gray-800/80 flex items-center justify-center z-20 md:hidden">
-                        <div class="flex items-center space-x-2 text-gray-600 dark:text-gray-300">
-                            <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            <span class="text-sm">Yuklanmoqda...</span>
-                        </div>
-                    </div>
-
-                    <div class="min-w-full">
-                        {{ $this->table }}
-                    </div>
+                <!-- Table -->
+                <div class="marks-table-container">
+                    <table class="marks-table">
+                        <thead>
+                            <tr>
+                                <th class="col-num">#</th>
+                                <th class="col-name">O'quvchi IFSH</th>
+                                @foreach($this->problems as $problem)
+                                    <th class="text-center">
+                                        T-{{ $problem['id'] }}<br>
+                                        <span class="text-xs font-normal text-gray-400 dark:text-gray-500">Max: {{ $problem['max_mark'] }}</span>
+                                    </th>
+                                @endforeach
+                                <th class="col-total">
+                                    Jami<br>
+                                    <span class="text-xs font-normal">Max: {{ collect($this->problems)->sum('max_mark') }}</span>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($this->students as $student)
+                                @php
+                                    $initialTotal = collect($this->problems)->sum(function ($p) use ($student) {
+                                        $val = (float) ($this->marks[$student->id . '_' . $p['id']] ?? 0);
+                                        return min($val, $p['max_mark']);
+                                    });
+                                @endphp
+                                <tr
+                                    wire:key="student-{{ $student->id }}"
+                                    x-data="markRow('{{ number_format($initialTotal, 1) }}')"
+                                >
+                                    <td class="col-num">{{ $loop->iteration }}</td>
+                                    <td class="col-name font-medium text-gray-900 dark:text-gray-100">
+                                        {{ $student->full_name }}
+                                    </td>
+                                    @foreach($this->problems as $problem)
+                                        <td class="text-center">
+                                            <input
+                                                type="number"
+                                                wire:model="marks.{{ $student->id }}_{{ $problem['id'] }}"
+                                                @input="recalcTotal()"
+                                                class="mark-input"
+                                                step="0.1"
+                                                min="0"
+                                                max="{{ $problem['max_mark'] }}"
+                                                data-max="{{ $problem['max_mark'] }}"
+                                            >
+                                        </td>
+                                    @endforeach
+                                    <td class="col-total" x-text="total"></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
+
+                <!-- Bottom Save button (for long tables) -->
+                @if($this->students->count() > 10)
+                    <div class="flex justify-end px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800">
+                        <x-filament::button
+                            wire:click="saveAll"
+                            color="success"
+                            icon="heroicon-o-check"
+                            size="lg"
+                        >
+                            Saqlash
+                        </x-filament::button>
+                    </div>
+                @endif
             </div>
         @else
             <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-600 rounded-lg p-6 text-center">

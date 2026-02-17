@@ -34,7 +34,7 @@ class Exam extends Model
 
     protected $fillable = [
         'maktab_id', 'sinf_id', 'subject_id', 'teacher_id', 'teacher2_id',
-        'type', 'serial_number', 'quarter', 'metod_id', 'problems', 'status'
+        'type', 'serial_number', 'quarter', 'metod_id', 'problems'
     ];
 
     protected static function boot()
@@ -381,25 +381,6 @@ class Exam extends Model
 
 
 
-                    ToggleButtons::make('status')
-                        ->label('Imtihon Holati')
-                        ->options([
-                            'pending' => 'Jarayonda',
-                            'approved' => 'Tasdiqlangan',
-                            'rejected' => 'Rad etilgan',
-                        ])
-                        ->inline()
-                        ->colors([
-                            'pending' => 'warning',
-                            'approved' => 'success',
-                            'rejected' => 'danger',
-                        ])
-                        ->icons([
-                            'pending' => 'heroicon-m-clock',
-                            'approved' => 'heroicon-m-check-circle',
-                            'rejected' => 'heroicon-m-x-circle',
-                        ])
-                        ->visible(fn () => Auth::user()?->role?->name === 'admin'),
                 ]),
         ];
     }

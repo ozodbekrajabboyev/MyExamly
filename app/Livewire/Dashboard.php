@@ -5,15 +5,10 @@ namespace App\Livewire;
 use App\Models\Exam;
 use App\Models\Mark;
 use App\Models\Student;
-use App\Models\User;
 use App\Services\ExamCalculationService;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Filament\Forms\Components\Actions;
-use Filament\Forms\Components\Actions\Action;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
-use Livewire\Attributes\On;
 use Livewire\Component;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -157,24 +152,12 @@ class Dashboard extends Component implements HasForms
         $this->refreshTableData();
         $exam = Exam::with(['sinf', 'subject'])->find($this->selectedExamId);
 
-        // Check if exam is approved
-        if (!$exam || $exam->status !== 'approved') {
-            $this->refreshTableData();
+        if (!$exam) {
             Notification::make()
-                ->title('Tasdiqlash jarayoni!')
-                ->body("Natijalarni PDF shaklida yuklab olish imkoniyati faqat imtihon tasdiqlangandan so'ng beriladi.")
-                ->warning()
-                ->persistent()
-                ->actions([
-                    \Filament\Notifications\Actions\Action::make('requestApproval')
-                        ->label("Tasdiqlashni so'rash")
-                        ->button()
-                ->color('warning')
-                ->dispatch('requestApproval', [$exam->id])
-                ->close()
-                ])
+                ->title('Xato')
+                ->body('Imtihon topilmadi.')
+                ->danger()
                 ->send();
-
             return;
         }
 
@@ -250,50 +233,6 @@ class Dashboard extends Component implements HasForms
 
             $this->totalMaxScore = collect($this->problems)->sum('max_mark');
         }
-    }
-
-    #[On('requestApproval')]
-    public function handleRequestApproval($examId)
-    {
-        $exam = Exam::find($this->selectedExamId);
-
-        // Correctly query for admin users using the 'role' relationship.
-        $admins = User::where('role_id', 2)
-            ->where('maktab_id', auth()->user()->maktab_id)
-            ->get();
-
-        if ($admins->isEmpty()) {
-            Notification::make()
-                ->title('Action Failed')
-                ->body('Could not send approval request. No administrators found.')
-                ->danger()
-                ->send();
-            return;
-        }
-
-        // Send notification to all found admins
-        Notification::make()
-            ->title('Imtihonni tasdiqlash so‘rovi')
-            ->body("{$exam->sinf->name}-sinf | {$exam->subject->name} | {$exam->serial_number}-{$exam->type} imtihonini tasdiqlash uchun so‘rov yuborildi.")
-            ->icon('heroicon-o-document-check')
-            ->iconColor('warning')
-            ->actions([
-                \Filament\Notifications\Actions\Action::make('edit_exam')
-                    ->label('👉 Imtihonni tasdiqlash')
-                    ->url(route('filament.app.resources.exams.edit', ['record' => $exam->id]))
-                    ->button()
-                    ->close()
-                    ->color('primary')
-            ])
-            ->sendToDatabase($admins);
-
-        // Show success notification to the current user
-        Notification::make()
-            ->title('So‘rov yuborildi')
-            ->body('Tasdiqlash so‘rovingiz administratorga muvaffaqiyatli yuborildi.')
-            ->icon('heroicon-o-check-circle')
-            ->iconColor('success')
-            ->send();
     }
 
     public function render()

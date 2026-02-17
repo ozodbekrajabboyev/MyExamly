@@ -42,7 +42,7 @@ class StoreExamRequest extends FormRequest
             'problems' => ['nullable', 'array'],
             'problems.*.id' => ['required', 'integer'],
             'problems.*.max_mark' => ['required', 'numeric', 'min:0'],
-            'status' => ['sometimes', 'in:pending,approved,rejected'],
+
         ];
     }
 
